@@ -1,0 +1,70 @@
+body{
+	background-color:#1b2838;
+	font-family: Brandon-Regular;
+    color:#EFEFEF;
+    font-size: 16px;
+    width: 1042px;
+    margin: 0 auto;
+    margin-top: 10px;
+}
+
+#header{
+    margin-bottom: 15px;
+}
+
+#accounts{
+    background-color:#304661;
+    border:10px inset #73aaee;
+    border-radius: 8px;
+}
+
+.account{
+    height: 110px;
+    width: 300px;
+    margin: 20px;
+    float: left;
+}
+
+.avatar{
+    height: 80px;
+    width: 80px;
+    float: left;
+    margin-right: 10px;
+}
+
+.account-login{
+    font-size: 18px;
+}
+
+.status{
+    color: #90ba3c;
+}
+
+.delete{
+    float: right;
+}
+
+.start-stop{
+    float: left;
+}
+
+.clear{
+    clear: left; display: block; 
+}
+
+#header{
+    display:table;
+}
+
+#title{
+    font-size: 25px;
+    color: gold;
+    font-weight: bolder;
+    display:table-cell;
+    vertical-align:middle;
+}
+
+#add-account{
+    margin-top: 10px;
+    float: right;
+}
