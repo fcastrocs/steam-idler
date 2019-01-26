@@ -7,7 +7,7 @@ $(()=>{
             if(res.error){
                 $('#login-error').text(res.error);
             }else{
-                window.location = `/dashboard/${res.username}`
+                window.location = `/`
             }
         })
     });

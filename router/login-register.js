@@ -59,6 +59,7 @@ router.post('/register', (req, res) => {
         user.save(err =>{
             if(err) throw err;
             req.session.loggedIn = true;
+            req.session.username = user.username;
             return res.sendStatus(200);
         })
     })
