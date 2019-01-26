@@ -1,28 +1,46 @@
 body{
 	background-color:#1b2838;
-	font-family: Brandon-Regular;
+    font-family: "Motiva Sans", Sans-serif;
     color:#EFEFEF;
     font-size: 16px;
-    width: 1042px;
+    width: 1060px;
     margin: 0 auto;
     margin-top: 10px;
+    letter-spacing: 1px;
+}
+
+#title{
+    font-size: 25px;
+    color: #5d85b6;
+    font-weight: bold;
+    display:table-cell;
+    vertical-align:middle;
 }
 
 #header{
+    display:table;
     margin-bottom: 15px;
+}
+
+#user-greet{
+    float: right;
 }
 
 #accounts{
     background-color:#304661;
-    border:10px inset #73aaee;
+    border:10px outset #73aaee;
     border-radius: 8px;
+    line-height: 21px;
+    padding: 10px;
+    margin-bottom: 15px;
+    margin-top: 15px;
 }
 
 .account{
     height: 110px;
-    width: 300px;
-    margin: 20px;
+    width: 320px;
     float: left;
+    margin: 10px;
 }
 
 .avatar{
@@ -31,40 +49,107 @@ body{
     float: left;
     margin-right: 10px;
 }
+.account-info{
+
+}
+
+
 
 .account-login{
-    font-size: 18px;
+    font-weight: bolder;
 }
 
 .status{
     color: #90ba3c;
 }
 
-.delete{
-    float: right;
-}
-
-.start-stop{
-    float: left;
-}
-
 .clear{
     clear: left; display: block; 
-}
-
-#header{
-    display:table;
-}
-
-#title{
-    font-size: 25px;
-    color: gold;
-    font-weight: bolder;
-    display:table-cell;
-    vertical-align:middle;
 }
 
 #add-account{
     margin-top: 10px;
     float: right;
+}
+
+
+.btn-sm{
+    height: 20px;
+    padding: 3px;
+    line-height: 0px;
+}
+
+
+
+
+
+
+
+
+.modal-buttons{
+    float:right;
+}
+
+.modal-content{
+    margin-top: 100px;
+    background-color: rgba(19, 54, 87, .9);
+    border: solid 3px rgb(74, 106, 167);
+    width: 450px;
+}
+
+.modal-header, .modal-footer{
+    background-color: rgba(9, 34, 58, 0.9);
+    padding: 5px;
+}
+
+.close{
+    color: red;
+}
+
+input{
+    background: rgba(74, 106, 167, .8) !important;
+    color: white !important;
+    letter-spacing: 2px;
+}
+
+.input-group-text{
+    width: 100px;
+}
+
+#steam-guard-text{
+    width: 135px;
+}
+
+#steam-guard-input{
+    text-transform: uppercase;
+    width: 100px;
+    padding-left: 20px;
+}
+
+#cd-key{
+    text-transform: uppercase;
+}
+
+/* LOGIN PAGE*/
+#login-form, #register-form{
+    width: 400px;
+    margin: 0 auto;
+    background-color: rgba(19, 54, 87, .9);
+    border: solid 3px rgb(74, 106, 167);
+    border-radius: 8px;
+    padding: 10px;
+    overflow: auto;
+    box-shadow: 10px 10px 5px -6px rgba(0, 17, 49, 0.6);
+}
+
+#signin-button, #register-button, #show-register{
+    margin-left: 10px;
+    float: right;
+}
+
+
+#register-error, #login-error{
+    color:red;
+    font-weight: bold;
+    font-size: 12px;
 }

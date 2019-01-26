@@ -1,0 +1,99 @@
+<script src="../public/js/accounts.js"></script>
+
+<div id="user-greet">Hello {{{username}}}</div>
+
+<button type="button" class="btn btn-primary startall-stopall">Start All</button>
+<div id="accounts">
+    <div class="account">
+        <div class="info">
+            <img class="avatar" src="../public/images/avatar.jpg" alt="">
+            <div class="account-login">fcastro16@gmail.com</div>
+            <div class="status">Status: farming game name</div>
+            <div class="cards-left">Cards left: 8</div>
+            <div class="games-left">Games left to idle: 1</div>
+        </div>
+        <div class="account-buttons">
+            <button type="button" class="btn btn-primary btn-sm start-stop">Stop Farming</button>
+            <button type="button" class="btn btn-primary btn-sm activate-key" data-toggle="modal" data-target="#activate-key-modal">Activate
+                Key</button>
+            <button type="button" class="btn btn-primary btn-sm Delete-account">Delete</button>
+        </div>
+    </div>
+    <span class="clear"></span>
+</div>
+<button type="button" class="btn btn-primary btn-lg btn-block add-account" data-toggle="modal" data-target="#add-acc-modal">Add
+    Account</button>
+
+<!-- Add account Modal -->
+<div class="modal fade" id="add-acc-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add account</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="add-acc">
+                    <div class="form-group" id="form-account">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Username</span>
+                            </div>
+                            <input type="text" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="form-account">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Password</span>
+                            </div>
+                            <input type="password" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="form-account">
+                        <div id="steam-guard" hidden>
+                            <div class="form-group" id="form-steamguard">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text" id="steam-guard-text">Steam Guard</span>
+                                    </div>
+                                    <input type="text" id="steam-guard-input">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Add account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add account Modal -->
+<div class="modal fade" id="activate-key-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <form>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">CD-KEY</span>
+                        </div>
+                        <input type="text" class="form-control" id="cd-key" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Activate Key</button>
+            </div>
+        </div>
+    </div>
+</div>
