@@ -39,6 +39,7 @@ app.use(session({
 // Routes
 app.use('/', require('./router/login-register'));
 app.use('/', require('./router/dashboard'))
+app.use('/', require('./router/steam-accounts'))
 
 
 app.listen(port, () =>{

@@ -148,7 +148,7 @@ input{
 }
 
 
-#register-error, #login-error{
+#register-error, #login-error, #add-steamacc-error{
     color:red;
     font-weight: bold;
     font-size: 12px;

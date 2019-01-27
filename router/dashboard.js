@@ -8,7 +8,7 @@ router.get("/", isLoggedIn, (req, res) => {
     res.redirect(`/dashboard/${req.session.username}`);
 });
 
-router.get(`/dashboard/:username`, (req, res) =>{
+router.get(`/dashboard/:username`, isLoggedIn, (req, res) =>{
     if(req.params.username === req.session.username){
         res.render('dashboard', {username: req.session.username})
     }else{

@@ -12,6 +12,10 @@ router.get('/login', isLoggedIn, (req, res) => {
 
 // Login Request
 router.post('/login', (req, res) => {
+    if(req.session.loggedIn){
+        return res.status(403).send({error: 'already loggedin'})
+    }
+
     // find user
     User.findOne({ username: req.body.username }, (err, user) => {
         if (err) throw err;
@@ -26,6 +30,7 @@ router.post('/login', (req, res) => {
             if (isMatch) {
                 req.session.loggedIn = true;
                 req.session.username = user.username;
+                req.session.userId = user._id;
                 res.send({username: user.username})
             } else { // bad password
                 return res.send({error: 'bad user/password'});
@@ -36,6 +41,10 @@ router.post('/login', (req, res) => {
 
 // Register request
 router.post('/register', (req, res) => {
+    if(req.session.loggedIn){
+        return res.status(403).send({error: 'already registered'})
+    }
+
     if (!req.body.username || !req.body.password || !req.body.invcode) {
         return res.sendStatus(400)
     }
@@ -56,10 +65,11 @@ router.post('/register', (req, res) => {
         });
 
         // Save user to database
-        user.save(err =>{
+        user.save((err, savedUser) =>{
             if(err) throw err;
             req.session.loggedIn = true;
-            req.session.username = user.username;
+            req.session.username = savedUser.username;
+            req.session.userId = savedUser._id;
             return res.sendStatus(200);
         })
     })

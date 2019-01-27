@@ -1,4 +1,4 @@
-<script src="../public/js/accounts.js"></script>
+<script src="../public/js/dashboard.js"></script>
 
 <div id="user-greet">Hello {{{username}}}</div>
 
@@ -35,13 +35,14 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form id="add-acc">
+                <p id="add-steamacc-error"></p>
+                <form id="add-steamaccount-form">
                     <div class="form-group" id="form-account">
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Username</span>
                             </div>
-                            <input type="text" class="form-control" required>
+                            <input type="text" name="user" class="form-control" required>
                         </div>
                     </div>
 
@@ -50,11 +51,11 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Password</span>
                             </div>
-                            <input type="password" class="form-control" required>
+                            <input type="password" name="pass" class="form-control" required>
                         </div>
                     </div>
 
-                    <div class="form-group" id="form-account">
+                    <div class="form-group" id="form-account" hidden>
                         <div id="steam-guard" hidden>
                             <div class="form-group" id="form-steamguard">
                                 <div class="input-group">
