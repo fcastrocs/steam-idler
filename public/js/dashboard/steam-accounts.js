@@ -1,5 +1,4 @@
 $(()=>{
-
     $('#add-steamaccount-form').submit((e) =>{
         e.preventDefault();
         let data = $('#add-steamaccount-form').serialize();

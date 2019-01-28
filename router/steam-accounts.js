@@ -4,7 +4,7 @@ const SteamAccounts = require('../models/steam-accounts')
 
 // Returns all accounts for this user
 router.get('/steamaccounts', isLoggedIn, (req, res) =>{
-    SteamAccounts.findById(req.session.userId, "user pass", (err, accounts) => {
+    SteamAccounts.find({userId: req.session.userId}, 'user', (err, accounts) => {
         if(err) throw err;
         if(!accounts) return res.send(null);
         res.send(accounts)
