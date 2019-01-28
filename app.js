@@ -6,6 +6,7 @@ const session = require('express-session');
 const mongoose = require('mongoose')
 const MongoStore = require('connect-mongo')(session);
 const helmet = require('helmet')
+const GetProxies = require('./util/get-proxies');
 
 // Init app
 const app = express(); 
@@ -35,7 +36,6 @@ app.use(session({
     httpOnly: true
 }));
 
-
 // Routes
 app.use('/', require('./router/login-register'));
 app.use('/', require('./router/dashboard'))
@@ -44,15 +44,24 @@ app.use('/', require('./router/steam-accounts'))
 
 app.listen(port, () =>{
     console.log(`steam-farmer started on port ${port}`);
+});
 
-    //connect to db
-    const DBURL = 'mongodb://machi:chivas10@ds033056.mlab.com:33056/heroku_z7f42pmp';
-    mongoose.set('useCreateIndex', true);
-    mongoose.connect(DBURL, { useNewUrlParser: true })
-    .then(() =>{
-        console.log("connected to mongodb")
-    })
-    .catch(err=>{
-        console.log('error connecting to mongodb')
-    })
+//connect to db
+const DBURL = 'mongodb://machi:chivas10@ds033056.mlab.com:33056/heroku_z7f42pmp';
+mongoose.set('useCreateIndex', true);
+mongoose.connect(DBURL, { useNewUrlParser: true })
+.then(() =>{
+    console.log("connected to mongodb")
+})
+.catch(err=>{
+    console.log('error connecting to mongodb');
+});
+
+
+//Get proxies
+GetProxies().then(proxyList =>{
+    process.proxyList = proxyList;
+    console.log(process.proxyList.next())
+}).catch(err =>{
+    throw err;
 });

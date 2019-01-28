@@ -1,7 +1,6 @@
 {
   "name": "checker",
   "version": "1.0.0",
-  "description": "",
   "main": "checker.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,5 +13,6 @@
     "bignumber.js": "^7.2.1",
     "mkdirp": "^0.5.1",
     "moment": "^2.22.2"
-  }
+  },
+  "description": ""
 }
