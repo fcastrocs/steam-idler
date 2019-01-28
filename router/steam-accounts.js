@@ -25,6 +25,9 @@ router.post('/steamaccounts', isLoggedIn, (req,res) =>{
         if(err) throw err;
         //account already in database
         if(doc) return res.send({error: "You've already added this account"})
+
+        //Create an account handler before saving
+        // to do...
         
         //save account
         let account = new SteamAccounts({
@@ -44,6 +47,10 @@ router.post('/steamaccounts', isLoggedIn, (req,res) =>{
 router.delete('/steamaccounts/:user', isLoggedIn, (req, res) =>{
     SteamAccounts.findOneAndDelete({userId: req.session.userId, user: req.params.user}, (doc) =>{
         if(!doc) return res.status(400).send({error: 'forbidden'})
+
+        //Terminate account handler
+        //to do... 
+        
         res.status(200).send('okay')
     })
 })
