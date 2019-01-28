@@ -7,6 +7,7 @@ const mongoose = require('mongoose')
 const MongoStore = require('connect-mongo')(session);
 const helmet = require('helmet')
 const GetProxies = require('./util/get-proxies');
+const GetSteamCM = require('./util/get-steamcm');
 
 // Init app
 const app = express(); 
@@ -61,7 +62,13 @@ mongoose.connect(DBURL, { useNewUrlParser: true })
 //Get proxies
 GetProxies().then(proxyList =>{
     process.proxyList = proxyList;
-    console.log(process.proxyList.next())
 }).catch(err =>{
     throw err;
 });
+
+//Get Steam CMs
+GetSteamCM().then(steamCM =>{
+    process.steamCMarray = steamCM;
+}).catch(err =>{
+    throw err;
+})

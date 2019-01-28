@@ -1,8 +1,16 @@
-const axios = require("axios");
-const axiosRetry = require("axios-retry")
+const request = require('request')
 
-module.exports = GetSteamServers = () => {
-    axiosRetry(axios, { retries: 5, retryDelay: () => { return 2000;} });
-    let url = "https://api.steampowered.com/ISteamDirectory/GetCMList/v1/?format=json&cellid=0";
-    return axios.get(url);
+let url = "https://api.steampowered.com/ISteamDirectory/GetCMList/v1/?format=json&cellid=0";
+
+module.exports = GetSteamCM = () => {
+    console.log('Getting Steam CMs')
+    return new Promise((resolve, reject) => {
+        request(url, (err, res, body) => {
+            if (err) {
+                reject(err);
+            }
+            body = JSON.parse(body)
+            resolve(body.response.serverlist)
+        })
+    })
 }
