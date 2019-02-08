@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const isLoggedIn = require('./util/isLoggedIn');
 const SteamAccounts = require('../models/steam-accounts')
+const AccountHandler = require('../farmer/account-handler');
 
 // Returns all accounts for this user
 router.get('/steamaccounts', isLoggedIn, (req, res) =>{
@@ -38,7 +39,10 @@ router.post('/steamaccounts', isLoggedIn, (req,res) =>{
 
         account.save(err =>{
             if(err) throw err;
-            res.status(200).send('account added')
+            //res.status(200).send('account added');
+            let accounthandler = new AccountHandler(account.user, account.pass);
+            //accounthandler.Connect();
+
         })
     })
 })

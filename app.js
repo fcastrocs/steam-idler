@@ -57,15 +57,17 @@ app.listen(port, () => console.log(`steam-farmer started on port ${port}`) );
 const DBURL = 'mongodb://machi:chivas10@ds033056.mlab.com:33056/heroku_z7f42pmp';
 mongoose.set('useCreateIndex', true);
 mongoose.connect(DBURL, { useNewUrlParser: true })
-.then(() => console.log("connected to mongodb"))
+.then(() =>{
+    process.env.dbconnected = true;
+    console.log('Connected to database')
+})
 .catch(err=> console.log('error connecting to mongodb'));
 
-//Get Proxies
-//FetchProxies();
-//Get Steam CMs
-//FetchSteamCMs();
-
-// Set interval to refetch proxies every hour
-setInterval(() => {
-    //FetchProxies();
-}, 1 * 60 * 60 * 1000);
+//Fetch steamcms and proxies
+// let id = setInterval(() => {
+//     if(process.env.dbconnected){
+//         clearInterval(id);
+//         FetchProxies();
+//         FetchSteamCMs();
+//     }
+// }, 5000);

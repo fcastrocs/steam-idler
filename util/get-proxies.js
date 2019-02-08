@@ -1,27 +1,53 @@
-const List = require("./circular-list");
-const request = require('request')
+const request = require('request-promise');
+const Proxy = require('../models/proxy');
 
-let user = "w3V23o79rDeD";
-let pass = "w3bFwhoE48jP";
-let limit = 5000;
-let type = "socks4"
-let url = `http://proxy-daily.com/api/getproxy.php?username=${user}&password=${pass}&limit=${limit}&filter=${type}`;
+async function GetProxies() {
+    let baseURL = "http://proxy-daily.com/api/getproxy.php";
+    let user = "?username=opVs6lWtf7uz";
+    let pass = "&password=hTDIhgBkUlOW";
+    let limit = "&limit=250";
+    let type = "&filter=socks4"
+    let country = "&country=US"
+    let url = baseURL + user + pass + limit + type + country;
 
+    let options = {
+        url: url,
+        method: 'GET'
+    }
 
-module.exports = GetProxies = () => {
-    console.log('Getting Proxy List')
-    return new Promise((resolve, reject) => {
-        request(url, (err, res, body) => {
-            if (err) reject(err);
-
-            if (body === 'Incorrect username or password!') {
-                reject("Could not get proxies, incorrect username/password")
-            }
-
-            let proxies = body.split("<br>")
-            let list = new List();
-            list.arrayToList(proxies)
-            resolve(list);
-        })
+    var res = await request(options);
+    return res.split("<br>").filter(proxy => {
+        //make sure every proxy is in this format ip:port
+        if ((proxy.indexOf(":") > -1)) {
+            return true;
+        }
+        return false;
     })
-}
+};
+
+module.exports = async function FetchProxies() {
+    try {
+        let proxiesArr = await GetProxies();
+        console.log(`${proxiesArr.length} proxies fetched.`);
+        //Save to database
+        for (let i = 0; i < proxiesArr.length; i++) {
+            let proxySplit = proxiesArr[i].split(":");
+            proxySplit[1] = parseInt(proxySplit[1]);//cast port to int
+
+            let proxy = new Proxy({
+                ip: proxySplit[0],
+                port: proxySplit[1]
+            });
+
+            proxy.save(err => { if (err) throw err; });
+            if(i == proxiesArr.length - 1){
+                console.log('Proxies saved to database.');
+            }
+        }
+    } catch (error) {
+        console.log('Retrying to fetch proxies...')
+        setTimeout(() => {
+            FetchProxies()
+        }, 5000);
+    }
+} 

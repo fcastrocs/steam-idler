@@ -130,15 +130,6 @@ class SteamClient extends EventEmitter {
 		else if (msg == this.EMsg.ClientLogOnResponse) {
 			this.ClientLogOnResponse(body);
 		}
-		else if (msg == this.EMsg.ClientEmailAddrInfo) {
-			this.ClientEmailAddrInfo(body);
-		}
-		else if (msg == this.EMsg.ClientIsLimitedAccount) {
-			this.ClientIsLimitedAccount(body);
-		}
-		else if (msg == this.EMsg.ClientVACBanStatus) {
-			this.ClientVACBanStatus(body);
-		}
 		else if(msg == this.EMsg.ClientLicenseList){
 			this.ClientLicenseList(body);	
 		}
@@ -270,41 +261,6 @@ class SteamClient extends EventEmitter {
 
 		this.Send({ msg: this.EMsg.ChannelEncryptResponse }, body.toBuffer());
 	};
-
-	ClientEmailAddrInfo(body) {
-		body = this.Schema.CMsgClientEmailAddrInfo.decode(body);
-		if (body.email_is_validated) {
-			this.emit("email-verified", true);
-		} else {
-			this.emit("email-verified", false);
-		}
-	};
-
-	ClientIsLimitedAccount(body) {
-		body = this.Schema.CMsgClientIsLimitedAccount.decode(body);
-		if (body.bis_locked_account || body.bis_community_banned) {
-			this.emit("community-banned-locked", true);
-		} else if (!body.bis_locked_account && !body.bis_community_banned){
-			this.emit("community-banned-locked", false);
-		}
-
-		if(body.bis_limited_account){
-			this.emit("limited", true);
-		}
-		else if(!body.bis_limited_account){
-			this.emit("limited", false);
-		}
-	}
-
-	ClientVACBanStatus(body) {
-		let numBans = body.readUInt32LE(0);
-		if (numBans > 0) {
-			this.emit("vacced", true);
-		}
-		else {
-			this.emit("vacced", false);
-		}
-	}
 
 	DisconnectAfterHit(){
 		clearInterval(this._heartBeatFunc)
