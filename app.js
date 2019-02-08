@@ -16,15 +16,22 @@ const port = process.env.PORT || 3000;
 app.use(helmet())
 
 // public folder
-app.use('/public', express.static(path.join(__dirname, 'public')))
+app.use('/static', express.static('web/public'))
 
 // Use body-parser
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+
+
+
 // use Handlebars view engine
-app.set('views', path.join(__dirname, 'views'));
-app.engine('.hbs', exphbs({defaultLayout: 'main', extname: '.hbs'}));
+app.set('views', "./web/views");
+app.engine('.hbs', exphbs({
+    defaultLayout: 'main', 
+    extname: '.hbs',
+    layoutsDir: 'web/views/layouts'
+}));
 app.set('view engine', '.hbs')
 
 // Set up sessions
@@ -54,11 +61,11 @@ mongoose.connect(DBURL, { useNewUrlParser: true })
 .catch(err=> console.log('error connecting to mongodb'));
 
 //Get Proxies
-FetchProxies();
+//FetchProxies();
 //Get Steam CMs
-FetchSteamCMs();
+//FetchSteamCMs();
 
 // Set interval to refetch proxies every hour
 setInterval(() => {
-    FetchProxies();
+    //FetchProxies();
 }, 1 * 60 * 60 * 1000);
