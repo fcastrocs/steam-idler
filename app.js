@@ -5,7 +5,9 @@ const bodyParser = require("body-parser");
 const session = require('express-session');
 const mongoose = require('mongoose')
 const MongoStore = require('connect-mongo')(session);
-const helmet = require('helmet')
+const helmet = require('helmet');
+const FetchProxies = require('./utils/get-proxies');
+const FetchSteamCMs = require('./utils/get-steam-servers')
 
 // Init app
 const app = express(); 
@@ -42,17 +44,22 @@ app.use('/', require('./router/dashboard'))
 app.use('/', require('./router/steam-accounts'))
 
 
-app.listen(port, () =>{
-    console.log(`steam-farmer started on port ${port}`);
+//Start listening on port
+app.listen(port, () => console.log(`steam-farmer started on port ${port}`) );
 
-    //connect to db
-    const DBURL = 'mongodb://machi:chivas10@ds033056.mlab.com:33056/heroku_z7f42pmp';
-    mongoose.set('useCreateIndex', true);
-    mongoose.connect(DBURL, { useNewUrlParser: true })
-    .then(() =>{
-        console.log("connected to mongodb")
-    })
-    .catch(err=>{
-        console.log('error connecting to mongodb')
-    })
-});
+// Connect to db
+const DBURL = 'mongodb://machi:chivas10@ds033056.mlab.com:33056/heroku_z7f42pmp';
+mongoose.set('useCreateIndex', true);
+mongoose.connect(DBURL, { useNewUrlParser: true })
+.then(() => console.log("connected to mongodb"))
+.catch(err=> console.log('error connecting to mongodb'));
+
+//Get Proxies
+FetchProxies();
+//Get Steam CMs
+FetchSteamCMs();
+
+// Set interval to refetch proxies every hour
+setInterval(() => {
+    FetchProxies();
+}, 1 * 60 * 60 * 1000);
