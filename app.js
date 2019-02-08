@@ -5,9 +5,9 @@ const bodyParser = require("body-parser");
 const session = require('express-session');
 const mongoose = require('mongoose')
 const MongoStore = require('connect-mongo')(session);
-const helmet = require('helmet');
-const FetchProxies = require('./utils/get-proxies');
-const FetchSteamCMs = require('./utils/get-steam-servers')
+const helmet = require('helmet')
+const FetchProxies = require('./util/get-proxies');
+const FetchSteamCMs = require('./util/get-steamcm');
 
 // Init app
 const app = express(); 
@@ -36,7 +36,6 @@ app.use(session({
     name: 'farmSessionId',
     httpOnly: true
 }));
-
 
 // Routes
 app.use('/', require('./router/login-register'));
