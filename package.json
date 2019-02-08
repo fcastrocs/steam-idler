@@ -17,11 +17,7 @@
     "express-session": "^1.15.6",
     "helmet": "^3.15.0",
     "mongoose": "^5.4.6",
-<<<<<<< HEAD
     "request": "^2.88.0",
     "request-promise": "^4.2.2"
-=======
-    "request": "^2.88.0"
->>>>>>> 779e583637dff28dd9903629e1d205af32c63446
   }
 }
