@@ -1,5 +1,5 @@
 //double linked list
-class LinkedList{
+class CircularList{
     constructor(){
         this.head = new Object();
         this.head.val = null;
@@ -78,4 +78,4 @@ class LinkedList{
     }
 }
 
-module.exports = LinkedList;
+module.exports = CircularList;
