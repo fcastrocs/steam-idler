@@ -1,4 +1,4 @@
-const List = require("./Linked-List");
+const List = require("./linked-list");
 const request = require('request')
 
 let user = "w3V23o79rDeD";
