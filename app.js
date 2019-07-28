@@ -75,3 +75,9 @@ mongoose.connect(DBURL, { useNewUrlParser: true }).then(async function () {
         console.log(error)
     }
 }).catch(err => console.log('error connecting to mongodb'));
+
+
+var http = require("http");
+setInterval(function () {
+    http.get("https://steam-farmer.herokuapp.com");
+}, 300000); // every 5 min
