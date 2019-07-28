@@ -299,6 +299,8 @@ class AccountHandler extends EventEmitter {
                 return reject("Account already in DB.");
             }
 
+            console.log(account)
+
             //try to login to steam
             try {
                 let client = await self.connectSteam(account);

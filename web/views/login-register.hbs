@@ -1,61 +1,67 @@
+<link rel="stylesheet" type="text/css" href="../static/css/login-register.css">
 <script src="../static/js/login-register.js"></script>
 
-<!-- Register form -->
-<form id="login-form">
-    <p>Login</p>
-    <p id="login-error"></p>
-    <div class="form-group" id="form-account">
-        <div class="input-group">
-            <div class="input-group-prepend">
-                <span class="input-group-text">Username</span>
-            </div>
-            <input type="text" name="username" class="form-control" required>
-        </div>
-    </div>
 
-    <div class="form-group" id="form-account">
-        <div class="input-group">
-            <div class="input-group-prepend">
-                <span class="input-group-text">Password</span>
-            </div>
-            <input type="password" name="password" class="form-control" required>
-        </div>
-    </div>
-    <button type="button" class="btn btn-primary" id="show-register">Register</button>
-    <button type="submit" class="btn btn-primary" id="signin-button">Sign in</button>
-    <span class="clear"></span>
-</form>
+<div id="content-body">
 
-<!-- Register form -->
-<form id="register-form" hidden>
-    <p>Register</p>
-    <p id="register-error"></p>
-    <div class="form-group" id="form-account">
-        <div class="input-group">
-            <div class="input-group-prepend">
-                <span class="input-group-text">Username</span>
+    <!-- Login form -->
+    <form id="login-form">
+        <p>Login</p>
+        <p id="login-error"></p>
+        <div class="form-group" id="form-account">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Username</span>
+                </div>
+                <input type="text" name="username" class="form-control" required>
             </div>
-            <input type="text" name="username" class="form-control" required>
         </div>
-    </div>
 
-    <div class="form-group" id="form-account">
-        <div class="input-group">
-            <div class="input-group-prepend">
-                <span class="input-group-text">Password</span>
+        <div class="form-group" id="form-account">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Password</span>
+                </div>
+                <input type="password" name="password" class="form-control" required>
             </div>
-            <input type="password" name="password" class="form-control" required>
         </div>
-    </div>
+        <button type="button" class="btn btn-primary" id="show-register">Register</button>
+        <button type="submit" class="btn btn-primary" id="signin-button">Sign in</button>
+        <span class="clear"></span>
+    </form>
 
-    <div class="form-group" id="form-account">
-        <div class="input-group">
-            <div class="input-group-prepend">
-                <span class="input-group-text">Inv. Code</span>
+    <!-- Register form -->
+    <form id="register-form" hidden>
+        <p>Register</p>
+        <p id="register-error"></p>
+        <div class="form-group" id="form-account">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Username</span>
+                </div>
+                <input type="text" name="username" class="form-control" required>
             </div>
-            <input type="password" name="invcode" class="form-control" required>
         </div>
-    </div>
-    <button type="submit" class="btn btn-primary" id="register-button">Register</button>
-    <span class="clear"></span>
-</form>
+
+        <div class="form-group" id="form-account">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Password</span>
+                </div>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="form-group" id="form-account">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Inv. Code</span>
+                </div>
+                <input type="password" name="invcode" class="form-control" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="register-button">Register</button>
+        <span class="clear"></span>
+    </form>
+
+</div>

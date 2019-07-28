@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const SteamAccounts = require('../models/steam-accounts')
-const SteamAccHandler = require('../models/steamacc-handler')
 const isLoggedIn = require('./util/isLoggedIn')
 const AccountHandler = require("../app")
 
@@ -49,6 +48,9 @@ router.post('/dashboard/addacc', isLoggedIn, async function (req, res) {
         emailGuard: req.body.emailGuard,
         shared_secret: req.body.sharedSecret
     }
+
+    console.log(account)
+    return;
 
     try {
         let result = await AccountHandler.addAccount(req.session.userId, account)
