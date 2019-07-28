@@ -5,13 +5,18 @@ const session = require('express-session');
 const mongoose = require('mongoose')
 const MongoStore = require('connect-mongo')(session);
 const helmet = require('helmet')
-const FetchAndSaveProxies = require('./util/proxy').FetchAndSave;
-const FetchAndSaveSteamCMs = require('./util/steamcm').FetchAndSave;
+const GetAndSaveProxies = require('./util/proxy').GetAndSaveProxies;
+const GetAndSaveSteamCMs = require('./util/steamcm').GetAndSaveSteamCMs;
+const AccountHandler = require("./account-handler");
 
-// Init app
+// Init steam account handler
+module.exports = new AccountHandler();
+
+// Init express
 const app = express();
 const port = process.env.PORT || 3000;
 
+// set HTTP headers appropriately to counter web vulnerabilities
 app.use(helmet())
 
 // public folder
@@ -32,21 +37,26 @@ app.set('view engine', '.hbs')
 
 // Set up sessions
 app.use(session({
-    store: new MongoStore({ mongooseConnection: mongoose.connection }),
-    secret: "#$#$^*&GBFSDF&^",
-    resave: false,
-    saveUninitialized: false,
-    name: 'farmSessionId',
+    store: new MongoStore({
+        mongooseConnection: mongoose.connection,
+        touchAfter: 24 * 3600, // time period in seconds 
+        ttl: 14 * 24 * 60 * 60 // = 14 days. Default
+    }),
+    secret: "#$#$^*&GB4534fsgsdfg4352FSDF&^",
+    resave: false, //don't save session if unmodified
+    saveUninitialized: false, // don't create session until something stored
+    name: 'idlerSession',
     httpOnly: true
 }));
+
 
 // Routes
 app.use('/', require('./router/login-register'));
 app.use('/', require('./router/dashboard'))
-app.use('/', require('./router/steam-accounts'))
+app.use('/', require('./router/admin'))
 
 //Start listening on port
-app.listen(port, () => console.log(`steam-farmer started on port ${port}`));
+app.listen(port, () => console.log(`steam-farmer started on port ${port}\n`));
 
 // Connect to db
 const DBURL = 'mongodb://machi:chivas10@ds033056.mlab.com:33056/heroku_z7f42pmp';
@@ -54,15 +64,8 @@ mongoose.set('useCreateIndex', true);
 mongoose.connect(DBURL, { useNewUrlParser: true })
     .then(() => {
         process.env.dbconnected = true;
-        console.log('Connected to database')
+        console.log('Connected to database');
+        GetAndSaveSteamCMs();
+        GetAndSaveProxies();
     })
     .catch(err => console.log('error connecting to mongodb'));
-
-//Fetch steamcms and proxies
-let id = setInterval(() => {
-    if(process.env.dbconnected){
-        clearInterval(id);
-        FetchAndSaveProxies();
-        //FetchAndSaveSteamCMs();
-    }
-}, 5000);

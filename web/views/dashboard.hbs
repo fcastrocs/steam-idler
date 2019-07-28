@@ -1,44 +1,56 @@
+<link rel="stylesheet" type="text/css" href="../static/css/dashboard.css">
+
+<script src="../static/js/dashboard/dashboard.js"></script>
 <script src="../static/js/dashboard/build-dashboard.js"></script>
-<script src="../static/js/dashboard/steam-accounts.js"></script>
 
-<div id="user-greet">Hello {{{username}}}</div>
+<!-- container -->
+<div class="container-fluid">
+    <div class="row" id="box">
+        <div id="sidebar">
 
-<button type="button" class="btn btn-primary startall-stopall">Start All</button>
-<div id="accounts">
-    <div class="account">
-        <div class="info">
-            <img class="avatar" src="../static/images/avatar.jpg" alt="">
-            <div class="account-login">fcastro16@gmail.com</div>
-            <div class="status">Status: farming game name</div>
-            <div class="cards-left">Cards left: 8</div>
-            <div class="games-left">Games left to idle: 1</div>
+            <div id="sidebar-greet">Hello {{{username}}}</div>
+
+
+            <div id="sidebar-menu">
+                <div id="sidebar-button" data-toggle="modal" data-target="#add-acc-modal" type="button">Add Account
+                </div>
+
+                <div class="separator-text">All Accounts Actions</div>
+                <div id="sidebar-button" type="button">Connect</div>
+                <div id="sidebar-button" type="button">Disconnect</div>
+                <div id="sidebar-button" type="button">Farm All Cards</div>
+                <div id="sidebar-button" type="button">Stop Farming</div>
+                <div id="sidebar-button" type="button">Activate Free Game</div>
+            </div>
         </div>
-        <div class="account-buttons">
-            <button type="button" class="btn btn-primary btn-sm start-stop">Stop Farming</button>
-            <button type="button" class="btn btn-primary btn-sm activate-key" data-toggle="modal" data-target="#activate-key-modal">Activate
-                Key</button>
-            <button type="button" class="btn btn-primary btn-sm Delete-account">Delete</button>
+
+        <div class="col" id="content">
+            <div id="content-body"></div>
         </div>
     </div>
-    <span class="clear"></span>
 </div>
-<button type="button" class="btn btn-primary btn-lg btn-block add-account" data-toggle="modal" data-target="#add-acc-modal">Add
-    Account</button>
 
 <!-- Add account Modal -->
 <div class="modal fade" id="add-acc-modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add account</h5>
+                <h5 class="modal-title">Add Steam Account</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                <p id="add-steamacc-error"></p>
+
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-info" id="spinner" role="status" hidden></div>
+                </div>
+
+                <div class="alert alert-primary" role="alert" id="add-acc-msg" hidden></div>
+                <div class="alert alert-danger" role="alert" id="add-acc-errMsg" hidden></div>
+
                 <form id="add-steamaccount-form">
-                    <div class="form-group" id="form-account">
+                    <div class="form-group" id="username">
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Username</span>
@@ -47,7 +59,7 @@
                         </div>
                     </div>
 
-                    <div class="form-group" id="form-account">
+                    <div class="form-group" id="password">
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Password</span>
@@ -56,45 +68,32 @@
                         </div>
                     </div>
 
-                    <div class="form-group" id="form-account" hidden>
-                        <div id="steam-guard" hidden>
-                            <div class="form-group" id="form-steamguard">
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text" id="steam-guard-text">Steam Guard</span>
-                                    </div>
-                                    <input type="text" id="steam-guard-input">
+                    <div class="form-group" id="shared-secret">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Shared Secret</span>
+                            </div>
+                            <input type="password" name="sharedSecret" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="email-guard" hidden>
+                        <div class="form-group" id="form-steamguard">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text, steam-guard-text">Email Guard:</span>
                                 </div>
+                                <input type="text" name="emailGuard" class="guardcode">
                             </div>
                         </div>
                     </div>
+
                     <div class="modal-buttons">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Add account</button>
+                        <button type="submit" class="btn btn-primary" id="add-account">Add account</button>
                     </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Add account Modal -->
-<div class="modal fade" id="activate-key-modal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-body">
-                <form>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text">CD-KEY</span>
-                        </div>
-                        <input type="text" class="form-control" id="cd-key" required>
-                    </div>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Activate Key</button>
             </div>
         </div>
     </div>

@@ -32,6 +32,7 @@ class SteamClient extends EventEmitter {
 
 		// Errors while connection is active
 		this._connection.once("error", err => {
+			clearInterval(this._heartBeatFunc)
 			self.emit("error", err);
 		})
 
@@ -39,6 +40,25 @@ class SteamClient extends EventEmitter {
 			self.NetMsgReceived(packet);
 		});
 	}
+
+	setPersona(state, name) {
+		this._personaState = state;
+		this.Send({
+			msg: this.EMsg.ClientChangeStatus,
+			proto: {}
+		}, new this.Schema.CMsgClientChangeStatus({
+			persona_state: state,
+			player_name: name
+		}).toBuffer());
+	}
+
+
+	playGames(games) {
+		this.Send({
+			msg: this.EMsg.ClientGamesPlayed,
+			proto: {}
+		}, new this.Schema.CMsgClientGamesPlayed(games).toBuffer());
+	};
 
 	LogOn(logOnDetails) {
 		// construct temporary SteamID
@@ -54,6 +74,17 @@ class SteamClient extends EventEmitter {
 			proto: {}
 		}, new this.Schema.CMsgClientLogon(logOnDetails).toBuffer());
 	};
+
+	ClientUpdateMachineAuth(body, callback) {
+		let self = this;
+		let machineAuth = this.Schema.CMsgClientUpdateMachineAuth.decode(body);
+		this.emit('updateMachineAuth', this.ProcessProto(machineAuth), function (response) {
+			callback({
+				msg: self.EMsg.ClientUpdateMachineAuthResponse,
+				proto: {}
+			}, new self.Schema.CMsgClientUpdateMachineAuthResponse(response).toBuffer());
+		});
+	}
 
 	NetMsgReceived(data) {
 		var rawEMsg = data.readUInt32LE(0);
@@ -85,7 +116,9 @@ class SteamClient extends EventEmitter {
 
 		var body = data.toBuffer();
 
-		this.HandlerSelect(eMsg, body);
+		if (eMsg !== this.EMsg.ClientUpdateMachineAuth) {
+			this.HandlerSelect(eMsg, body);
+		}
 
 		if (sourceJobID != '18446744073709551615') {
 			var callback = function (header, body, callback) {
@@ -100,7 +133,10 @@ class SteamClient extends EventEmitter {
 		if (targetJobID in this._jobs)
 			this._jobs[targetJobID](header, body, callback);
 		else {
-			this.emit('message', header, body, callback);
+			//this.emit('message', header, body, callback);
+			if (eMsg == this.EMsg.ClientUpdateMachineAuth) {
+				this.ClientUpdateMachineAuth(body, callback)
+			}
 		}
 	};
 
@@ -130,10 +166,43 @@ class SteamClient extends EventEmitter {
 		else if (msg == this.EMsg.ClientLogOnResponse) {
 			this.ClientLogOnResponse(body);
 		}
-		else if(msg == this.EMsg.ClientLicenseList){
-			this.ClientLicenseList(body);	
+		else if (msg == this.EMsg.ClientLicenseList) {
+			this.ClientLicenseList(body);
 		}
+		else if (msg == this.EMsg.ClientAccountInfo) {
+			let data = this.Schema.CMsgClientAccountInfo.decode(body);
+			this.emit("persona", data.persona_name)
+		}
+		else if (msg == this.EMsg.ClientPersonaState) { //get avatar url
+			//For some reason this is called twice.
+			if (this.persona_state) { //only exectue once
+				return;
+			}
+			this.persona_state = true;
+			let data = this.Schema.CMsgClientPersonaState.decode(body);
+			this.emit("avatar", this.getAvatarURL(data.friends[0].avatar_hash.toString('hex')))
+		}
+		/*else if (msg == this.EMsg.ClientNewLoginKey) { //accept loginkey
+			let newLoginKey = this.Schema.CMsgClientNewLoginKey.decode(body);
+			
+			this.Send({
+				msg: this.EMsg.ClientNewLoginKeyAccepted,
+				proto: {}
+			}, new this.Schema.CMsgClientNewLoginKeyAccepted({ unique_id: newLoginKey.unique_id }).toBuffer());
+
+			this.emit('loginKey', newLoginKey.login_key);
+		}*/
 	};
+
+	getAvatarURL(hash) {
+		let tag = hash.substring(0, 2);
+		let url = "http://cdn.akamai.steamstatic.com/steamcommunity/public/images/avatars/"
+		if (hash == "0000000000000000000000000000000000000000") { //return default avatar
+			return `${url}/fe/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg`
+		} else {
+			return `${url}/${tag}/${hash}_full.jpg`
+		}
+	}
 
 	_Send(header, body, callback) {
 		if (callback) {
@@ -163,13 +232,13 @@ class SteamClient extends EventEmitter {
 
 	Send(header, body, callback) {
 		// ignore any target job ID
-		if (header.proto){
+		if (header.proto) {
 			delete header.proto.jobid_target;
-		}else{
+		} else {
 			delete header.targetJobID;
 		}
 
-		if(ByteBuffer.isByteBuffer(body)){
+		if (ByteBuffer.isByteBuffer(body)) {
 			body = body.toBuffer();
 		}
 
@@ -177,7 +246,6 @@ class SteamClient extends EventEmitter {
 	};
 
 	ClientLogOnResponse(data) {
-		console.log(data)
 		var logonResp = this.Schema.CMsgClientLogonResponse.decode(data);
 		var eresult = logonResp.eresult;
 
@@ -193,8 +261,8 @@ class SteamClient extends EventEmitter {
 					"proto": {}
 				}, new this.Schema.CMsgClientHeartBeat().toBuffer());
 			}.bind(this), hbDelay * 1000);
-		} 
-		else{ // Destroy the connection
+		}
+		else { // Destroy the connection
 			this._connection.DestroyConnection();
 		}
 
@@ -262,8 +330,9 @@ class SteamClient extends EventEmitter {
 		this.Send({ msg: this.EMsg.ChannelEncryptResponse }, body.toBuffer());
 	};
 
-	DisconnectAfterHit(){
+	Disconnect() {
 		clearInterval(this._heartBeatFunc)
+		this.removeAllListeners();
 		this._connection.DestroyConnection();
 	}
 
@@ -275,37 +344,45 @@ class SteamClient extends EventEmitter {
 
 	GetLicenseInfo() {
 		var packageids = this.GetOwnedPackages();
-		
-		//no games
-		if(!packageids){
+
+		//no games in this acc
+		if (!packageids) {
 			this.emit('games', false)
 			return;
 		}
 
-		console.log('Getting games in account')
-	
 		var self = this;
-		this.GetProductInfo([], packageids, function(apps, packages) {
+		this.GetProductInfo([], packageids, function (apps, packages) {
 			// Request info for all the apps in these packages
 			var appids = [];
 			for (var pkgid in packages) {
 				// This package has expired. Free weekend, usually
 				var extended = packages[pkgid].packageinfo.extended;
 				if (extended && extended.expirytime && extended.expirytime <= Math.floor(Date.now() / 1000)) {
-						continue;
+					continue;
 				}
 
 				self.packages.push(packages[pkgid])
 
-				packages[pkgid].packageinfo.appids.forEach((appid) =>{
+				packages[pkgid].packageinfo.appids.forEach((appid) => {
 					appids.push(appid);
 				})
 			}
-			
-			self.GetProductInfo(appids, [], function(apps, packages) {
+
+			//bug? this function returns twice with the same info.
+			//proceeded after the first return
+			let returnCount = 0
+			self.GetProductInfo(appids, [], function (apps, packages) {
+				returnCount++;
+				if (returnCount > 1) {
+					return;
+				}
 				for (var id in apps) {
+					if (!apps[id].appinfo || !apps[id].appinfo.common || !apps[id].appinfo.common.type) {
+						continue;
+					}
 					var type = apps[id].appinfo.common.type.toLowerCase();
-					if(type != 'game'){
+					if (type != 'game') {
 						continue
 					}
 					self.apps.push(apps[id]);
@@ -318,20 +395,20 @@ class SteamClient extends EventEmitter {
 
 	GetOwnedPackages() {
 		//Filter out the default steam package
-		var packages = this.licenses.filter((license) =>{
-			if(license.package_id == 0){
+		var packages = this.licenses.filter((license) => {
+			if (license.package_id == 0) {
 				return false;
-			}else{
+			} else {
 				return true;
 			}
-		}).map(function(license) {
+		}).map(function (license) {
 			return license.package_id;
 		});
-	
+
 		packages.sort(this.SortNumeric);
 
 		//No games
-		if(packages.length == 0){
+		if (packages.length == 0) {
 			return false
 		}
 
@@ -357,32 +434,32 @@ class SteamClient extends EventEmitter {
 			"unknownApps": [],
 			"unknownPackages": []
 		};
-	
-		apps = apps.map(function(app) {
+
+		apps = apps.map(function (app) {
 			if (typeof app === 'object') {
 				appids.push(app.appid);
 				return app;
 			} else {
 				appids.push(app);
-				return {"appid": app};
+				return { "appid": app };
 			}
 		});
-	
-		packages = packages.map(function(pkg) {
+
+		packages = packages.map(function (pkg) {
 			if (typeof pkg === 'object') {
 				packageids.push(pkg.packageid);
 				return pkg;
 			} else {
 				packageids.push(pkg);
-				return {"packageid": pkg};
+				return { "packageid": pkg };
 			}
 		});
 
 		this.__Send(this.EMsg.ClientPICSProductInfoRequest, {
 			"apps": apps,
 			"packages": packages
-		}, function(body) {
-			(body.apps || []).forEach(function(app) {
+		}, function (body) {
+			(body.apps || []).forEach(function (app) {
 				var data = {
 					"changenumber": app.change_number,
 					"missingToken": !!app.missing_token,
@@ -390,8 +467,8 @@ class SteamClient extends EventEmitter {
 				};
 				app._parsedData = data;
 			});
-	
-			(body.packages || []).forEach(function(pkg) {
+
+			(body.packages || []).forEach(function (pkg) {
 				var data = {
 					"changenumber": pkg.change_number,
 					"missingToken": !!pkg.missing_token,
@@ -399,139 +476,83 @@ class SteamClient extends EventEmitter {
 				};
 				pkg._parsedData = data;
 			});
-	
+
 			if (!callback) {
 				return;
 			}
-	
-			(body.unknown_appids || []).forEach(function(appid) {
+
+			(body.unknown_appids || []).forEach(function (appid) {
 				response.unknownApps.push(appid);
 				var index = appids.indexOf(appid);
 				if (index != -1) {
 					appids.splice(index, 1);
 				}
 			});
-	
-			(body.unknown_packageids || []).forEach(function(packageid) {
+
+			(body.unknown_packageids || []).forEach(function (packageid) {
 				response.unknownPackages.push(packageid);
 				var index = packageids.indexOf(packageid);
 				if (index != -1) {
 					packageids.splice(index, 1);
 				}
 			});
-	
-			(body.apps || []).forEach(function(app) {
+
+			(body.apps || []).forEach(function (app) {
 				response.apps[app.appid] = app._parsedData || {
 					"changenumber": app.change_number,
 					"missingToken": !!app.missing_token,
 					"appinfo": VDF.parse(app.buffer.toString('utf8')).appinfo
 				};
-	
+
 				var index = appids.indexOf(app.appid);
 				if (index != -1) {
 					appids.splice(index, 1);
 				}
 			});
-	
-			(body.packages || []).forEach(function(pkg) {
+
+			(body.packages || []).forEach(function (pkg) {
 				response.packages[pkg.packageid] = pkg._parsedData || {
 					"changenumber": pkg.change_number,
 					"missingToken": !!pkg.missing_token,
 					"packageinfo": BinaryKVParser.parse(pkg.buffer)[pkg.packageid]
 				};
-	
+
 				var index = packageids.indexOf(pkg.packageid);
 				if (index != -1) {
 					packageids.splice(index, 1);
 				}
 			});
-	
+
 			if (appids.length === 0 && packageids.length === 0) {
 				callback(response.apps, response.packages, response.unknownApps, response.unknownPackages);
 			}
 		});
 	}
 
-	PrepareGamesData(){
-		var tempGames = new Array();
+	PrepareGamesData() {
 		var games = new Array();
-
-		for(var i in this.apps){
-			var gameInfo = this.apps[i].appinfo.common;
+		for (var i in this.apps) {
 			let game = {
-				appid: gameInfo.gameid,
-				name: gameInfo.name
+				appId: this.apps[i].appinfo.common.gameid,
+				name: this.apps[i].appinfo.common.name,
+				logo: this.apps[i].appinfo.common.logo
 			}
-			tempGames.push(game);
+			games.push(game);
 		}
-
-		var paidGames = 0;
-		var freeGames = 0;
-		for(var pkg in this.packages){
-			this.packages[pkg].packageinfo.appids.forEach((id) =>{
-				let obj = tempGames.find(game => game.appid == id);
-				if(!obj){
-					return;
-				}
-
-				var billingtype = this.packages[pkg].packageinfo.billingtype;
-				if(billingtype == 0){
-					billingtype = 'No Cost'
-					freeGames++;
-				}
-				else if(billingtype == 1){
-					billingtype = "Store Purchase"
-					paidGames++;
-				}else if(billingtype == 3){
-					billingtype = "CD Key"
-					paidGames++;
-				}else if(billingtype == 4){
-					billingtype = "Guest Pass"
-					freeGames++;
-				}else if(billingtype == 6){
-					billingtype = "Gifted"
-					paidGames++;
-				}else if(billingtype == 7){
-					billingtype = "Free Weekend"
-					freeGames++;
-				}else if(billingtype == 10){
-					billingtype = "Store or CD Key"
-					paidGames++;
-				}else if(billingtype == 12){
-					billingtype = "Free to Play"
-					freeGames++;
-				}else{
-					billingtype = "Other (" + billingtype + ")";
-					freeGames++;
-				}
-				obj.billingtype = billingtype
-				obj.packageid = this.packages[pkg].packageinfo.packageid;
-				
-				games.push(obj)
-			})
-		}
-
-		let prepedGames = {
-			gameStats: {
-				paidGames: paidGames,
-				freeGames: freeGames
-			},
-			games: games
-		}
-		this.emit('games', prepedGames)
+		this.emit('games', games)
 	}
 
 	__Send(emsg, body, callback) {
 		if (!this.steamID || !this.connected) {
 			return;
 		}
-	
+
 		var header = {
 			"msg": emsg
 		};
 
 		var Proto;
-		if(emsg == 8903){
+		if (emsg == 8903) {
 			Proto = this.Schema.CMsgClientPICSProductInfoRequest
 		}
 
@@ -543,7 +564,7 @@ class SteamClient extends EventEmitter {
 		var self = this;
 		var cb = null;
 		if (callback) {
-			cb = function(header, body) {
+			cb = function (header, body) {
 				if (header.msg == 8904) {
 					body = self.Schema.CMsgClientPICSProductInfoResponse.decode(body);
 				}

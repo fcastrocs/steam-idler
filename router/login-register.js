@@ -31,6 +31,7 @@ router.post('/login', (req, res) => {
                 req.session.loggedIn = true;
                 req.session.username = user.username;
                 req.session.userId = user._id;
+                req.session.admin = user.admin
                 res.send({username: user.username})
             } else { // bad password
                 return res.send({error: 'bad user/password'});

@@ -1,49 +1,87 @@
 const request = require('request-promise');
 const Proxy = require('../models/proxy');
 
-module.exports.FetchAndSave = async () =>{
-    let baseURL = "http://proxy-daily.com/api/getproxy.php";
-    let user = "?username=opVs6lWtf7uz";
-    let pass = "&password=hTDIhgBkUlOW";
-    let limit = "&limit=250";
-    let type = "&filter=socks4"
-    let country = "&country=US"
-    let url = baseURL + user + pass + limit + type + country;
-
-    let options = {
-        url: url,
-        method: 'GET'
-    }
+// Returns proxy list from proxyscrape.com
+async function GetProxies() {
+    let url = `https://api.proxyscrape.com/?request=getproxies&proxytype=socks4&timeout=1000&country=all`;
+    
+    let proxyList = null;
 
     try {
-        let res = await request(options);
-        let proxiesArr = res.split("<br>").filter(proxy => {
-            //make sure every proxy is in this format ip:port
-            if ((proxy.indexOf(":") > -1)) {
-                return true;
+        let res = await request.get(url);
+        // validate the proxies
+        proxyList = res.split("\r\n").filter(proxy => {
+            // do not allow emtpy values
+            if (proxy === "") {
+                return false;
             }
-            return false;
+            return true;
         })
 
-        //Save to database
-        for (let i = 0; i < proxiesArr.length; i++) {
-            let proxySplit = proxiesArr[i].split(":");
-            proxySplit[1] = parseInt(proxySplit[1]);//cast port to int
-
-            let proxy = new Proxy({
-                ip: proxySplit[0],
-                port: proxySplit[1]
-            });
-
-            proxy.save(err => { if (err) throw err; });
-            if(i == proxiesArr.length - 1){
-                console.log('Proxies saved to database.');
-            }
+        // now validate that we actually got proxies
+        // this will validate ip:port
+        let regex = new RegExp(/^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):[0-9]+$/g);
+        res = regex.test(proxyList[0]);
+        if(res === false){
+            throw "bad proxy list";
         }
     } catch (error) {
-        console.log('Retrying to fetch proxies...')
-        setTimeout(() => {
-            FetchProxies()
-        }, 5000);
+        throw error;
     }
-} 
+    return proxyList;
+};
+
+// Gets proxy list and saves it to database
+async function GetAndSaveProxies() {
+    try {
+        let proxiesArr = await GetProxies();
+
+        Proxy.deleteMany({}, ()=>{
+            //Save to database
+            for (let i = 0; i < proxiesArr.length; i++) {
+                let proxySplit = proxiesArr[i].split(":");
+                proxySplit[1] = parseInt(proxySplit[1]);//cast port to int
+
+                let proxy = new Proxy({
+                    ip: proxySplit[0],
+                    port: proxySplit[1]
+                });
+
+                proxy.save(err => { if (err) throw err; });
+                if(i == proxiesArr.length - 1){
+                    console.log('Proxies saved to database.');
+                }
+            }
+
+        });
+    } catch (error) {
+        throw error;
+    }
+}
+
+// Returns a random proxy from database
+let GetProxy = (cb) =>{
+    Proxy.countDocuments((err, count) =>{
+        if(err){
+            throw err;
+        }
+
+        let rand = Math.floor(Math.random() * count);
+        
+        Proxy.findOne().skip(rand).exec((err, proxy) =>{
+            if(err) throw err;
+            cb(proxy);
+        })
+    });
+}
+
+let RemoveAndGet = (proxy, cb) =>{
+    Proxy.deleteOne(proxy, (err, doc) =>{
+        if(err) throw err;
+        return GetProxy(cb);
+    })
+}
+
+module.exports.GetAndSaveProxies = GetAndSaveProxies;
+module.exports.GetProxy = GetProxy;
+module.exports.RemoveAndGet = RemoveAndGet;

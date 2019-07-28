@@ -78,6 +78,7 @@ class Connection extends EventEmitter{
     buffer.writeUInt32LE(data.length, 0);
     buffer.write(this.MAGIC, 4);
     data.copy(buffer, 8);
+    
     this.socket.write(buffer);
   };
 

@@ -5,7 +5,8 @@ const mongoose = require('mongoose'),
 
 let user = new Schema({
     username: {type: String, required: true, unique: true},
-    password: {type: String, required: true, minlength: 5, maxlength: 20}
+    password: {type: String, required: true, minlength: 5, maxlength: 20},
+    admin: {type: Boolean, default: false}
 });
 
 // Hash password before saving
