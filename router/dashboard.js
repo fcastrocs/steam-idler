@@ -49,9 +49,6 @@ router.post('/dashboard/addacc', isLoggedIn, async function (req, res) {
         shared_secret: req.body.sharedSecret
     }
 
-    console.log(account)
-    return;
-
     try {
         let result = await AccountHandler.addAccount(req.session.userId, account)
         return res.send(result);

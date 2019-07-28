@@ -4,7 +4,6 @@ $(() => {
     $('#add-steamaccount-form').submit((e) => {
         e.preventDefault();
 
-
         //remove hidden tags, but keep msg boxes hidden
         $('#add-acc-msg').removeAttr("hidden").hide(0)
         $('#add-acc-errMsg').removeAttr("hidden").hide(0)
