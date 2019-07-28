@@ -102,6 +102,11 @@ class Client extends EventEmitter {
         });
 
         this.client.once('updateMachineAuth', (sentry, callback) => {
+            //Do not reaccept sentry if we have one already
+            if(this.account.sentry){
+                return;
+            }
+
             //get SHA1
             let shasum = crypto.createHash('sha1');
             shasum.end(sentry.bytes);
