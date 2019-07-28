@@ -146,7 +146,12 @@ class AccountHandler extends EventEmitter {
 
             client.once("persona", persona_name => {
                 event_count++
-                account.persona_name = persona_name
+                // no name?
+                if(!persona_name){
+                    account.persona_name = "No Nickname?"
+                }else{
+                    account.persona_name = persona_name
+                }
                 if (event_count === 3) {
                     return resolve(client);
                 }
@@ -171,7 +176,7 @@ class AccountHandler extends EventEmitter {
         }
 
         if (acc.sentry) {
-            account.sentry = Security.decrypt_buffer(acc.sentry);
+            account.sentry = Security.decrypt_buffer(acc.sentry)
         }
 
         if (acc.shared_secret) {
@@ -287,7 +292,7 @@ class AccountHandler extends EventEmitter {
     */
     addAccount(userId, account) {
         let self = this;
-        return new Promise(async function (reject, resolve) {
+        return new Promise(async function (resolve, reject) {
             // Check if account is already in DB
             let query = SteamAccount.findOne({
                 userId: userId,
@@ -299,26 +304,16 @@ class AccountHandler extends EventEmitter {
                 return reject("Account already in DB.");
             }
 
-            console.log(account)
-
             //try to login to steam
             try {
                 let client = await self.connectSteam(account);
-
-                // 2FA accounts don't get a sentry
-                if (account.sentry) {
-                    account.sentry = Security.encrypt(account.sentry)
-                } else {
-                    account.sentry = null;
-                }
 
                 //save account to database
                 let steamacc = new SteamAccount({
                     userId: userId,
                     user: account.user,
                     pass: Security.encrypt(account.pass),
-                    shared_secret: Security.encrypt(account.shared_secret),
-                    sentry: account.sentry,
+                    sentry: Security.encrypt(account.sentry),
                     status: "online",
                     games: account.games,
                     steamid: account.steamid,
@@ -326,12 +321,20 @@ class AccountHandler extends EventEmitter {
                     avatar: account.avatar
                 })
 
+                // Only 2FA accs get shared secret
+                if(account.shared_secret){
+                    steamacc.shared_secret = Security.encrypt(account.shared_secret);
+                }
+
                 steamacc.save((err, doc) => {
+                    if(err){
+                        console.log(err)
+                        return
+                    }
                     //save and store account to handler
                     self.saveToHandler(userId, doc._id, client);
                     return resolve("okay")
                 });
-
             } catch (error) {
                 return reject(error);
             }

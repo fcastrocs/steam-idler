@@ -61,11 +61,17 @@ app.listen(port, () => console.log(`steam-farmer started on port ${port}\n`));
 // Connect to db
 const DBURL = 'mongodb://machi:chivas10@ds033056.mlab.com:33056/heroku_z7f42pmp';
 mongoose.set('useCreateIndex', true);
-mongoose.connect(DBURL, { useNewUrlParser: true })
-    .then(() => {
-        process.env.dbconnected = true;
-        console.log('Connected to database');
-        GetAndSaveSteamCMs();
-        GetAndSaveProxies();
-    })
-    .catch(err => console.log('error connecting to mongodb'));
+
+mongoose.connect(DBURL, { useNewUrlParser: true }).then(async function () {
+    process.env.dbconnected = true;
+    console.log('Connected to database');
+
+    try {
+        let res = await GetAndSaveSteamCMs();
+        console.log(res)
+        res = await GetAndSaveProxies();
+        console.log(res)
+    } catch (error) {
+        console.log(error)
+    }
+}).catch(err => console.log('error connecting to mongodb'));

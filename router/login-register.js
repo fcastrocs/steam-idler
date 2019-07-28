@@ -43,7 +43,7 @@ router.post('/login', async function (req, res) {
     req.session.userId = doc._id;
     req.session.admin = doc.admin
 
-    return res.send("okay")
+    return res.send("Logged in")
 })
 
 // Register request
@@ -82,7 +82,7 @@ router.post('/register', async function (req, res) {
         req.session.loggedIn = true;
         req.session.username = doc.username;
         req.session.userId = doc._id;
-        return res.send("okay")
+        return res.send("Registered")
     })
 })
 

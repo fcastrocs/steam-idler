@@ -50,13 +50,12 @@ class Client extends EventEmitter {
             this.loginOption.two_factor_code = SteamTotp.generateAuthCode(this.account.shared_secret);
         }
 
-        console.log(this.loginOption)
-
         // Login to steam
         this.client.LogOn(this.loginOption);
 
         // login response
         this.client.once('logOnResponse', res => {
+            console.log(res.eresult)
             // LOGGED IN
             if (res.eresult == 1) {
                 this.emit("loggedIn", res);
@@ -91,11 +90,14 @@ class Client extends EventEmitter {
             else if (res.eresult == 65) {
                 res = "Invalid guard code"
             }
+            else if(res.eresult == 88){
+                res = "Invalid shared secret"
+            }
             // INVALID USER/PASS
             else {
                 res = "Bad User/Pass"
             }
-
+            console.log(res)
             this.emit("loginError", res);
         });
 
@@ -109,9 +111,9 @@ class Client extends EventEmitter {
             callback({ sha_file: sentry });
 
             //store sentry for relogins
-            this.account.sentry = sentry.buffer;
+            this.account.sentry = sentry;
 
-            self.emit("sentry", sentry.buffer);
+            self.emit("sentry", sentry);
         });
 
         this.client.once('games', games => {

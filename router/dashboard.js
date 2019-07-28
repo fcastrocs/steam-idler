@@ -39,7 +39,7 @@ router.get('/dashboard/steamacc/get', isLoggedIn, (req, res) => {
 // Adds a new steam account to the collection
 router.post('/dashboard/addacc', isLoggedIn, async function (req, res) {
     if (!req.body.user || !req.body.pass) {
-        return res.status(400).send({ error: 'bad addacc request' })
+        return res.status(400).send('Bad addacc request')
     }
 
     let account = {
@@ -53,7 +53,8 @@ router.post('/dashboard/addacc', isLoggedIn, async function (req, res) {
         let result = await AccountHandler.addAccount(req.session.userId, account)
         return res.send(result);
     } catch (error) {
-        return res.send(error);
+        console.log(error)
+        return res.status(400).send(error)
     }
 })
 

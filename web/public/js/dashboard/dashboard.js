@@ -1,57 +1,68 @@
 $(() => {
 
-    // Add account
+    // Add new account
     $('#add-steamaccount-form').submit((e) => {
         e.preventDefault();
 
-        //remove hidden tags, but keep msg boxes hidden
+        // Hide msg
         $('#add-acc-msg').removeAttr("hidden").hide(0)
-        $('#add-acc-errMsg').removeAttr("hidden").hide(0)
-
-        //hide form
+        // Hide form
         $("#add-steamaccount-form").hide(0);
+
         //show loading spinner
+        $('#add-acc-errMsg').removeAttr("hidden").show(0).text("Wait, do not refresh the page.")
         $("#spinner").removeAttr("hidden").show(0);
 
         //form handler
         let data = $('#add-steamaccount-form').serialize();
 
         $.post('/dashboard/addacc', data, (res) => {
-
+            $('#add-acc-msg').show(0).text("Account successfully added.")
             //hide spinner
             $("#spinner").hide(0)
+            //hide err message
+            $('#add-acc-errMsg').hide(0)
             //show form again
             $("#add-steamaccount-form").show(0);
-
-            //catch errors
-            if (res.error) {
-                $('#add-acc-msg').text(res.error)
-                return;
-            }
-
-            if (res === "okay") {
-                $("#add-acc-modal").hide(0);
-            } else if (res === "Email guard code needed") {
-                $('#add-acc-msg').text("Enter email guard code").show(0)
-                $("#username").hide();
-                $("#password").hide();
-                $("#email-guard").removeAttr("hidden");
-            } else if (res === "2FA code needed") {
-                $('#add-acc-msg').text("Enter mobile guard code").show(0)
-                $("#username").hide();
-                $("#password").hide();
-                $("#mobile-guard").removeAttr("hidden");
-            } else if (res === "Bad User/Pass") {
-                $('#add-acc-errMsg').text("Bad user/pass").show(0)
-            } else if (res == "Invalid guard code") {
-                $('#add-acc-errMsg').text("Invalid guard code, retry").show(0)
-                $("#username").hide();
-                $("#password").hide();
-                $("#email-guard").removeAttr("hidden");
-            }
-
+            //hide email guard inputs
+            $("#email-guard").hide(0)
+            $("input[name='emailGuard").val("")
+            $("#shared-secret").show(0)
+            $("input[name='sharedSecret").val("")
+            $("#username").show(0)
+            $("input[name='user").val("")
+            $("#password").show(0)
+            $("input[name='pass").val("")
+            //show pass, user, shared secret inputs
         }).fail((xhr, status, err) => {
-            alert(xhr.responseText)
+            //show form again
+            $("#add-steamaccount-form").show(0);
+            //stop loading spinner
+            $("#spinner").hide(0)
+
+            if (xhr.responseText === "Email guard code needed") {
+                $('#add-acc-msg').text("Enter email guard code").show(0)
+                $('#add-acc-errMsg').hide(0)
+                $("#shared-secret").hide(0);
+                $("#username").hide(0);
+                $("#password").hide(0);
+                $("#email-guard").removeAttr("hidden"); //show email guard input
+            } else if (xhr.responseText === "Bad User/Pass") {
+                $('#add-acc-errMsg').show(0).text("Bad user/pass")
+                $("input[name='pass").val("")
+            } else if (xhr.responseText == "Invalid guard code") {
+                $('#add-acc-errMsg').text("Invalid email guard code, retry").show(0)
+                $("#username").hide();
+                $("#password").hide();
+                $("#shared-secret").hide();
+                $("#email-guard").removeAttr("hidden");
+                $("input[name='emailGuard").val("")
+            }else if(xhr.responseText == "Invalid shared secret"){
+                $('#add-acc-errMsg').show(0).text(xhr.responseText)
+                $("input[name='sharedSecret").val("")
+            } else {
+                $('#add-acc-msg').text(xhr.responseText).show(0)
+            }
         })
     })
 

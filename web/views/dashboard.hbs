@@ -42,12 +42,12 @@
             </div>
             <div class="modal-body">
 
+                <div class="alert alert-primary" role="alert" id="add-acc-msg" hidden></div>
+                <div class="alert alert-danger" role="alert" id="add-acc-errMsg" hidden></div>
+
                 <div class="d-flex justify-content-center">
                     <div class="spinner-border text-info" id="spinner" role="status" hidden></div>
                 </div>
-
-                <div class="alert alert-primary" role="alert" id="add-acc-msg" hidden></div>
-                <div class="alert alert-danger" role="alert" id="add-acc-errMsg" hidden></div>
 
                 <form id="add-steamaccount-form">
                     <div class="form-group" id="username">
@@ -69,6 +69,7 @@
                     </div>
 
                     <div class="form-group" id="shared-secret">
+                        Needed for accounts with 2FA
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">Shared Secret</span>
