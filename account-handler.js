@@ -9,7 +9,7 @@ class AccountHandler extends EventEmitter {
         super();
 
         this.userAccounts = new Object();
-        //this.initializeHandlers()
+        this.initializeHandlers()
     }
 
     // Brings all accounts in user handlers back online
