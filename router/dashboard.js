@@ -139,6 +139,22 @@ router.post('/dashboard/changenick', isLoggedIn, async function (req, res) {
     }
 })
 
+
+
+// Activate free game
+router.post('/dashboard/activatefreegame', isLoggedIn, async function (req, res) {
+    if (!req.body.accountId || !req.body.appId) {
+        return res.status(400).send("Bad activatefreegame request.")
+    }
+
+    try {
+        let result = await AccountHandler.activateFreeGame(req.session.userId, req.body.accountId, req.body.appId)
+        return res.send(result);
+    } catch (error) {
+        return res.status(400).send(error)
+    }
+})
+
 // Removes a steam account
 router.delete('/dashboard/deleteacc', isLoggedIn, async function (req, res) {
     if (!req.body.accountId) {

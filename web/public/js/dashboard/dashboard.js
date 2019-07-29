@@ -169,7 +169,7 @@ $(() => {
             self.find(".info .status").removeClass("status-online").addClass(`status-in-game`).text(res)
             self.find("a img.avatar").removeClass("avatar-online").addClass(`avatar-in-game`);
             self.find(".games-idle").first().modal('toggle');
-            
+
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
@@ -180,7 +180,7 @@ $(() => {
         let self = $(this).closest("div.account");
 
         let games = self.find(".start-idle").attr("data-games")
-        if(!games){
+        if (!games) {
             alert("Not playing any games");
             return;
         }
@@ -192,8 +192,8 @@ $(() => {
             self.find("a img.avatar").removeClass("avatar-in-game").addClass(`avatar-online`);
             self.find(".start-idle").first().attr("data-games", "");
             self.find(".games-idle").first().modal('toggle');
-            self.find(".game-body").first().children(".game-img").each(function(){
-                if($(this).hasClass("selected")){
+            self.find(".game-body").first().children(".game-img").each(function () {
+                if ($(this).hasClass("selected")) {
                     $(this).removeClass("selected").addClass("unselected")
                 }
             })
@@ -311,4 +311,52 @@ $(() => {
             }
         });
     })
+
+
+
+
+
+    /**************************************************** 
+    *           STEAM - ACTIVATE FREE GAME              *
+    * **************************************************/
+    // Opem activate game modal
+    $("#content-body").on('click', ".get-game", function () {
+        let accountId = $(this).closest("div.account").attr("data-id")
+        $("#activate-free-game").attr("data-id", accountId)
+        $("#activate-free-game-modal").modal("toggle")
+    })
+
+
+    $("#activate-game-form").submit(function(e){
+        e.preventDefault();
+
+        let accountId = $("#activate-free-game").attr("data-id");
+        if(!accountId){
+            return;
+        }
+
+        let appId = $("input[name=appId]").val();
+        if(!appId){
+            return
+        }
+
+        console.log(accountId)
+        console.log(appId)
+
+        return;
+
+    })
+
+
+
+
+
+
+
+
+
+
+
+
+
 })

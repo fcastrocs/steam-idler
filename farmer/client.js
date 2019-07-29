@@ -57,18 +57,18 @@ class Client extends EventEmitter {
         this.client.once('logOnResponse', res => {
             // LOGGED IN
             if (res.eresult == 1) {
-                console.log(`Success: login > user: ${this.account.user}`)
-                this.emit("loggedIn", res);
+                console.log(`Successful login > user: ${self.account.user}`)
+                self.emit("loggedIn", res);
 
                 //delete login options
-                this.loginOption = {};
+                self.loginOption = {};
 
                 // set online status
-                this.setPersona(1);
+                self.setPersona(1);
 
                 // set accounts to play games
-                if (this.account.gamesPlaying && this.account.gamesPlaying.length > 0) {
-                    this.playGames(this.account.gamesPlaying)
+                if (self.account.gamesPlaying && self.account.gamesPlaying.length > 0) {
+                    self.playGames(self.account.gamesPlaying)
                 }
                 return;
             }
@@ -78,7 +78,8 @@ class Client extends EventEmitter {
             }
             // RATE LIMIT
             else if (res.eresult == 84) {
-                this.Disconnect();
+                console.log(`Rate limit > user: ${self.account.user}`)
+                self.Disconnect();
                 self.connect();
                 return;
             }
@@ -97,12 +98,14 @@ class Client extends EventEmitter {
             else {
                 res = "Bad User/Pass"
             }
-            this.emit("loginError", res);
+            console.log(`${res} > user: ${self.account.user}`)
+            self.emit("loginError", res);
         });
 
         this.client.once('updateMachineAuth', (sentry, callback) => {
             //Do not reaccept sentry if we have one already
             if(this.account.sentry){
+                console.log(`Sentry rejected > user: ${this.account.user}`)
                 return;
             }
 
@@ -170,7 +173,7 @@ class Client extends EventEmitter {
 
         // Connection lost
         self.client.once('error', err => {
-            console.log(`Error: ${err} > user: ${this.account.user}`)
+            console.log(`${err} > user: ${self.account.user}`)
             self.connect(); //reconnect
         })
 
