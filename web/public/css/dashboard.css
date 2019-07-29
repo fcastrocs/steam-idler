@@ -12,7 +12,7 @@
 }
 
 .account-in-game{
-    background: linear-gradient(0deg, rgba(143,185,59, 0.6) 0%, rgba(17,74,121,1) 100%);
+    background: linear-gradient(0deg, rgba(143,185,59, 0.45) 0%, rgba(17,74,121,1) 100%);
     border: solid 2px rgba(17,74,121,1)
 }
 
@@ -22,12 +22,12 @@
 }
 
 .account-offline{
-    background: linear-gradient(0deg, rgba(106,106,106, 0.5) 0%, rgba(17,74,121,1) 100%);
+    background: linear-gradient(0deg, rgba(106,106,106, 0.6) 0%, rgba(17,74,121,1) 100%);
     border: solid 1px rgba(17,74,121,1)
 }
 
 .account-online{
-    background: linear-gradient(0deg, rgba(83,164,196, 0.5) 0%, rgba(17,74,121,1) 100%);
+    background: linear-gradient(0deg, rgba(83,164,196, 0.65) 0%, rgba(17,74,121,1) 100%);
     border: solid 1px rgba(17,74,121,1)
 }
 
@@ -66,6 +66,10 @@
 
 .avatar-bad{
     border: solid 3px rgb(255, 0, 0)
+}
+
+.status{
+    font-weight: bolder;
 }
 
 .status-online{
@@ -115,11 +119,6 @@
 
 
 
-
-
-
-
-
 #cd-key{
     text-transform: uppercase;
 }
@@ -134,15 +133,20 @@
 }
 
 .modal-content{
-    margin-top: 100px;
     background-color: rgba(19, 54, 87, .9);
     border: solid 3px rgb(74, 106, 167);
     width: 450px;
+    margin: auto;
 }
 
-.modal-header, .modal-footer{
+.modal-header{
     background-color: rgba(9, 34, 58, 0.9);
     padding: 5px;
+    padding-left: 20px;
+}
+
+.input-group-text{
+    width: auto !important;
 }
 
 input{
@@ -151,15 +155,27 @@ input{
     letter-spacing: 2px;
 }
 
-.input-group-text{
-    width: 100px;
-}
-
 #guardcode{
     text-transform: uppercase;
-    width: 100px;
-    padding-left: 20px;
 }
+
+#email-guard{
+    width: 210px;
+}
+
+
+
+
+
+/*  GENERAL CSS */
+
+.modal-content{
+    background: rgba(14, 30, 51, 0.918);
+    border: solid 3px rgb(74, 106, 167);
+}
+
+
+
 
 
 
@@ -171,17 +187,21 @@ input{
     margin: 5px;
 }
 
-.games-box{
-    text-align:center !important;
-    margin-top: 100px;
-    background-color: rgba(19, 54, 87);
-    border: solid 3px rgb(74, 106, 167);
-    width: 650px;
+.games-idle{
+    margin-top: 10px;
+}
+
+.games-dialog, .games-content{
+    width: 80%;
+    max-width: 80%;
+    margin: 0 auto;
+    text-align: center;
+    padding: 0px;
 }
 
 .unselected{
     border: none;
-    opacity: 0.4;
+    opacity: 0.6;
 }
 
 .selected{

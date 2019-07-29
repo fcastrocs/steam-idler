@@ -147,9 +147,9 @@ class AccountHandler extends EventEmitter {
             client.once("persona", persona_name => {
                 event_count++
                 // no name?
-                if(!persona_name){
+                if (!persona_name) {
                     account.persona_name = "No Nickname?"
-                }else{
+                } else {
                     account.persona_name = persona_name
                 }
                 if (event_count === 3) {
@@ -172,11 +172,8 @@ class AccountHandler extends EventEmitter {
         let account = {
             user: acc.user,
             pass: Security.decrypt(acc.pass),
+            sentry: Security.decrypt_buffer(acc.sentry),
             gamesPlaying: acc.gamesPlaying
-        }
-
-        if (acc.sentry) {
-            account.sentry = Security.decrypt_buffer(acc.sentry)
         }
 
         if (acc.shared_secret) {
@@ -185,18 +182,23 @@ class AccountHandler extends EventEmitter {
         return account;
     }
 
+    async getAccount(userId, accountId) {
+        //Find account in DB
+        let query = SteamAccount.findOne({
+            _id: accountId,
+            userId: userId,
+        })
+        let doc = await query.exec();
+        return doc;
+    }
+
 
     // Login steam account
     async loginAccount(userId, accountId) {
         let self = this;
         return new Promise(async function (resolve, reject) {
-            //Find account in DB
-            let query = SteamAccount.findOne({
-                _id: accountId,
-                userId: userId,
-            })
-            let doc = await query.exec();
 
+            let doc = await self.getAccount(userId, accountId)
             // account not found
             if (!doc) {
                 return reject("Account not found.")
@@ -243,20 +245,18 @@ class AccountHandler extends EventEmitter {
         let self = this;
         return new Promise(async function (resolve, reject) {
             //Find account in DB
-            let query = SteamAccount.find({
-                _id: accountId,
-                userId: userId,
-            })
-            let doc = await query.exec();
-
+            let doc = await self.getAccount(userId, accountId)
             // account not found
-            if (doc.length < 1) {
+            if (!doc) {
                 return reject("Account not found.")
             }
 
             // check account is logged in
             let client = self.findClient(userId, accountId)
             if (!client) {
+                // force logoff
+                doc.status = "offline"
+                doc.save();
                 return reject("Account not logged in.")
             }
 
@@ -278,8 +278,8 @@ class AccountHandler extends EventEmitter {
             }
 
             //finally update account status to offline
-            doc[0].status = "offline"
-            doc[0].save((err, doc) => {
+            doc.status = "offline"
+            doc.save((err, doc) => {
                 return resolve(doc.status);
             })
         })
@@ -293,13 +293,10 @@ class AccountHandler extends EventEmitter {
     addAccount(userId, account) {
         let self = this;
         return new Promise(async function (resolve, reject) {
-            // Check if account is already in DB
-            let query = SteamAccount.findOne({
-                userId: userId,
-                user: account.user
-            })
+            //Find account in DB
+            let query = SteamAccount.findOne({userId: userId, user: account.user})
             let doc = await query.exec();
-
+            // account found
             if (doc) {
                 return reject("Account already in DB.");
             }
@@ -322,12 +319,12 @@ class AccountHandler extends EventEmitter {
                 })
 
                 // Only 2FA accs get shared secret
-                if(account.shared_secret){
+                if (account.shared_secret) {
                     steamacc.shared_secret = Security.encrypt(account.shared_secret);
                 }
 
                 steamacc.save((err, doc) => {
-                    if(err){
+                    if (err) {
                         console.log(err)
                         return
                     }

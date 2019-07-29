@@ -1,6 +1,8 @@
 $(() => {
 
-    // Add new account
+    /**************************************************** 
+     *               ADD STEAM ACCOUNT                  *
+     * **************************************************/
     $('#add-steamaccount-form').submit((e) => {
         e.preventDefault();
 
@@ -55,9 +57,9 @@ $(() => {
                 $("#username").hide();
                 $("#password").hide();
                 $("#shared-secret").hide();
-                $("#email-guard").removeAttr("hidden");
+                $("#email-guard").removeAttr("hidden").show(0);
                 $("input[name='emailGuard").val("")
-            }else if(xhr.responseText == "Invalid shared secret"){
+            } else if (xhr.responseText == "Invalid shared secret") {
                 $('#add-acc-errMsg').show(0).text(xhr.responseText)
                 $("input[name='sharedSecret").val("")
             } else {
@@ -66,7 +68,9 @@ $(() => {
         })
     })
 
-    // steam account login
+    /**************************************************** 
+    *               STEAM - LOGIN                       *
+    * **************************************************/
     $("#content-body").on('click', ".acc-login", function () {
         let self = $(this).closest("div.account")
         let accountId = self.attr("data-id");
@@ -103,7 +107,9 @@ $(() => {
     })
 
 
-    // steam account logout
+    /**************************************************** 
+    *               STEAM - LOGOUT                      *
+    * **************************************************/
     $("#content-body").on('click', ".acc-logout", function () {
         let self = $(this).closest("div.account")
         let accountId = self.attr("data-id");
@@ -139,39 +145,61 @@ $(() => {
 
 
 
-    // logout account from steam
-    $("#content-body").on('click', ".play-game", function () {
-        let accountId = $(this).closest("div.account").attr("data-id");
+    /**************************************************** 
+    *               STEAM - PLAY GAME                   *
+    * **************************************************/
+    // Open correct modal
+    $("#content-body").on('click', ".idle-game", function () {
+        $(this).closest("div.account").find(".games-idle").first().modal('toggle');
+    })
 
-        // disable login button
-        $(this).attr('disabled', true);
-        // enable loader
-        $(this).children().first().removeAttr("hidden")
+    // start game idle
+    $("#content-body").on('click', ".start-idle", function () {
+        let self = $(this).closest("div.account");
+        let accountId = self.attr("data-id");
+        let games = $(this).attr("data-games")
+        if (!games) {
+            alert("No games selected.")
+            return
+        }
 
-        $.post('/dashboard/playgames', { accountId: accountId }).done((res) => {
-            if (res === "okay") {
-                // add online css
-                $(`div.account-online[data-id=${accountId}]`).removeClass("account-online").addClass("account-offline")
-                // remove login button
-                $(this).attr('hidden', true);
-                // add login button
-                $(`button.acc-login[data-id=${accountId}]`).attr('hidden', false);
-            } else {
-                alert(res);
-            }
+        $.post('/dashboard/playgames', { accountId: accountId, games: games }, function (res) {
+            //set ingame status
+            self.removeClass("account-online").addClass(`account-in-game`)
+            self.find(".info .status").removeClass("status-online").addClass(`status-in-game`).text(res)
+            self.find("a img.avatar").removeClass("avatar-online").addClass(`avatar-in-game`);
+            self.find(".games-idle").first().modal('toggle');
+            
+        }).fail((xhr, status, err) => {
+            alert(xhr.responseText)
         })
     })
 
-    //open correct game modal
-    $("#content-body").on('click', ".idle-game", function () {
-        let id = $(this).closest("div.account").attr("data-id");
-        $(`#${id}.modal`).modal('toggle');
-    })
-
-    //open correct change nick modal
-    $("#content-body").on('click', ".nick", function () {
+    // stop games idle
+    $("#content-body").on('click', ".stop-idle", function () {
         let self = $(this).closest("div.account");
-        self.find(".change-nick-modal").first().modal("toggle")
+
+        let games = self.find(".start-idle").attr("data-games")
+        if(!games){
+            alert("Not playing any games");
+            return;
+        }
+
+        let accountId = self.attr("data-id");
+        $.post('/dashboard/stopgames', { accountId: accountId }, function (res) {
+            self.removeClass("account-in-game").addClass(`account-online`)
+            self.find(".info .status").removeClass("status-in-game").addClass(`status-online`).text(res)
+            self.find("a img.avatar").removeClass("avatar-in-game").addClass(`avatar-online`);
+            self.find(".start-idle").first().attr("data-games", "");
+            self.find(".games-idle").first().modal('toggle');
+            self.find(".game-body").first().children(".game-img").each(function(){
+                if($(this).hasClass("selected")){
+                    $(this).removeClass("selected").addClass("unselected")
+                }
+            })
+        }).fail((xhr, status, err) => {
+            alert(xhr.responseText)
+        })
     })
 
     // game image click
@@ -207,12 +235,10 @@ $(() => {
             }
         } else { //selected
             $(this).removeClass("selected").addClass("unselected")
-
             //no games set
             if (!games) {
                 return;
             }
-
             //split string into an array
             games = games.split(" ");
 
@@ -230,40 +256,14 @@ $(() => {
     })
 
 
-    // start game idle
-    $("#content-body").on('click', ".start-idle", function () {
+    /**************************************************** 
+    *               STEAM - CHANGE NICK                 *
+    * **************************************************/
+    // Open correct modal
+    $("#content-body").on('click', ".nick", function () {
         let self = $(this).closest("div.account");
-        let accountId = self.attr("data-id");
-        let games = $(this).attr("data-games")
-        if (!games) {
-            alert("No games selected.")
-            return
-        }
-
-        $.post('/dashboard/playgames', { accountId: accountId, games: games }, function (res) {
-            //set ingame status
-            self.removeClass("account-online").addClass(`account-in-game`)
-            self.find(".info .status").removeClass("status-online").addClass(`status-in-game`).text(res)
-            self.find("a img.avatar").removeClass("avatar-online").addClass(`avatar-in-game`);
-        }).fail((xhr, status, err) => {
-            alert(xhr.responseText)
-        })
+        self.find(".change-nick-modal").first().modal("toggle")
     })
-
-    // start games idle
-    $("#content-body").on('click', ".stop-idle", function () {
-        let self = $(this).closest("div.account");
-        let accountId = self.attr("data-id");
-        $.post('/dashboard/stopgames', { accountId: accountId }, function (res) {
-            //set online status
-            self.removeClass("account-in-game").addClass(`account-online`)
-            self.find(".info .status").removeClass("status-in-game").addClass(`status-online`).text(res)
-            self.find("a img.avatar").removeClass("avatar-in-game").addClass(`avatar-online`);
-        }).fail((xhr, status, err) => {
-            alert(xhr.responseText)
-        })
-    })
-
 
 
     $("#content-body").on('submit', '.change-nick-form', function (e) {
@@ -287,10 +287,9 @@ $(() => {
     })
 
 
-
-
-
-    // start games idle
+    /**************************************************** 
+    *               STEAM - DELETE ACC                  *
+    * **************************************************/
     $("#content-body").on('click', ".delete-acc", function () {
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id");

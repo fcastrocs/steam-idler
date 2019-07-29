@@ -43,7 +43,7 @@ router.post('/dashboard/addacc', isLoggedIn, async function (req, res) {
     }
 
     let account = {
-        user: req.body.user.toLowerCase(),
+        user: req.body.user.toLowerCase().trim(),
         pass: req.body.pass,
         emailGuard: req.body.emailGuard,
         shared_secret: req.body.sharedSecret

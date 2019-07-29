@@ -76,16 +76,16 @@ $(() => {
                     <div class="spinner-border text-primary login-wait" role="status" hidden></div>
                 </div>
 
-                <div class="modal fade games-idle" id="${accounts[i]._id}" tabindex="-1" role="dialog" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content games-box">
+                <div class="modal fade games-idle tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog games-dialog" role="document">
+                        <div class="modal-content games-content">
                             <div class="modal-header">
                                 <h5 class="modal-title">Pick Games To Idle</h5>
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
-                            <div class="modal-body">
+                            <div class="modal-body game-body">
                                 ${gamesDiv}
                                 <div class="modal-buttons">
                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -106,9 +106,7 @@ $(() => {
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
-
                             <div class="modal-body">
-            
                                 <form class="change-nick-form">
                                     <div class="form-group" id="nick">
                                         <div class="input-group">
@@ -118,7 +116,6 @@ $(() => {
                                             <input type="text" name="nick" maxlength="32" class="form-control" required>
                                         </div>
                                     </div>
-                
                                     <div class="modal-buttons">
                                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                         <button type="submit" class="btn btn-primary change-nick-button">Change Nick</button>
@@ -137,3 +134,4 @@ $(() => {
 })
 
 
+rgba(0, 0, 0, 0.918)

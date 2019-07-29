@@ -55,9 +55,9 @@ class Client extends EventEmitter {
 
         // login response
         this.client.once('logOnResponse', res => {
-            console.log(res.eresult)
             // LOGGED IN
             if (res.eresult == 1) {
+                console.log(`Success: login > user: ${this.account.user}`)
                 this.emit("loggedIn", res);
 
                 //delete login options
@@ -97,7 +97,6 @@ class Client extends EventEmitter {
             else {
                 res = "Bad User/Pass"
             }
-            console.log(res)
             this.emit("loginError", res);
         });
 
@@ -171,7 +170,7 @@ class Client extends EventEmitter {
 
         // Connection lost
         self.client.once('error', err => {
-            console.log(err)
+            console.log(`Error: ${err} > user: ${this.account.user}`)
             self.connect(); //reconnect
         })
 
