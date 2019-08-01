@@ -120,23 +120,23 @@ class AccountHandler extends EventEmitter {
             // Register needed events
 
             // account has logged in
-            client.once('steamid', steamid => {
+            client.on('steamid', steamid => {
                 account.steamid = steamid;
             })
 
             // login error has occurred
-            client.once("loginError", err => {
+            client.on("loginError", err => {
                 account.status = err;
                 return reject(err)
             })
 
             // sentry has been accepted
-            client.once("sentry", sentry => {
+            client.on("sentry", sentry => {
                 account.sentry = sentry
             })
 
             // games in account
-            client.once("games", games => {
+            client.on("games", games => {
                 event_count++;
                 account.games = games
                 if (event_count === 3) {
@@ -145,7 +145,7 @@ class AccountHandler extends EventEmitter {
             })
 
             // persona name/nick
-            client.once("persona-name", persona_name => {
+            client.on("persona-name", persona_name => {
                 event_count++
                 // no name?
                 if (!persona_name) {
@@ -159,7 +159,7 @@ class AccountHandler extends EventEmitter {
             })
 
             // account avatar
-            client.once("avatar", avatar => {
+            client.on("avatar", avatar => {
                 event_count++;
                 account.avatar = avatar
                 if (event_count === 3) {

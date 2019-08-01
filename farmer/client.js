@@ -120,11 +120,8 @@ class Client extends EventEmitter {
             this.loginOption.two_factor_code = SteamTotp.generateAuthCode(this.account.shared_secret);
         }
 
-        // Login to steam
-        this.client.LogOn(this.loginOption);
-
         // login response
-        this.client.once('logOnResponse', res => {
+        this.client.on('logOnResponse', res => {
 
             // LOGGED IN
             if (res.eresult == 1) {
@@ -161,7 +158,7 @@ class Client extends EventEmitter {
             else if (res.eresult == 84) {
                 self.loggedIn = false;
                 console.log(`Rate limit > user: ${self.account.user}`)
-                self.Disconnect();
+                //self.Disconnect();
                 self.connect();
                 return;
             }
@@ -187,20 +184,20 @@ class Client extends EventEmitter {
             self.Disconnect();
         });
 
-        this.client.once('games', games => {
+        this.client.on('games', games => {
             self.emit("games", games);
         })
 
-        this.client.once("persona-name", persona_name => {
+        this.client.on("persona-name", persona_name => {
             self.emit("persona-name", persona_name)
         })
 
-        this.client.once("avatar", avatar => {
+        this.client.on("avatar", avatar => {
             self.emit("avatar", avatar)
         })
 
         // sentry
-        this.client.once('updateMachineAuth', (sentry, callback) => {
+        this.client.on('updateMachineAuth', (sentry, callback) => {
             // Do not reaccept sentry if we have one already
             if (self.account.sentry) {
                 return;
@@ -222,6 +219,9 @@ class Client extends EventEmitter {
         /*this.client.once("loginKey", loginKey => {
             self.emit("loginKey", loginKey)
         })*/
+
+         // Login to steam
+         this.client.LogOn(this.loginOption);
     }
 
     /************************************************************************
