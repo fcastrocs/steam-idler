@@ -49,6 +49,13 @@ class AccountHandler extends EventEmitter {
                     let options = this.setupLoginOptions(doc);
                     let client = await this.steamConnect(options);
 
+                    //Figure out correct status
+                    if(doc.gamesPlaying > 0){
+                        doc.status = "in-game"
+                    }else{
+                        doc.status = "online"
+                    }
+
                     //save and store client
                     this.saveToHandler(doc.userId, doc._id.toString(), client)
 
