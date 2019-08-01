@@ -173,7 +173,7 @@ $(() => {
             return
         }
 
-        $.post('/dashboard/playgames', { accountId: accountId, games: games }, ()=> {
+        $.post('/dashboard/playgames', { accountId: accountId, games: games }, () => {
             //set ingame status
             self.removeClass("account-online").addClass(`account-in-game`)
             self.find(".info .status").removeClass("status-online").addClass(`status-in-game`).text("in-game")
@@ -202,7 +202,8 @@ $(() => {
             self.find("a img.avatar").removeClass("avatar-in-game").addClass(`avatar-online`);
             self.find(".start-idle").first().attr("data-games", "");
             self.find(".games-idle").first().modal('toggle');
-            self.find(".game-body").first().children(".game-img").each(() => {
+            // Remove selected imaged
+            self.find(".game-body").first().children(".game-img").each(function () {
                 if ($(this).hasClass("selected")) {
                     $(this).removeClass("selected").addClass("unselected")
                 }
@@ -269,28 +270,30 @@ $(() => {
     /**************************************************** 
     *               STEAM - CHANGE NICK                 *
     * **************************************************/
-    // Open correct modal
+    // open modal
     $("#content-body").on('click', ".nick", function () {
-        let self = $(this).closest("div.account");
-        self.find(".change-nick-modal").first().modal("toggle")
+        let accountId = $(this).closest("div.account").attr("data-id");
+        $("#change-nick-button").attr("data-id", accountId);
+        $("#change-nick-modal").modal("toggle")
     })
 
 
-    $("#content-body").on('submit', '.change-nick-form', function (e) {
+    $("#change-nick-form").submit(function (e) {
         e.preventDefault();
 
-        let self = $(this).closest("div.account");
-        let accountId = self.attr("data-id");
+        let accountId = $("#change-nick-button").attr("data-id");
+
 
         //form handler
-        let nickname = $(this).serializeArray()[0].value;
+        let nickname = $("input[name='nick']").val();
         if (!nickname) {
             return
         }
 
-        $.post('/dashboard/changenick', { nickname: nickname, accountId: accountId }, function (res) {
-            self.find(".change-nick-modal").first().modal("toggle");
-            self.find(".nick").first().text(nickname)
+        $.post('/dashboard/changenick', { nickname: nickname, accountId: accountId }, function (nick) {
+            $("#change-nick-modal").modal("toggle")
+            $("input[name='nick']").val("");
+            $(`div.account[data-id=${accountId}]`).find(".nick").first().text(nick)
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
@@ -336,8 +339,8 @@ $(() => {
 
     // close activate game modal
     $(".activate-free-game-close").click(function () {
-        $("#activated-games").hide(0);
-        $("#activated-games .game-body").html('');
+        $(".activated-games").hide(0);
+        $(".activated-game-body").html('');
         $("#activate-game-form").show(0);
         $("input[name=appId]").val("");
         $("#activate-game-msg").hide(0).text("")
@@ -360,8 +363,7 @@ $(() => {
 
         $("#activate-game-msg").attr("hidden", false).hide(0);
         $("#activate-game-errMsg").attr("hidden", false).hide(0);
-        $("#activated-games").attr("hidden", false).hide(0)
-
+        $(".activated-games").attr("hidden", false).hide(0)
 
         $.post('/dashboard/activatefreegame', { accountId: accountId, appIds: appIds }, games => {
             $("#activate-game-form").hide(0)
@@ -374,8 +376,18 @@ $(() => {
                 gamesDiv += `<img class="game-img" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
             }
 
-            $(".game-body").append(gamesDiv)
-            $("#activated-games").show(0)
+            $(".activated-game-body").append(gamesDiv)
+
+            //now build it for .games-body
+            gamesDiv = ""
+            for (let j in games) {
+                let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
+                gamesDiv += `<img class="game-img unselected" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
+            }
+            $(`div.account[data-id="${accountId}"]`).find(".game-body").first().append(gamesDiv)
+
+
+            $(".activated-games").show(0)
 
         }).fail((xhr, status, err) => {
             $("#activate-game-errMsg").show(0).text(xhr.responseText)
@@ -396,8 +408,8 @@ $(() => {
 
     // close activate game modal
     $(".redeem-key-close").click(function () {
-        $("#activated-games").hide(0);
-        $("#activated-games .game-body").html('');
+        $(".activated-games").hide(0);
+        $(".activated-game-body").html('');
         $("#redeem-key-form").show(0);
         $("input[name=cdkey]").val("");
         $("#redeem-key-msg").hide(0).text("")
@@ -434,8 +446,17 @@ $(() => {
                 gamesDiv += `<img class="game-img" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
             }
 
-            $(".game-body").append(gamesDiv)
-            $("#activated-games").show(0)
+            $(".activated-game-body").append(gamesDiv)
+
+            //now build it for .games-body
+            gamesDiv = ""
+            for (let j in games) {
+                let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
+                gamesDiv += `<img class="game-img unselected" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
+            }
+            $(`div.account[data-id="${accountId}"]`).find(".game-body").first().append(gamesDiv)
+
+            $(".activated-games").show(0)
 
         }).fail((xhr, status, err) => {
             $("#redeem-key-errMsg").show(0).text(xhr.responseText)

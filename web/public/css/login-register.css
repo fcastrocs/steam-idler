@@ -1,14 +1,18 @@
-#content-body{
-    margin: auto;
-    text-align:center !important;
-    width: 500px;
-    border: solid 1px black;
-    padding: 10px;
-    background: linear-gradient(0deg, rgba(8, 52, 70, 0.5) 0%, rgb(10, 40, 65) 100%);
-    border: solid 1px rgba(17,74,121,1)
+
+
+#login-form, #register-form{
+    width: 450px;
+    padding: 20px;
+    background-color: rgb(12, 45, 71);
+    margin:80px auto;
+    overflow: auto;
+    box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.8);
 }
 
-form{
-    width: 300px;
-    margin: auto;
+.login-page-buttons{
+    float: right;
+}
+
+#signin-button, #register-button{
+    width: 200px;
 }

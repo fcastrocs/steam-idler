@@ -35,9 +35,11 @@ body{
 
 #content-body{
     position: absolute;
-    top: 49px;
-    left: 190px;
-    width: calc(100% - 190px);
+    top: 53px;
+    left: 178.5px;
+    width: calc(100% - 178.5px);
+    text-align:center !important;
+    height: calc(100% - 53px);
 }
 
 #sidebar-greet{
@@ -58,11 +60,6 @@ body{
 
 #box{
     height: calc(100% - 54px);
-}
-
-#content-body{
-    margin: auto;
-    text-align:center !important;
 }
 
 .separator-text{

@@ -148,6 +148,7 @@ router.post('/dashboard/activatefreegame', isLoggedIn, async function (req, res)
         return res.status(400).send("Bad activatefreegame request.")
     }
 
+    // validation
     let appIds = req.body.appIds.split(",").map(Number).filter(item => !isNaN(item))
 
     if (appIds.length < 1) {

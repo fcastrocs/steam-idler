@@ -206,11 +206,13 @@ input{
 
 .unselected{
     border: none;
-    opacity: 0.6;
+    opacity: 0.25;
 }
 
 .selected{
-    border: solid 4px rgb(0, 255, 0)
+    border: solid 2px rgb(0, 255, 0);
+    border-radius: 4px;
+    padding: 5px;
 }
 
 .modal-buttons{

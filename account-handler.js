@@ -20,9 +20,9 @@ class AccountHandler extends EventEmitter {
         let query = SteamAccount.find({})
         let accounts = await query.exec();
 
-        for(let i in accounts){
+        for (let i in accounts) {
             accounts[i].status = "offline"
-           await this.saveAccount(accounts[i])
+            await this.saveAccount(accounts[i])
         }
 
         console.log("Initializing accounts.")
@@ -77,7 +77,14 @@ class AccountHandler extends EventEmitter {
             return Promise.reject("Account is not online.");
         }
         client.setPersona(1, name)
-        return Promise.resolve("okay");
+
+        let account = await this.getAccount(userId, accountId);
+        if (!account) {
+            return Promise.reject("Account not found.")
+        }
+        account.persona_name = name;
+        await this.saveAccount(account);
+        return Promise.resolve(name);
     }
 
 
@@ -97,10 +104,15 @@ class AccountHandler extends EventEmitter {
             // Play games
             client.playGames(games)
 
-            //save playing games to account
+            //save playing games to account and force correct status
             let account = await self.getAccount(userId, accountId);
             account.gamesPlaying = games;
-            self.saveAccount(account);
+            if (games.length == 0) {
+                account.status = "online"
+            } else {
+                account.status = "in-game"
+            }
+            await self.saveAccount(account);
             resolve("okay");
         })
     }
@@ -342,24 +354,18 @@ class AccountHandler extends EventEmitter {
         }
 
         //find account in db
-        let acc = this.getAccount(userId, accountId);
+        let acc = await this.getAccount(userId, accountId, null);
         if (!acc) {
             return Promise.reject("Account not found.")
         }
 
         try {
             let games = await client.activateFreeGame(appIds)
-
-            // update account
-            acc.games.push(games)
-
-            acc.save((err, doc) => {
-                if (err) {
-                    console.log(err)
-                }
-                return Promise.resolve(games)
-            })
+            acc.games = this.addGames(games, acc.games);
+            this.saveAccount(acc)
+            return Promise.resolve(games)
         } catch (error) {
+            console.log(error)
             return Promise.reject(error)
         }
     }
@@ -376,16 +382,16 @@ class AccountHandler extends EventEmitter {
         }
 
         //find account in db
-        let acc = this.getAccount(userId, accountId);
+        let acc = await this.getAccount(userId, accountId);
         if (!acc) {
             return Promise.reject("Account not found.")
         }
 
         try {
             let games = await client.redeemKey(cdkey)
-
-            // update account
-            console.log(games)
+            acc.games = this.addGames(games, acc.games);
+            this.saveAccount(acc);
+            return Promise.resolve(games);
         } catch (error) {
             console.log(error)
             return Promise.reject(error)
@@ -393,10 +399,37 @@ class AccountHandler extends EventEmitter {
     }
 
 
-
     /************************************************************************
     * 					          HELPER FUNCTIONS					        *
     ************************************************************************/
+
+    // adds acquired games to account games
+    // returns accountGames array
+    addGames(games, accountGames) {
+        // check if game is already in acc.games
+        // trick, convert object to string and check for equality
+        for (let i in games) {
+            let game = JSON.stringify(games[i])
+            let found = false;
+
+            for (let j in accountGames) {
+                //convert to strong
+                let accGame = JSON.stringify(accountGames[j])
+                if (game === accGame) {
+                    found = true;
+                    break;
+                }
+            }
+
+            // push game to accountGames if it was not found
+            if (!found) {
+                accountGames.push(games[i])
+            }
+        }
+        return accountGames;
+    }
+
+
 
     // Setup login options
     setupLoginOptions(acc) {

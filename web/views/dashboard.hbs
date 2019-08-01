@@ -76,8 +76,6 @@
                         </div>
                     </div>
 
-
-
                     <div class="form-group" id="email-guard" hidden>
                         <div class="input-group">
                             <div class="input-group-prepend">
@@ -105,17 +103,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Activate Free Games</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-primary" role="alert" id="activate-game-msg" hidden></div>
                 <div class="alert alert-danger" role="alert" id="activate-game-errMsg" hidden></div>
 
                 <!-- activated games will be displayed here -->
-                <div id="activated-games" hidden>
-                    <div class="game-body"></div>
+                <div class="activated-games" hidden>
+                    <div class="activated-game-body"></div>
                     <button type="button" class="btn btn-secondary activate-free-game-close float-right"
                         data-dismiss="modal">Close</button>
                 </div>
@@ -142,7 +137,6 @@
 </div>
 
 
-
 <!-- REDEEM KEY -->
 <div class="modal fade" id="redeem-key-modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -159,7 +153,7 @@
 
                 <!-- activated games will be displayed here -->
                 <div class="activated-games" hidden>
-                    <div class="game-body"></div>
+                    <div class="activated-game-body"></div>
                     <button type="button" class="btn btn-secondary redeem-key-close float-right"
                         data-dismiss="modal">Close</button>
                 </div>
@@ -175,8 +169,38 @@
                     <div class="modal-buttons">
                         <button type="button" class="btn btn-secondary redeem-key-close"
                             data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary" id="redeem-key"
-                            data-id="">Activate</button>
+                        <button type="submit" class="btn btn-primary" id="redeem-key" data-id="">Activate</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- CHANGE NICK -->
+<div class="modal fade" id="change-nick-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Nickname</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="change-nick-form">
+                    <div class="form-group" id="nick">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Nick</span>
+                            </div>
+                            <input type="text" name="nick" maxlength="32" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="change-nick-button" data-id="">Change Nick</button>
                     </div>
                 </form>
             </div>
