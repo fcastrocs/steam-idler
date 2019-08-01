@@ -16,9 +16,18 @@ class AccountHandler extends EventEmitter {
 
     // Brings all accounts in user handlers back online
     async initializeHandlers() {
+        //first change status of all accounts to offline
+        let query = SteamAccount.find({})
+        let accounts = await query.exec();
+
+        for(let i in accounts){
+            accounts[i].status = "offline"
+           await this.saveAccount(accounts[i])
+        }
+
         console.log("Initializing accounts.")
         //Get all user handlers
-        let query = SteamAccHandler.find();
+        query = SteamAccHandler.find();
         let handlers = await query.exec();
         //Nothing to do
         if (!handlers || handlers.length == 0) {
@@ -32,7 +41,7 @@ class AccountHandler extends EventEmitter {
                 // find account
                 let doc = await this.getAccount(null, accountIds[j], null)
                 if (!doc) {
-                    console.log("something went wrong initializing accounts")
+                    console.log("something went wrong initializing account")
                     continue;
                 }
 
@@ -128,7 +137,6 @@ class AccountHandler extends EventEmitter {
 
             // games in account
             client.once("games", games => {
-                console.log("here")
                 event_count++;
                 account.games = games
                 if (event_count === 3) {
@@ -138,7 +146,6 @@ class AccountHandler extends EventEmitter {
 
             // persona name/nick
             client.once("persona-name", persona_name => {
-                console.log("here")
                 event_count++
                 // no name?
                 if (!persona_name) {
@@ -153,7 +160,6 @@ class AccountHandler extends EventEmitter {
 
             // account avatar
             client.once("avatar", avatar => {
-                console.log("here")
                 event_count++;
                 account.avatar = avatar
                 if (event_count === 3) {
