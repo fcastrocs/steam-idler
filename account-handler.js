@@ -1,3 +1,5 @@
+"use strict";
+
 const Client = require('./farmer/client.js')
 const EventEmitter = require('events').EventEmitter;
 const SteamAccount = require('./models/steam-accounts')
@@ -27,116 +29,106 @@ class AccountHandler extends EventEmitter {
         for (let i = 0; i < handlers.length; i++) {
             let accountIds = handlers[i].accountIds
             for (let j = 0; j < accountIds.length; j++) {
-                query = SteamAccount.findById(accountIds[j])
-                let doc = await query.exec();
-
-                if (!doc) { // ???
-                    console.log("something went wrong")
+                // find account
+                let doc = await this.getAccount(null, accountIds[j], null)
+                if (!doc) {
+                    console.log("something went wrong initializing accounts")
                     continue;
                 }
 
                 try {
-                    let account = this.setupAccountDetails(doc)
-                    let client = await this.connectSteam(account);
+                    let options = this.setupLoginOptions(doc);
+                    let client = await this.steamConnect(options);
 
                     //save and store client
                     this.saveToHandler(doc.userId, doc._id.toString(), client)
 
                     //update account properties after login
-                    doc.games = account.games;
-                    doc.persona_name = account.persona_name;
-                    doc.avatar = account.avatar;
+                    doc.games = options.games;
+                    doc.persona_name = options.persona_name;
+                    doc.avatar = options.avatar;
 
-                    // Set online status
-                    doc.status = "online"
-                    // check if account is playing games
-                    if (doc.gamesPlaying.length > 0) {
-                        doc.status = "in-game"
-                    }
-
-                    doc.save();
+                    this.saveAccount(doc)
                 } catch (error) {
                     //could not login to account, update it's status
                     doc.status = error;
-                    doc.save();
+                    this.saveAccount(doc)
                 }
             }
         }
         console.log("Accounts initialized.")
     }
 
+    /************************************************************************
+    * 					          CHANGE NICK					            *
+    ************************************************************************/
     async changeNick(userId, accountId, name) {
-        let client = this.findClient(userId, accountId);
+        let client = this.isAccountOnline(userId, accountId);
         if (!client) {
-            return Promise.reject("Account not online");
-        } else {
-            client.setPersona(1, name)
-            return Promise.resolve("okay");
+            return Promise.reject("Account is not online.");
         }
+        client.setPersona(1, name)
+        return Promise.resolve("okay");
     }
 
-    async playGames(games, userId, accountId) {
+
+
+    /************************************************************************
+    * 					          PLAY GAME					                *
+    ************************************************************************/
+    async playGames(userId, accountId, games) {
         let self = this;
         return new Promise(async function (resolve, reject) {
 
-            //find client
-            let client = self.findClient(userId, accountId);
+            let client = self.isAccountOnline(userId, accountId);
             if (!client) {
-                return reject("Account not online.")
-            }
-
-            let games_played = [];
-            for (let i = 0; i < games.length; i++) {
-                games_played.push({ game_id: games[i] })
+                return reject("Account is not online.");
             }
 
             // Play games
-            client.playGames({ games_played })
+            client.playGames(games)
 
-            //save playing games to database
-            let query = SteamAccount.findOne({ userId: userId, _id: accountId });
-            let account = await query.exec();
-            account.gamesPlaying = games_played;
-
-            if (games.length === 0) {
-                account.status = "online"
-            } else {
-                account.status = "in-game"
-            }
-
-            account.save((err, doc) => {
-                return resolve(doc.status)
-            })
+            //save playing games to account
+            let account = await self.getAccount(userId, accountId);
+            account.gamesPlaying = games;
+            self.saveAccount(account);
+            resolve("okay");
         })
     }
 
-    // Helper function
-    // Connects an account to steam
-    async connectSteam(account) {
+    /************************************************************************
+     * 			        CONNECT TO STEAM AND REGISTER EVENTS			    *
+     ************************************************************************/
+    async steamConnect(account) {
+        let self = this;
+        // Resolve promise once we get needed data
         return new Promise(async function (resolve, reject) {
             let event_count = 0
 
+            // Create client
             let client = new Client(account);
 
-            client.once('loggedIn', res => {
-                account.steamid = res.client_supplied_steamid;
+            // Register needed events
+
+            // account has logged in
+            client.once('steamid', steamid => {
+                account.steamid = steamid;
             })
 
+            // login error has occurred
             client.once("loginError", err => {
                 account.status = err;
-                client.Disconnect();
                 return reject(err)
             })
 
+            // sentry has been accepted
             client.once("sentry", sentry => {
                 account.sentry = sentry
             })
 
-            // client.once("loginKey", loginKey => {
-            //     account.loginKey = loginKey
-            // })
-
+            // games in account
             client.once("games", games => {
+                console.log("here")
                 event_count++;
                 account.games = games
                 if (event_count === 3) {
@@ -144,7 +136,9 @@ class AccountHandler extends EventEmitter {
                 }
             })
 
-            client.once("persona", persona_name => {
+            // persona name/nick
+            client.once("persona-name", persona_name => {
+                console.log("here")
                 event_count++
                 // no name?
                 if (!persona_name) {
@@ -157,43 +151,59 @@ class AccountHandler extends EventEmitter {
                 }
             })
 
+            // account avatar
             client.once("avatar", avatar => {
+                console.log("here")
                 event_count++;
                 account.avatar = avatar
                 if (event_count === 3) {
                     return resolve(client);
                 }
             })
+
+            client.on("in-game", async (res) => {
+                //find acc by user
+                let doc = await self.getAccount(null, null, account.user);
+                if (!doc) {
+                    return;
+                }
+
+                doc.status = res
+                self.saveAccount(doc);
+            })
+
+            // connection has been lost after being logged in
+            client.on("connection-lost", async () => {
+                //find acc by user
+                let doc = await self.getAccount(null, null, account.user);
+                if (!doc) {
+                    return;
+                }
+                doc.status = "reconnecting";
+                self.saveAccount(doc);
+            })
+
+            // connection has been regained after being logged in
+            client.on("connection-gained", async () => {
+                //find acc by user
+                let doc = await self.getAccount(null, null, account.user);
+                if (!doc) {
+                    return;
+                }
+                doc.status = "online";
+                self.saveAccount(doc);
+            })
+
+            // client.once("loginKey", loginKey => {
+            //     account.loginKey = loginKey
+            // })
         })
     }
 
-    // Helper function to setup account details for login
-    setupAccountDetails(acc) {
-        let account = {
-            user: acc.user,
-            pass: Security.decrypt(acc.pass),
-            sentry: Security.decrypt_buffer(acc.sentry),
-            gamesPlaying: acc.gamesPlaying
-        }
 
-        if (acc.shared_secret) {
-            account.shared_secret = Security.decrypt(acc.shared_secret)
-        }
-        return account;
-    }
-
-    async getAccount(userId, accountId) {
-        //Find account in DB
-        let query = SteamAccount.findOne({
-            _id: accountId,
-            userId: userId,
-        })
-        let doc = await query.exec();
-        return doc;
-    }
-
-
-    // Login steam account
+    /************************************************************************
+     * 					     LOGIN STEAM ACCOUNT			                *
+     ************************************************************************/
     async loginAccount(userId, accountId) {
         let self = this;
         return new Promise(async function (resolve, reject) {
@@ -204,43 +214,35 @@ class AccountHandler extends EventEmitter {
                 return reject("Account not found.")
             }
 
-            // account already logged in
-            if (self.findClient(userId, accountId)) {
-                return reject("Account is already logged in.")
+            let client = self.isAccountOnline(userId, accountId);
+            if (client) {
+                return reject("Account is already online.");
             }
 
             try {
-                let account = self.setupAccountDetails(doc)
-
-                let client = await self.connectSteam(account);
+                let options = self.setupLoginOptions(doc);
+                let client = await self.steamConnect(options);
                 self.saveToHandler(userId, accountId, client);
 
                 //update account properties after login
-                doc.games = account.games;
-                doc.persona_name = account.persona_name;
-                doc.avatar = account.avatar;
-
-                //set account status to online
+                doc.games = options.games;
+                doc.persona_name = options.persona_name;
+                doc.avatar = options.avatar;
                 doc.status = "online"
-
-                // check if account is playing games
-                if (doc.gamesPlaying.length > 0) {
-                    doc.status = "in-game"
-                }
-
-                doc.save((err, doc) => {
-                    return resolve(doc.status)
-                })
+                self.saveAccount(doc)
+                return resolve("online")
             } catch (error) {
                 //login error
                 doc.status = error;
-                doc.save();
+                self.saveAccount(doc)
                 return reject(error);
             }
         })
     }
 
-    // Logout steam account
+    /************************************************************************
+     * 					     LOGOUT STEAM ACCOUNT			                *
+     ************************************************************************/
     async logoutAccount(userId, accountId) {
         let self = this;
         return new Promise(async function (resolve, reject) {
@@ -252,58 +254,43 @@ class AccountHandler extends EventEmitter {
             }
 
             // check account is logged in
-            let client = self.findClient(userId, accountId)
+            let client = self.isAccountOnline(userId, accountId);
             if (!client) {
-                // force logoff
-                doc.status = "offline"
-                doc.save();
-                return reject("Account not logged in.")
+                //force offline status
+                doc.status = "offline";
+                self.saveAccount(doc);
+                return resolve("offline")
             }
 
             // logout account
             client.Disconnect();
 
-            // Remove account from local handler
-            if (self.userAccounts[userId] && self.userAccounts[userId][accountId]) {
-                self.userAccounts[userId][accountId] = null
-            }
-
-            // Remove account from handler 
-            let handler = await SteamAccHandler.findOne({ userId: userId }).exec();
-            if (handler) {
-                handler.accountIds = handler.accountIds.filter(accId => {
-                    return accId.toString() !== accountId
-                });
-                handler.save();
-            }
+            // Remove handler
+            self.removeFromHandler(userId, accountId);
 
             //finally update account status to offline
-            doc.status = "offline"
-            doc.save((err, doc) => {
-                return resolve(doc.status);
-            })
+            doc.status = "offline";
+            self.saveAccount(doc)
+            return resolve("offline");
         })
     }
 
 
-    /*  Connects account to steam
-        Stores account to DB
-        adds account to user handler
-    */
-    addAccount(userId, account) {
+    /************************************************************************
+     * 					            ADD ACCOUNT				                 *
+     ************************************************************************/
+    async addAccount(userId, account) {
         let self = this;
         return new Promise(async function (resolve, reject) {
             //Find account in DB
-            let query = SteamAccount.findOne({userId: userId, user: account.user})
-            let doc = await query.exec();
-            // account found
+            let doc = await self.getAccount(userId, null, account.user);
             if (doc) {
                 return reject("Account already in DB.");
             }
 
             //try to login to steam
             try {
-                let client = await self.connectSteam(account);
+                let client = await self.steamConnect(account);
 
                 //save account to database
                 let steamacc = new SteamAccount({
@@ -323,29 +310,186 @@ class AccountHandler extends EventEmitter {
                     steamacc.shared_secret = Security.encrypt(account.shared_secret);
                 }
 
-                steamacc.save((err, doc) => {
-                    if (err) {
-                        console.log(err)
-                        return
-                    }
-                    //save and store account to handler
-                    self.saveToHandler(userId, doc._id, client);
-                    return resolve("okay")
-                });
+                // Save to database
+                doc = await self.saveAccount(steamacc)
+
+                //save and store account to handler
+                self.saveToHandler(userId, doc._id, client);
+                return resolve(doc)
+
             } catch (error) {
+                console.log(error)
                 return reject(error);
             }
         })
     }
 
-    // Stores client to this.userAccounts for future reference
-    // Saves accountId to user's handler
+
+    /************************************************************************
+    *               	        ACTIVATE FREE GAME	        	            *
+    ************************************************************************/
+    async activateFreeGame(userId, accountId, appIds) {
+        // check account is logged in
+        let client = this.isAccountOnline(userId, accountId);
+        if (!client) {
+            return Promise.reject("Account is not online.")
+        }
+
+        //find account in db
+        let acc = this.getAccount(userId, accountId);
+        if (!acc) {
+            return Promise.reject("Account not found.")
+        }
+
+        try {
+            let games = await client.activateFreeGame(appIds)
+
+            // update account
+            acc.games.push(games)
+
+            acc.save((err, doc) => {
+                if (err) {
+                    console.log(err)
+                }
+                return Promise.resolve(games)
+            })
+        } catch (error) {
+            return Promise.reject(error)
+        }
+    }
+
+
+    /************************************************************************
+    *               	        REDEEM CD KEY	        	                *
+    ************************************************************************/
+    async redeemKey(userId, accountId, cdkey) {
+        // check account is logged in
+        let client = this.isAccountOnline(userId, accountId);
+        if (!client) {
+            return Promise.reject("Account is not online.")
+        }
+
+        //find account in db
+        let acc = this.getAccount(userId, accountId);
+        if (!acc) {
+            return Promise.reject("Account not found.")
+        }
+
+        try {
+            let games = await client.redeemKey(cdkey)
+
+            // update account
+            console.log(games)
+        } catch (error) {
+            console.log(error)
+            return Promise.reject(error)
+        }
+    }
+
+
+
+    /************************************************************************
+    * 					          HELPER FUNCTIONS					        *
+    ************************************************************************/
+
+    // Setup login options
+    setupLoginOptions(acc) {
+        let options = {
+            user: acc.user,
+            pass: Security.decrypt(acc.pass),
+            sentry: Security.decrypt_buffer(acc.sentry),
+            gamesPlaying: acc.gamesPlaying
+        }
+
+        if (acc.shared_secret) {
+            options.shared_secret = Security.decrypt(acc.shared_secret)
+        }
+        return options;
+    }
+
+    // Remove from handler
+    async removeFromHandler(userId, accountId) {
+        // Remove account from local handler
+        if (this.userAccounts[userId] && this.userAccounts[userId][accountId]) {
+            this.userAccounts[userId][accountId] = null
+        }
+
+        // Get handler
+        let handler = await SteamAccHandler.findOne({ userId: userId })
+        if (!handler) {
+            return;
+        }
+        handler.accountIds = handler.accountIds.filter(accId => {
+            return accId.toString() !== accountId
+        });
+        handler.save();
+    }
+
+    // Returns accounts client if it's online
+    isAccountOnline(userId, accountId) {
+        let client = this.findClient(userId, accountId);
+        if (!client) {
+            return false;
+        }
+
+        if (!client.loggedIn) {
+            return false
+        }
+        return client;
+    }
+
+    // Returns client for steam account
+    findClient(userId, accountId) {
+        if (!this.userAccounts[userId] || !this.userAccounts[userId][accountId]) {
+            return false;
+        }
+        return this.userAccounts[userId][accountId]
+    }
+
+
+    // Get steam account from database
+    async getAccount(userId, accountId, user) {
+        let query = null;
+
+        // find by userId and accountId
+        if (userId && accountId) {
+            query = SteamAccount.findOne({ _id: accountId, userId: userId })
+        }
+        // find by userId and user
+        else if (userId && user) {
+            query = SteamAccount.findOne({ userId: userId, user: user })
+        }
+        // find by user
+        else if (!userId && !accountId && user) {
+            query = SteamAccount.findOne({ user: user })
+        }
+        // find by id
+        else if (!userId && accountId && !user) {
+            query = SteamAccount.findById(accountId)
+        } else {
+            return null;
+        }
+
+        return await query.exec();
+    }
+
+    // Save steam account to database
+    async saveAccount(account) {
+        return new Promise((resolve, reject) => {
+            account.save((err, doc) => {
+                resolve(doc)
+            })
+        })
+    }
+
+    // Saves account to handlers
     async saveToHandler(userId, accountId, client) {
         // store the client
         // check if user doesn't have a dictionary yet
         if (!this.userAccounts[userId]) {
             this.userAccounts[userId] = [];
         }
+        // Store the client to the handler
         this.userAccounts[userId][accountId] = client;
 
         // Save to DB
@@ -354,12 +498,14 @@ class AccountHandler extends EventEmitter {
 
         // user already has a handler in DB
         if (handler) {
-            //Remove acc from handler if it's there
+            // Trick to make sure no duplicates. Try to remove it, then insert
+
+            // Try to remove the accountId from the handler
             handler.accountIds = handler.accountIds.filter(accId => {
                 return accId.toString() !== accountId
             });
 
-            //Reinsert it
+            // if it was deleted, push it again
             handler.accountIds.push(accountId)
         }
         else {
@@ -373,13 +519,13 @@ class AccountHandler extends EventEmitter {
         handler.save()
     }
 
-    // Returns user's account client for this accountId
-    findClient(userId, accountId) {
-        if (!this.userAccounts[userId] || !this.userAccounts[userId][accountId]) {
-            return false;
-        }
-        return this.userAccounts[userId][accountId]
-    }
+
+
+
+
+
 }
+
+
 
 module.exports = AccountHandler;

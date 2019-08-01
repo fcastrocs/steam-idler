@@ -53,7 +53,6 @@ router.post('/dashboard/addacc', isLoggedIn, async function (req, res) {
         let result = await AccountHandler.addAccount(req.session.userId, account)
         return res.send(result);
     } catch (error) {
-        console.log(error)
         return res.status(400).send(error)
     }
 })
@@ -98,11 +97,13 @@ router.post('/dashboard/playgames', isLoggedIn, async function (req, res) {
 
     //do not allow more than 30 games
     if (games.length > 30) {
-        return res.send("More than 30 games is not allowed.")
+        return res.status(400).send("More than 30 games is not allowed.")
     }
 
+    games = games.map(gameId => { return { game_id: gameId } })
+
     try {
-        let result = await AccountHandler.playGames(games, req.session.userId, req.body.accountId)
+        let result = await AccountHandler.playGames(req.session.userId, req.body.accountId, games)
         return res.send(result);
     } catch (error) {
         return res.status(400).send(error)
@@ -117,7 +118,7 @@ router.post('/dashboard/stopgames', isLoggedIn, async function (req, res) {
     }
 
     try {
-        let result = await AccountHandler.playGames([], req.session.userId, req.body.accountId)
+        let result = await AccountHandler.playGames(req.session.userId, req.body.accountId, [])
         return res.send(result);
     } catch (error) {
         return res.status(400).send(error)
@@ -143,12 +144,32 @@ router.post('/dashboard/changenick', isLoggedIn, async function (req, res) {
 
 // Activate free game
 router.post('/dashboard/activatefreegame', isLoggedIn, async function (req, res) {
-    if (!req.body.accountId || !req.body.appId) {
+    if (!req.body.accountId || !req.body.appIds) {
+        return res.status(400).send("Bad activatefreegame request.")
+    }
+
+    let appIds = req.body.appIds.split(",").map(Number).filter(item => !isNaN(item))
+
+    if (appIds.length < 1) {
         return res.status(400).send("Bad activatefreegame request.")
     }
 
     try {
-        let result = await AccountHandler.activateFreeGame(req.session.userId, req.body.accountId, req.body.appId)
+        let result = await AccountHandler.activateFreeGame(req.session.userId, req.body.accountId, appIds)
+        return res.send(result);
+    } catch (error) {
+        return res.status(400).send(error)
+    }
+})
+
+// Redeem key
+router.post('/dashboard/redeemkey', isLoggedIn, async function (req, res) {
+    if (!req.body.accountId || !req.body.cdkey) {
+        return res.status(400).send("Bad redeemkey request.")
+    }
+
+    try {
+        let result = await AccountHandler.redeemKey(req.session.userId, req.body.accountId, req.body.cdkey)
         return res.send(result);
     } catch (error) {
         return res.status(400).send(error)

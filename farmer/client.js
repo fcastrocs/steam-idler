@@ -1,3 +1,5 @@
+"use strict";
+
 const Steam = require('./steam')
 const EventEmitter = require('events').EventEmitter;
 const GetProxy = require('../util/proxy').GetProxy;
@@ -5,26 +7,94 @@ const GetSteamCM = require('../util/steamcm').GetSteamCM
 const crypto = require('crypto');
 const SteamTotp = require('steam-totp');
 
-
 class Client extends EventEmitter {
     constructor(account) {
         super();
+        this.loggedIn = false;
         this.account = account;
         this.connect();
     }
 
-    // set account to play games
+    /************************************************************************
+    *  					       PLAY GAMES			                        *
+    * 	"activated-apps" event will be emitted along with:                  *
+    *    on success: Array of objects {appid, name, logo}                   *                                          *
+    *    on fail: does not fail                                             *
+    ************************************************************************/
     playGames(games) {
         this.account.gamesPlaying = games;
         this.client.playGames(games);
+        let self = this;
+
+        setTimeout(() => {
+            if (games.length > 0) {
+                self.emit("in-game", "in-game")
+            } else {
+                self.emit("in-game", "online")
+            }
+        }, 2500);
     }
 
-    // Set persona state and name(optional)
+    /************************************************************************
+    *  					    ACTIVATE FREE GAME			                    *
+    * 	"activated-apps" event will be emitted along with:                  *
+    *    on success: Array of objects {appid, name, logo}                   *                                          *
+    *    on fail: "Could not activate this game."                           *
+    ************************************************************************/
+    activateFreeGame(appIds) {
+        let self = this;
+        return new Promise((resolve, reject) => {
+            // register the event first
+            self.client.once('activated-apps', games => {
+                if (!games) {
+                    reject("Could not activate this game.")
+                } else {
+                    resolve(games)
+                }
+            })
+            self.client.activateFreeGame(appIds)
+        })
+    }
+
+    /************************************************************************
+    *  					       REDEEM CDKEY			                        *
+    * 	"redeem-key" event will be emitted along with:                      *
+	*    on success: Array of objects {appid, name, logo}                   *                                          *
+	*    on fail: String with error message                                 *
+    ************************************************************************/
+    redeemKey(cdkey) {
+        let self = this;
+        return new Promise((resolve, reject) => {
+            // register the event first
+            self.client.once('redeem-key', games => {
+                if (Array.isArray(games)) {
+                    resolve(games)
+                } else {
+                    reject(games)
+                }
+            })
+            self.client.redeemKey(cdkey)
+        })
+    }
+
+    /************************************************************************
+    *  				  SET PERSONA state, name(optional)			            *
+    * 	"Offline": 0,                                                       *
+	*   "Online": 1,                                                        *
+	*   "Busy": 2,                                                          *
+	*   "Away": 3,                                                          *
+	*   "Snooze": 4,                                                        *
+	*   "LookingToTrade": 5,                                                *
+	*   "LookingToPlay": 6,                                                 *
+	*   "Invisible": 7                                                      *
+    ************************************************************************/
     setPersona(state, name) {
         this.client.setPersona(state, name)
     }
 
-    // Login to steam
+    /************************************************************************
+     * 					        LOGIN TO STEAM					            *
+     ************************************************************************/
     login() {
         let self = this;
 
@@ -46,7 +116,7 @@ class Client extends EventEmitter {
         }
 
         //Generate mobile code if needed
-        if(this.account.shared_secret){
+        if (this.account.shared_secret) {
             this.loginOption.two_factor_code = SteamTotp.generateAuthCode(this.account.shared_secret);
         }
 
@@ -55,10 +125,20 @@ class Client extends EventEmitter {
 
         // login response
         this.client.once('logOnResponse', res => {
+
             // LOGGED IN
             if (res.eresult == 1) {
+                self.loggedIn = true;
+
+                self.emit("steamid", res.client_supplied_steamid);
+
+                // reloggedin after connection lost
+                if (self.reconnecting) {
+                    self.reconnecting = false;
+                    self.emit("connection-gained");
+                }
+
                 console.log(`Successful login > user: ${self.account.user}`)
-                self.emit("loggedIn", res);
 
                 //delete login options
                 self.loginOption = {};
@@ -70,6 +150,7 @@ class Client extends EventEmitter {
                 if (self.account.gamesPlaying && self.account.gamesPlaying.length > 0) {
                     self.playGames(self.account.gamesPlaying)
                 }
+
                 return;
             }
             // EMAIL GUARD
@@ -78,6 +159,7 @@ class Client extends EventEmitter {
             }
             // RATE LIMIT
             else if (res.eresult == 84) {
+                self.loggedIn = false;
                 console.log(`Rate limit > user: ${self.account.user}`)
                 self.Disconnect();
                 self.connect();
@@ -87,84 +169,82 @@ class Client extends EventEmitter {
             else if (res.eresult == 85) {
                 res = "2FA code needed"
             }
-            //InvalidLoginAuthCode
+            // InvalidLoginAuthCode
             else if (res.eresult == 65) {
                 res = "Invalid guard code"
             }
-            else if(res.eresult == 88){
+            else if (res.eresult == 88) {
                 res = "Invalid shared secret"
             }
             // INVALID USER/PASS
             else {
                 res = "Bad User/Pass"
             }
+
+            self.loggedIn = false;
             console.log(`${res} > user: ${self.account.user}`)
             self.emit("loginError", res);
-        });
-
-        this.client.once('updateMachineAuth', (sentry, callback) => {
-            //Do not reaccept sentry if we have one already
-            if(this.account.sentry){
-                console.log(`Sentry rejected > user: ${this.account.user}`)
-                return;
-            }
-
-            //get SHA1
-            let shasum = crypto.createHash('sha1');
-            shasum.end(sentry.bytes);
-            sentry = shasum.read();
-
-            //accept sentry
-            callback({ sha_file: sentry });
-
-            //store sentry for relogins
-            this.account.sentry = sentry;
-
-            self.emit("sentry", sentry);
+            self.Disconnect();
         });
 
         this.client.once('games', games => {
             self.emit("games", games);
         })
 
-        this.client.once("persona", persona_name => {
-            self.emit("persona", persona_name)
+        this.client.once("persona-name", persona_name => {
+            self.emit("persona-name", persona_name)
         })
 
         this.client.once("avatar", avatar => {
             self.emit("avatar", avatar)
         })
 
-        this.client.once("loginKey", loginKey => {
+        // sentry
+        this.client.once('updateMachineAuth', (sentry, callback) => {
+            // Do not reaccept sentry if we have one already
+            if (self.account.sentry) {
+                return;
+            }
+
+            // get SHA1
+            let shasum = crypto.createHash('sha1');
+            shasum.end(sentry.bytes);
+            sentry = shasum.read();
+
+            // accept sentry
+            callback({ sha_file: sentry });
+            // store sentry for relogins
+            self.account.sentry = sentry;
+
+            self.emit("sentry", sentry);
+        });
+
+        /*this.client.once("loginKey", loginKey => {
             self.emit("loginKey", loginKey)
-        })
+        })*/
     }
 
-    Disconnect() {
-        this.removeAllListeners();
-        this.client.Disconnect();
-    }
-
-    // Connect to steam, takes in the number of tries before giving up
-    // Returns true if connection successful, false otherwise
+    /************************************************************************
+     * 					  ESTABLISH CONNECTION WITH STEAM					*
+     ************************************************************************/
     async connect() {
         let self = this;
 
         // Get a SteamCM
-        await self.getSteamCM();
-        await self.getProxy();
+        let steamcm = await GetSteamCM();
+        let proxy = await GetProxy();
 
         // connection options
         this.options = {
             timeout: 10000, //timeout for lost connection, bad proxy
             proxy: {
-                ipaddress: this.proxy.ip,
-                port: this.proxy.port,
+                ipaddress: proxy.ip,
+                port: proxy.port,
                 type: 4
             },
             destination: {
-                host: this.steamcm.ip,
-                port: this.steamcm.port
+                host: steamcm.ip,
+                port: steamcm.port
             }
         }
 
@@ -173,6 +253,13 @@ class Client extends EventEmitter {
 
         // Connection lost
         self.client.once('error', err => {
+            // emit this event to update as offline.
+            if (self.loggedIn) {
+                self.reconnecting = true;
+                self.emit("connection-lost");
+            }
+
+            self.loggedIn = false;
             console.log(`${err} > user: ${self.account.user}`)
             self.connect(); //reconnect
         })
@@ -183,28 +270,14 @@ class Client extends EventEmitter {
         })
     }
 
-    async getProxy() {
-        let self = this;
-        let promise = new Promise((resolve, reject) => {
-            // Get a proxy
-            GetProxy(proxy => {
-                self.proxy = proxy;
-                resolve(proxy);
-            });
-        });
-        await promise;
-    }
-
-    async getSteamCM() {
-        let self = this;
-        let promise = new Promise((resolve, reject) => {
-            // Get a SteamCM
-            GetSteamCM(steamcm => {
-                self.steamcm = steamcm;
-                resolve(steamcm);
-            })
-        });
-        await promise;
+    /************************************************************************
+    * 					      DISCONNECT FROM STEAM					        *
+    ************************************************************************/
+    Disconnect() {
+        this.loggedIn = false;
+        console.log(`Disconnect > user: ${this.account.user}`)
+        this.removeAllListeners();
+        this.client.Disconnect();
     }
 }
 

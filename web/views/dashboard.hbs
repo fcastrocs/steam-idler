@@ -1,7 +1,9 @@
 <link rel="stylesheet" type="text/css" href="../static/css/dashboard.css">
 
-<script src="../static/js/dashboard/dashboard.js"></script>
-<script src="../static/js/dashboard/build-dashboard.js"></script>
+<script src="../static/js/dashboard/functions.js"></script>
+<script src="../static/js/dashboard/actions.js"></script>
+<script src="../static/js/dashboard/fetch-accounts.js"></script>
+<script src="../static/js/dashboard/account-refresher.js"></script>
 
 <!-- container -->
 <div>
@@ -96,17 +98,29 @@
     </div>
 </div>
 
+
+<!-- ACTIVATE FREE APP MODAL -->
 <div class="modal fade" id="activate-free-game-modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Activate Free Game</h5>
+                <h5 class="modal-title">Activate Free Games</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
+                <div class="alert alert-primary" role="alert" id="activate-game-msg" hidden></div>
+                <div class="alert alert-danger" role="alert" id="activate-game-errMsg" hidden></div>
+
+                <!-- activated games will be displayed here -->
+                <div id="activated-games" hidden>
+                    <div class="game-body"></div>
+                    <button type="button" class="btn btn-secondary activate-free-game-close float-right"
+                        data-dismiss="modal">Close</button>
+                </div>
                 <form id="activate-game-form">
+                    <p>Example to activate two games: 730, 570 </p>
                     <div class="form-group">
                         <div class="input-group">
                             <div class="input-group-prepend">
@@ -116,8 +130,53 @@
                         </div>
                     </div>
                     <div class="modal-buttons">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary" id="activate-free-game" data-id="">Activate</button>
+                        <button type="button" class="btn btn-secondary activate-free-game-close"
+                            data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="activate-free-game"
+                            data-id="">Activate</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- REDEEM KEY -->
+<div class="modal fade" id="redeem-key-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Redeem CD-KEY</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-primary" role="alert" id="redeem-key-msg" hidden></div>
+                <div class="alert alert-danger" role="alert" id="redeem-key-errMsg" hidden></div>
+
+                <!-- activated games will be displayed here -->
+                <div class="activated-games" hidden>
+                    <div class="game-body"></div>
+                    <button type="button" class="btn btn-secondary redeem-key-close float-right"
+                        data-dismiss="modal">Close</button>
+                </div>
+                <form id="redeem-key-form">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">CD-KEY</span>
+                            </div>
+                            <input type="text" name="cdkey" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="button" class="btn btn-secondary redeem-key-close"
+                            data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="redeem-key"
+                            data-id="">Activate</button>
                     </div>
                 </form>
             </div>

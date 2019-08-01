@@ -41,19 +41,16 @@ module.exports.GetAndSaveSteamCMs = async () => {
 
 
 // Returns a random SteamCM from database
-module.exports.GetSteamCM = async (cb) => {
-    SteamCM.countDocuments((err, count) => {
-        if (err) {
-            throw err;
-        }
-
-        let rand = Math.floor(Math.random() * count);
-
-        SteamCM.findOne().skip(rand).exec((err, steamcm) => {
-            if (err) {
-                throw err;
+module.exports.GetSteamCM = async () => {
+    return new Promise((resolve, reject) => {
+        SteamCM.countDocuments((err, count) => {
+            if (count == 0) {
+                return reject(false)
             }
-            cb(steamcm);
+            let rand = Math.floor(Math.random() * count);
+            SteamCM.findOne().skip(rand).exec((err, steamcm) => {
+                return resolve(steamcm);
+            })
         })
-    });
+    })
 }

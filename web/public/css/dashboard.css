@@ -31,6 +31,11 @@
     border: solid 1px rgba(17,74,121,1)
 }
 
+.account-reconnecting{
+    background: linear-gradient(0deg, rgba(106,106,106, 0.6) 0%, rgba(17,74,121,1) 100%);
+    border: solid 1px rgba(17,74,121,1)
+}
+
 
 .nick{
     background: rgba(0, 0, 0, 0.2);
@@ -60,7 +65,7 @@
     border: solid 3px rgb(143,185,59);
 }
 
-.avatar-offline{
+.avatar-offline, .avatar-reconnecting{
     border: solid 3px rgb(106,106,106)
 }
 
@@ -84,7 +89,7 @@
     color: #898989;
 }
 
-.status-bad{
+.status-bad, .status-reconnecting{
     color: #ff0000;
 }
 
@@ -211,4 +216,21 @@ input{
 .modal-buttons{
     width: 100%;
     text-align: right
+}
+
+
+
+
+
+
+
+
+#big-add-acc-button{
+    margin: 50px 30px;
+    height: 150px;
+    line-height: 150px;
+}
+
+#no-accounts-text{
+    margin-top: 15px;
 }

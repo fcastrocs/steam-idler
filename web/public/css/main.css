@@ -7,32 +7,30 @@ body{
 }
 
 #title{
-    font-size: 25px;
-    color: #5d85b6;
-    font-weight: bold;
-    display:table-cell;
-    vertical-align:middle;
+    font-size: 14px;
+    color: white;
+    display: inline;
 }
 
 #header{
     z-index: 1;
-    display:table;
-    height: 50px;
+    height: 54px;
     width: 100%;
     position: fixed;
     top: 0;
     left: 0;
-    background: #0f1720;
+    background: #233a57;
+    padding: 5px;
 }
 
 #sidebar{
     z-index: 1;
-    width: 190px;
+    width: 180px;
     height: 100%;
     position: fixed;
     left: 0;
-    top: 49px;
-    background: #0f1720;
+    top: 54px;
+    background: #233a57;
 }
 
 #content-body{
@@ -51,8 +49,7 @@ body{
     margin-top: 5px;
     padding: 5px;
     text-align: center;
-    background: #0b1118;
-    
+    background: #021727;
 }
 
 #sidebar-button:hover{
@@ -61,10 +58,6 @@ body{
 
 #box{
     height: calc(100% - 54px);
-}
-
-#content{
-    background-color: rgb(0, 21, 37);
 }
 
 #content-body{

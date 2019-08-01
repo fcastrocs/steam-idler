@@ -61,28 +61,21 @@ async function GetAndSaveProxies() {
 }
 
 // Returns a random proxy from database
-let GetProxy = (cb) => {
-    Proxy.countDocuments((err, count) => {
-        if (err) {
-            throw err;
-        }
-
-        let rand = Math.floor(Math.random() * count);
-
-        Proxy.findOne().skip(rand).exec((err, proxy) => {
-            if (err) throw err;
-            cb(proxy);
+let GetProxy = async () => {
+    return new Promise((resolve, reject) => {
+        Proxy.countDocuments((err, count) => {
+            if (count == 0) {
+                return reject(false)
+            }
+            let rand = Math.floor(Math.random() * count);
+            Proxy.findOne().skip(rand).exec((err, proxy) => {
+                return resolve(proxy);
+            })
         })
-    });
-}
-
-let RemoveAndGet = (proxy, cb) => {
-    Proxy.deleteOne(proxy, (err, doc) => {
-        if (err) throw err;
-        return GetProxy(cb);
     })
 }
 
+
+
 module.exports.GetAndSaveProxies = GetAndSaveProxies;
 module.exports.GetProxy = GetProxy;
-module.exports.RemoveAndGet = RemoveAndGet;

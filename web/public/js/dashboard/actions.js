@@ -1,5 +1,9 @@
 $(() => {
 
+    $.ajaxSetup({
+        timeout: 30000
+    });
+
     /**************************************************** 
      *               ADD STEAM ACCOUNT                  *
      * **************************************************/
@@ -18,8 +22,14 @@ $(() => {
         //form handler
         let data = $('#add-steamaccount-form').serialize();
 
-        $.post('/dashboard/addacc', data, (res) => {
-            $('#add-acc-msg').show(0).text("Account successfully added.")
+        $.post('/dashboard/addacc', data, (doc) => {
+            // Add account to content-body
+            $("#no-accounts").hide(0);
+            let account = buildAccount(doc);
+            $("#content-body").append(account)
+
+            // success message
+            $('#add-acc-msg').show(0).text("Success, account added.")
             //hide spinner
             $("#spinner").hide(0)
             //hide err message
@@ -80,7 +90,7 @@ $(() => {
         // enable login-wait spinner
         self.find(".login-wait").first().attr("hidden", false);
 
-        $.post('/dashboard/loginaccount', { accountId: accountId }, (res) => {
+        $.post('/dashboard/loginaccount', { accountId: accountId }, () => {
 
             // disable login-wait spinner
             self.find("div .login-wait").first().attr("hidden", true);
@@ -98,9 +108,9 @@ $(() => {
             buttons.find("button.get-game").attr("hidden", false);
 
             // change appropiate css
-            self.removeClass("account-offline").addClass(`account-${res}`)
-            self.find(".info .status").first().removeClass("status-offline").addClass(`status-${res}`).text(res)
-            self.find("a .avatar").first().removeClass("avatar-offline").addClass(`avatar-${res}`);
+            self.removeClass("account-offline").addClass(`account-online`)
+            self.find(".info .status").first().removeClass("status-offline").addClass(`status-online`).text("online")
+            self.find("a .avatar").first().removeClass("avatar-offline").addClass(`avatar-online`);
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
@@ -163,10 +173,10 @@ $(() => {
             return
         }
 
-        $.post('/dashboard/playgames', { accountId: accountId, games: games }, function (res) {
+        $.post('/dashboard/playgames', { accountId: accountId, games: games }, ()=> {
             //set ingame status
             self.removeClass("account-online").addClass(`account-in-game`)
-            self.find(".info .status").removeClass("status-online").addClass(`status-in-game`).text(res)
+            self.find(".info .status").removeClass("status-online").addClass(`status-in-game`).text("in-game")
             self.find("a img.avatar").removeClass("avatar-online").addClass(`avatar-in-game`);
             self.find(".games-idle").first().modal('toggle');
 
@@ -186,13 +196,13 @@ $(() => {
         }
 
         let accountId = self.attr("data-id");
-        $.post('/dashboard/stopgames', { accountId: accountId }, function (res) {
+        $.post('/dashboard/stopgames', { accountId: accountId }, () => {
             self.removeClass("account-in-game").addClass(`account-online`)
-            self.find(".info .status").removeClass("status-in-game").addClass(`status-online`).text(res)
+            self.find(".info .status").removeClass("status-in-game").addClass(`status-online`).text("online")
             self.find("a img.avatar").removeClass("avatar-in-game").addClass(`avatar-online`);
             self.find(".start-idle").first().attr("data-games", "");
             self.find(".games-idle").first().modal('toggle');
-            self.find(".game-body").first().children(".game-img").each(function () {
+            self.find(".game-body").first().children(".game-img").each(() => {
                 if ($(this).hasClass("selected")) {
                     $(this).removeClass("selected").addClass("unselected")
                 }
@@ -313,13 +323,10 @@ $(() => {
     })
 
 
-
-
-
     /**************************************************** 
     *           STEAM - ACTIVATE FREE GAME              *
     * **************************************************/
-    // Opem activate game modal
+    // Open activate game modal
     $("#content-body").on('click', ".get-game", function () {
         let accountId = $(this).closest("div.account").attr("data-id")
         $("#activate-free-game").attr("data-id", accountId)
@@ -327,31 +334,113 @@ $(() => {
     })
 
 
-    $("#activate-game-form").submit(function(e){
-        e.preventDefault();
-
-        let accountId = $("#activate-free-game").attr("data-id");
-        if(!accountId){
-            return;
-        }
-
-        let appId = $("input[name=appId]").val();
-        if(!appId){
-            return
-        }
-
-        console.log(accountId)
-        console.log(appId)
-
-        return;
-
+    // close activate game modal
+    $(".activate-free-game-close").click(function () {
+        $("#activated-games").hide(0);
+        $("#activated-games .game-body").html('');
+        $("#activate-game-form").show(0);
+        $("input[name=appId]").val("");
+        $("#activate-game-msg").hide(0).text("")
+        $("#activate-game-errMsg").hide(0).text("")
     })
 
 
+    $("#activate-game-form").submit(function (e) {
+        e.preventDefault();
+
+        let accountId = $("#activate-free-game").attr("data-id");
+        if (!accountId) {
+            return;
+        }
+
+        let appIds = $("input[name=appId]").val();
+        if (!appIds) {
+            return
+        }
+
+        $("#activate-game-msg").attr("hidden", false).hide(0);
+        $("#activate-game-errMsg").attr("hidden", false).hide(0);
+        $("#activated-games").attr("hidden", false).hide(0)
 
 
+        $.post('/dashboard/activatefreegame', { accountId: accountId, appIds: appIds }, games => {
+            $("#activate-game-form").hide(0)
+            $("#activate-game-errMsg").hide(0);
+            $("#activate-game-msg").show(0).text("Successfully added games")
+
+            let gamesDiv = ""
+            for (let j in games) {
+                let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
+                gamesDiv += `<img class="game-img" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
+            }
+
+            $(".game-body").append(gamesDiv)
+            $("#activated-games").show(0)
+
+        }).fail((xhr, status, err) => {
+            $("#activate-game-errMsg").show(0).text(xhr.responseText)
+        })
+    })
 
 
+    /**************************************************** 
+    *           STEAM - REDEEM KEY                      *
+    * **************************************************/
+    // Open redeem key modal
+    $("#content-body").on('click', ".redeem-key", function () {
+        let accountId = $(this).closest("div.account").attr("data-id")
+        $("#redeem-key").attr("data-id", accountId)
+        $("#redeem-key-modal").modal("toggle")
+    })
+
+
+    // close activate game modal
+    $(".redeem-key-close").click(function () {
+        $("#activated-games").hide(0);
+        $("#activated-games .game-body").html('');
+        $("#redeem-key-form").show(0);
+        $("input[name=cdkey]").val("");
+        $("#redeem-key-msg").hide(0).text("")
+        $("#redeem-key-errMsg").hide(0).text("")
+    })
+
+
+    $("#redeem-key-form").submit(function (e) {
+        e.preventDefault();
+
+        let accountId = $("#redeem-key").attr("data-id");
+        if (!accountId) {
+            return;
+        }
+
+        let cdkey = $("input[name=cdkey]").val();
+        if (!cdkey) {
+            return
+        }
+
+        $("#redeem-key-msg").attr("hidden", false).hide(0);
+        $("#redeem-key-errMsg").attr("hidden", false).hide(0);
+        $("#activated-games").attr("hidden", false).hide(0)
+
+
+        $.post('/dashboard/redeemkey', { accountId: accountId, cdkey: cdkey }, games => {
+            $("#redeem-key-form").hide(0)
+            $("#redeem-key-errMsg").hide(0);
+            $("#redeem-key-msg").show(0).text("Successfully added games")
+
+            let gamesDiv = ""
+            for (let j in games) {
+                let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
+                gamesDiv += `<img class="game-img" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
+            }
+
+            $(".game-body").append(gamesDiv)
+            $("#activated-games").show(0)
+
+        }).fail((xhr, status, err) => {
+            $("#redeem-key-errMsg").show(0).text(xhr.responseText)
+        })
+    })
 
 
 
