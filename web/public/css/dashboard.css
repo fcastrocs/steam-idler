@@ -11,29 +11,60 @@
 }
 
 
-.account-in-game{
-    background: linear-gradient(0deg, rgba(143,185,59, 0.45) 0%, rgba(17,74,121,1) 100%);
-    border: solid 2px rgba(17,74,121,1)
-}
-
-.account-bad{
+.account-Bad{
     background: linear-gradient(0deg,  rgb(24, 0, 0) 0%, rgb(134, 0, 0) 100%);
     border: solid 1px rgb(134, 0, 0)
 }
 
-.account-offline{
+.account-Offline{
+    background: linear-gradient(0deg, rgba(145, 145, 145, 0.8) 0%, rgb(53, 53, 53) 100%);
+    border: solid 1px rgba(17,74,121,1)
+}
+
+.account-Online, .account-Away, .account-Busy, .account-Invisible{
+    background: linear-gradient(0deg, rgba(0, 183, 255, 0.65) 0%, rgb(7, 45, 77) 100%);
+    border: solid 1px rgba(17,74,121,1)
+}
+
+.account-Invisible, .account-Offline{
+    border: solid 2px rgb(192,192,192)
+}
+
+.account-Away{
+    border: solid 2px rgb(255, 255, 0);
+}
+
+.account-Online{
+    border: solid 2px #57cbde;
+}
+
+.account-Busy{
+    border: solid 2px rgb(211, 141, 11);
+}
+
+.account-Reconnecting{
     background: linear-gradient(0deg, rgba(106,106,106, 0.6) 0%, rgba(17,74,121,1) 100%);
     border: solid 1px rgba(17,74,121,1)
 }
 
-.account-online{
-    background: linear-gradient(0deg, rgba(83,164,196, 0.65) 0%, rgba(17,74,121,1) 100%);
-    border: solid 1px rgba(17,74,121,1)
+.status-Away{
+    color: rgb(255, 255, 0);
 }
 
-.account-reconnecting{
-    background: linear-gradient(0deg, rgba(106,106,106, 0.6) 0%, rgba(17,74,121,1) 100%);
-    border: solid 1px rgba(17,74,121,1)
+.status-Busy{
+    color: rgb(211, 141, 11);
+}
+
+.status-Invisible, .status-Offline{
+    color: rgb(192,192,192)
+}
+
+.status-Online{
+    color: #57cbde;
+}
+
+.status-Bad, .status-Reconnecting{
+    color: #ff0000;
 }
 
 
@@ -57,15 +88,15 @@
     margin-bottom: 5px;
 }
 
-.avatar-online{
+.avatar-Online{
     border: solid 3px rgb(83,164,196);
 }
 
-.avatar-in-game{
+.avatar-In-game{
     border: solid 3px rgb(143,185,59);
 }
 
-.avatar-offline, .avatar-reconnecting{
+.avatar-Offline, .avatar-Reconnecting{
     border: solid 3px rgb(106,106,106)
 }
 
@@ -77,21 +108,6 @@
     font-weight: bolder;
 }
 
-.status-online{
-    color: #57cbde;
-}
-
-.status-in-game{
-    color: #90ba3c;
-}
-
-.status-offline{
-    color: #898989;
-}
-
-.status-bad, .status-reconnecting{
-    color: #ff0000;
-}
 
 .info{
     font-size: 12px;

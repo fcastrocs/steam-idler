@@ -9,6 +9,7 @@ let steamAcc = new Schema({
     sentry: {type: Object, default: null},
     games: {type: Array, default: null},
     status: {type: String, required: true},
+    forcedStatus: {type: String, required: true},
     steamid: {type: String, required: true},
     gamesPlaying: [{ type: Object }],
     persona_name: {type: String, required: true},

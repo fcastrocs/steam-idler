@@ -6,7 +6,7 @@ $(() => {
             for (let i in accounts) {
                 // find account div
                 let self = $(`.account[data-id="${accounts[i]._id}"]`)
-                let status = self.find(".status").first().text();
+                let status = self.attr("data-realstatus")
 
                 // Check if status has changed
                 if (status === accounts[i].status) {

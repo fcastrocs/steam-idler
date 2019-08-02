@@ -21,7 +21,7 @@ class AccountHandler extends EventEmitter {
         let accounts = await query.exec();
 
         for (let i in accounts) {
-            accounts[i].status = "offline"
+            accounts[i].status = "Offline"
             await this.saveAccount(accounts[i])
         }
 
@@ -48,14 +48,9 @@ class AccountHandler extends EventEmitter {
                 try {
                     let options = this.setupLoginOptions(doc);
                     let client = await this.steamConnect(options);
-
-                    //Figure out correct status
-                    if(doc.gamesPlaying > 0){
-                        doc.status = "in-game"
-                    }else{
-                        doc.status = "online"
-                    }
-
+                    
+                    doc.status = "Online"
+                    
                     //save and store client
                     this.saveToHandler(doc.userId, doc._id.toString(), client)
 
@@ -64,11 +59,11 @@ class AccountHandler extends EventEmitter {
                     doc.persona_name = options.persona_name;
                     doc.avatar = options.avatar;
 
-                    this.saveAccount(doc)
+                    await this.saveAccount(doc)
                 } catch (error) {
                     //could not login to account, update it's status
                     doc.status = error;
-                    this.saveAccount(doc)
+                    await this.saveAccount(doc)
                 }
             }
         }
@@ -114,11 +109,6 @@ class AccountHandler extends EventEmitter {
             //save playing games to account and force correct status
             let account = await self.getAccount(userId, accountId);
             account.gamesPlaying = games;
-            if (games.length == 0) {
-                account.status = "online"
-            } else {
-                account.status = "in-game"
-            }
             await self.saveAccount(account);
             resolve("okay");
         })
@@ -139,23 +129,23 @@ class AccountHandler extends EventEmitter {
             // Register needed events
 
             // account has logged in
-            client.on('steamid', steamid => {
+            client.once('steamid', steamid => {
                 account.steamid = steamid;
             })
 
             // login error has occurred
-            client.on("loginError", err => {
+            client.once("loginError", err => {
                 account.status = err;
                 return reject(err)
             })
 
             // sentry has been accepted
-            client.on("sentry", sentry => {
+            client.once("sentry", sentry => {
                 account.sentry = sentry
             })
 
             // games in account
-            client.on("games", games => {
+            client.once("games", games => {
                 event_count++;
                 account.games = games
                 if (event_count === 3) {
@@ -164,7 +154,7 @@ class AccountHandler extends EventEmitter {
             })
 
             // persona name/nick
-            client.on("persona-name", persona_name => {
+            client.once("persona-name", persona_name => {
                 event_count++
                 // no name?
                 if (!persona_name) {
@@ -178,7 +168,7 @@ class AccountHandler extends EventEmitter {
             })
 
             // account avatar
-            client.on("avatar", avatar => {
+            client.once("avatar", avatar => {
                 event_count++;
                 account.avatar = avatar
                 if (event_count === 3) {
@@ -194,7 +184,7 @@ class AccountHandler extends EventEmitter {
                 }
 
                 doc.status = res
-                self.saveAccount(doc);
+                await self.saveAccount(doc);
             })
 
             // connection has been lost after being logged in
@@ -204,8 +194,8 @@ class AccountHandler extends EventEmitter {
                 if (!doc) {
                     return;
                 }
-                doc.status = "reconnecting";
-                self.saveAccount(doc);
+                doc.status = "Reconnecting";
+                await self.saveAccount(doc);
             })
 
             // connection has been regained after being logged in
@@ -215,8 +205,8 @@ class AccountHandler extends EventEmitter {
                 if (!doc) {
                     return;
                 }
-                doc.status = "online";
-                self.saveAccount(doc);
+                doc.status = "Online";
+                await self.saveAccount(doc);
             })
 
             // client.once("loginKey", loginKey => {
@@ -253,9 +243,9 @@ class AccountHandler extends EventEmitter {
                 doc.games = self.addGames(options.games, doc.games);
                 doc.persona_name = options.persona_name;
                 doc.avatar = options.avatar;
-                doc.status = "online"
-                self.saveAccount(doc)
-                return resolve("online")
+                doc.status = "Online"
+                await self.saveAccount(doc)
+                return resolve(doc.forcedStatus)
             } catch (error) {
                 //login error
                 doc.status = error;
@@ -264,6 +254,28 @@ class AccountHandler extends EventEmitter {
             }
         })
     }
+
+
+    /************************************************************************
+     * 					     DELETE STEAM ACCOUNT		                    *
+     ************************************************************************/
+    async deleteAccount(userId, accountId) {
+        //Find account in DB
+        let doc = await this.getAccount(userId, accountId)
+        // account not found
+        if (!doc) {
+            return Promise.reject("Account not found.")
+        }
+        // check account if account is logged in
+        let client = this.isAccountOnline(userId, accountId);
+        if (client) {
+            this.removeFromHandler(userId, accountId);
+        }
+
+        await doc.delete();
+        return Promise.resolve("deleted");
+    }
+
 
     /************************************************************************
      * 					     LOGOUT STEAM ACCOUNT			                *
@@ -282,21 +294,18 @@ class AccountHandler extends EventEmitter {
             let client = self.isAccountOnline(userId, accountId);
             if (!client) {
                 //force offline status
-                doc.status = "offline";
-                self.saveAccount(doc);
-                return resolve("offline")
+                doc.status = "Offline";
+                await self.saveAccount(doc);
+                return resolve("Offline")
             }
-
-            // logout account
-            client.Disconnect();
 
             // Remove handler
             self.removeFromHandler(userId, accountId);
 
             //finally update account status to offline
-            doc.status = "offline";
-            self.saveAccount(doc)
-            return resolve("offline");
+            doc.status = "Offline";
+            await self.saveAccount(doc)
+            return resolve("Offline");
         })
     }
 
@@ -313,26 +322,32 @@ class AccountHandler extends EventEmitter {
                 return reject("Account already in DB.");
             }
 
+            let options = account;
+
             //try to login to steam
             try {
-                let client = await self.steamConnect(account);
+                let client = await self.steamConnect(options);
 
                 //save account to database
                 let steamacc = new SteamAccount({
                     userId: userId,
-                    user: account.user,
-                    pass: Security.encrypt(account.pass),
-                    sentry: Security.encrypt(account.sentry),
-                    status: "online",
-                    games: account.games,
-                    steamid: account.steamid,
-                    persona_name: account.persona_name,
-                    avatar: account.avatar
+                    user: options.user,
+                    pass: Security.encrypt(options.pass),
+                    status: "Online",
+                    forcedStatus: "Online",
+                    games: options.games,
+                    steamid: options.steamid,
+                    persona_name: options.persona_name,
+                    avatar: options.avatar
                 })
 
                 // Only 2FA accs get shared secret
-                if (account.shared_secret) {
-                    steamacc.shared_secret = Security.encrypt(account.shared_secret);
+                if (options.shared_secret) {
+                    steamacc.shared_secret = Security.encrypt(options.shared_secret);
+                }
+                // 2FA accs don't get sentry
+                if(options.sentry){
+                    steamacc.sentry = Security.encrypt(options.sentry);
                 }
 
                 // Save to database
@@ -343,7 +358,6 @@ class AccountHandler extends EventEmitter {
                 return resolve(doc)
 
             } catch (error) {
-                console.log(error)
                 return reject(error);
             }
         })
@@ -405,6 +419,29 @@ class AccountHandler extends EventEmitter {
         }
     }
 
+    /************************************************************************
+    * 					          FORCED STATUS					            *
+    ************************************************************************/
+    async setStatus(userId, accountId, status) {
+        // check account is logged in
+        let client = this.isAccountOnline(userId, accountId);
+        if (!client) {
+            return Promise.reject("Account is not online.")
+        }
+
+        // Find account in db-
+        let doc = await this.getAccount(userId, accountId, null);
+        if (!doc) {
+            return Promise.reject("Account not found.")
+        }
+
+        doc.forcedStatus = status;
+
+        client.setPersona(status);
+        await this.saveAccount(doc);
+        return Promise.resolve(doc.forcedStatus)
+    }
+
 
     /************************************************************************
     * 					          HELPER FUNCTIONS					        *
@@ -457,7 +494,8 @@ class AccountHandler extends EventEmitter {
     async removeFromHandler(userId, accountId) {
         // Remove account from local handler
         if (this.userAccounts[userId] && this.userAccounts[userId][accountId]) {
-            this.userAccounts[userId][accountId] = null
+            this.userAccounts[userId][accountId].Disconnect();
+            this.userAccounts[userId][accountId] = null;
         }
 
         // Get handler
@@ -523,7 +561,11 @@ class AccountHandler extends EventEmitter {
     async saveAccount(account) {
         return new Promise((resolve, reject) => {
             account.save((err, doc) => {
-                resolve(doc)
+                if (err) {
+                    console.log(err)
+                } else {
+                    resolve(doc)
+                }
             })
         })
     }

@@ -19,47 +19,47 @@ function buildAccount(account) {
     }
     data_games = data_games.trim()
 
+
     // Set correct buttons
     let buttons = ""
-    let status = ""
-    if (account.status === "online" || account.status === "in-game") {
-        status = account.status;
+    if (account.status === "Online" || account.status === "In-game") {
         buttons = `
             <button type="button" class="btn btn-primary btn-sm acc-login" hidden>Login</button>
             <button type="button" class="btn btn-primary btn-sm acc-logout">Logout</button>
             <button type="button" class="btn btn-primary btn-sm set-status">Status</button>
+            <button type="button" class="btn btn-primary btn-sm idle-game">Idle</button>
             <button type="button" class="btn btn-primary btn-sm redeem-key">Redeem Key</button>
-            <button type="button" class="btn btn-primary btn-sm idle-game">Idle / Farm</button>
-            
             <button type="button" class="btn btn-primary btn-sm get-game">Get Games</button>
             <button type="button" class="btn btn-primary btn-sm btn-danger delete-acc">Delete</button>`
-    } else if (account.status === "offline") {
-        status = account.status;
+    } else if (account.status === "Offline") {
+        account.forcedStatus = "Offline"
         buttons = `
             <button type="button" class="btn btn-primary btn-sm acc-login">Login</button>
             <button type="button" class="btn btn-primary btn-sm acc-logout" hidden>Logout</button>
-            <button type="button" class="btn btn-primary btn-sm idle-game" hidden>Idle</button>
+            <button type="button" class="btn btn-primary btn-sm set-status" hidden>Status</button>
             <button type="button" class="btn btn-primary btn-sm redeem-key" hidden>Redeem Key</button>
+            <button type="button" class="btn btn-primary btn-sm idle-game" hidden>Idle</button>
             <button type="button" class="btn btn-primary btn-sm get-game" hidden>Get Games</button>
             <button type="button" class="btn btn-primary btn-sm btn-danger delete-acc">Delete</button>`
-    } else if (account.status === "reconnecting") {
-        status = account.status;
+    } else if (account.status === "Reconnecting") {
+        account.forcedStatus = "Reconnecting"
         buttons = `
             <button type="button" class="btn btn-primary btn-sm acc-login" hidden>Login</button>
             <button type="button" class="btn btn-primary btn-sm acc-logout" hidden>Logout</button>
-            <button type="button" class="btn btn-primary btn-sm idle-game" hidden>Idle</button>
+            <button type="button" class="btn btn-primary btn-sm set-status" hidden>Status</button>
             <button type="button" class="btn btn-primary btn-sm redeem-key" hidden>Redeem Key</button>
+            <button type="button" class="btn btn-primary btn-sm idle-game" hidden>Idle</button>
             <button type="button" class="btn btn-primary btn-sm get-game" hidden>Get Games</button>
             <button type="button" class="btn btn-primary btn-sm btn-danger delete-acc" hidden>Delete</button>`
     }
     else { // bad account
-        status = "bad"
+        account.forcedStatus = "Bad"
         buttons = `<button type="button" class="btn btn-primary btn-sm delete-acc">Delete Acc</button>`
     }
 
 
     let acc = `
-        <div class="account account-${status}" data-id="${account._id}">
+        <div class="account account-${account.forcedStatus}" data-id="${account._id}" data-realstatus="${account.status}">
 
             <div class="nick">${account.persona_name}</div>
 
@@ -68,7 +68,7 @@ function buildAccount(account) {
             </a>
             
             <div class="info">
-                <div class="status status-${account.status}">${account.status}</div>
+                <div class="status status-${account.forcedStatus}">${account.forcedStatus}</div>
                 <div class="cards-left">Cards left: todo</div>
                 <div class="games-left">Games left to idle: todo</div>
             </div>

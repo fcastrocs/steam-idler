@@ -1,7 +1,7 @@
 $(() => {
 
     $.ajaxSetup({
-        timeout: 30000
+        timeout: 60000
     });
 
     /**************************************************** 
@@ -90,7 +90,7 @@ $(() => {
         // enable login-wait spinner
         self.find(".login-wait").first().attr("hidden", false);
 
-        $.post('/dashboard/loginaccount', { accountId: accountId }, () => {
+        $.post('/dashboard/loginaccount', { accountId: accountId }, res => {
 
             // disable login-wait spinner
             self.find("div .login-wait").first().attr("hidden", true);
@@ -102,15 +102,17 @@ $(() => {
 
             // show correct buttons
             let buttons = self.find(".account-buttons").first()
+            buttons.find("button.acc-login").attr("hidden", true);
             buttons.find("button.acc-logout").attr("hidden", false);
+            buttons.find("button.set-status").attr("hidden", false);
             buttons.find("button.idle-game").attr("hidden", false);
             buttons.find("button.redeem-key").attr("hidden", false);
             buttons.find("button.get-game").attr("hidden", false);
 
             // change appropiate css
-            self.removeClass("account-offline").addClass(`account-online`)
-            self.find(".info .status").first().removeClass("status-offline").addClass(`status-online`).text("online")
-            self.find("a .avatar").first().removeClass("avatar-offline").addClass(`avatar-online`);
+            self.removeClass("account-Offline").addClass(`account-${res}`)
+            self.find(".info .status").first().removeClass("status-Offline").addClass(`status-${res}`).text(res)
+            self.find("a .avatar").first().removeClass("avatar-Offline").addClass(`avatar-Online`);
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
@@ -130,7 +132,7 @@ $(() => {
         // enable login-wait spinner
         self.find(".login-wait").first().attr("hidden", false);
 
-        $.post('/dashboard/logoutaccount', { accountId: accountId }, (res) => {
+        $.post('/dashboard/logoutaccount', { accountId: accountId }, () => {
             // disable login-wait spinner
             self.find("div .login-wait").first().attr("hidden", true);
             // enable all buttons
@@ -140,14 +142,15 @@ $(() => {
             let buttons = self.find(".account-buttons").first()
             buttons.find("button.acc-login").attr("hidden", false);
             buttons.find("button.acc-logout").attr("hidden", true);
+            buttons.find("button.set-status").attr("hidden", true);
             buttons.find("button.idle-game").attr("hidden", true);
             buttons.find("button.redeem-key").attr("hidden", true);
             buttons.find("button.get-game").attr("hidden", true);
 
             // change appropiate css
-            self.removeClass("account-in-game").removeClass("account-online").addClass(`account-offline`)
-            self.find(".info .status").first().removeClass("status-in-game").removeClass("status-online").addClass(`status-offline`).text(res)
-            self.find("a .avatar").first().removeClass("avatar-in-game").removeClass("avatar-online").addClass(`avatar-offline`);
+            self.removeClass().addClass(`account account-Offline`)
+            self.find(".info .status").first().removeClass().addClass(`status status-Offline`).text("Offline")
+            self.find("a .avatar").first().removeClass().addClass(`avatar avatar-Offline`);
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
@@ -175,9 +178,7 @@ $(() => {
 
         $.post('/dashboard/playgames', { accountId: accountId, games: games }, () => {
             //set ingame status
-            self.removeClass("account-online").addClass(`account-in-game`)
-            self.find(".info .status").removeClass("status-online").addClass(`status-in-game`).text("in-game")
-            self.find("a img.avatar").removeClass("avatar-online").addClass(`avatar-in-game`);
+            self.find("a img.avatar").removeClass().addClass(`avatar avatar-In-game`);
             self.find(".games-idle").first().modal('toggle');
 
         }).fail((xhr, status, err) => {
@@ -197,9 +198,7 @@ $(() => {
 
         let accountId = self.attr("data-id");
         $.post('/dashboard/stopgames', { accountId: accountId }, () => {
-            self.removeClass("account-in-game").addClass(`account-online`)
-            self.find(".info .status").removeClass("status-in-game").addClass(`status-online`).text("online")
-            self.find("a img.avatar").removeClass("avatar-in-game").addClass(`avatar-online`);
+            self.find("a img.avatar").removeClass().addClass(`avatar avatar-Online`);
             self.find(".start-idle").first().attr("data-games", "");
             self.find(".games-idle").first().modal('toggle');
             // Remove selected imaged
@@ -464,15 +463,38 @@ $(() => {
     })
 
     /**************************************************** 
-    *           STEAM - REDEEM KEY                      *
+    *             STEAM - SET STATUS                    *
     * **************************************************/
-    // Open redeem key modal
+    // Open set status modal
     $("#content-body").on('click', ".set-status", function () {
-        let accountId = $(this).closest("div.account").attr("data-id")
+        let self = $(this).closest("div.account");
+        let accountId = self.attr("data-id")
+        //disable and check current status
+        let status = self.find(".status").first().text();
+        $(`input[value="${status}"]`).attr("checked", true).attr("disabled", true);
+        $("#set-status-button").attr("data-id", accountId)
         $("#set-status-modal").modal("toggle")
     })
 
+    $("#set-status-form").submit(function (e) {
+        e.preventDefault();
+        let accountId = $("#set-status-button").attr("data-id");
+        let status = $('input[name="status"]:checked').val();
+        $.post('/dashboard/setstatus', { status: status, accountId: accountId }, function (res) {
+            //change css
+            let self = $(`div.account[data-id="${accountId}"]`)
+            self.removeClass().addClass(`account account-${status}`)
+            //change status
+            let oldStatus = self.find(".status").first().text();
+            self.find(".status").first().removeClass().addClass(`status status-${status}`).text(status)
 
+            //uncheck and enable old status
+            $(`input[value="${oldStatus}"]`).attr("checked", false).attr("disabled", false);
+            $("#set-status-modal").modal("toggle")
+        }).fail((xhr, status, err) => {
+            alert(xhr.responseText)
+        })
+    })
 
 
 

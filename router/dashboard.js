@@ -23,7 +23,7 @@ router.get(`/dashboard/:username`, isLoggedIn, (req, res) => {
 
 // Returns all accounts for this user
 router.get('/dashboard/steamacc/get', isLoggedIn, (req, res) => {
-    SteamAccounts.find({ userId: req.session.userId }, 'persona_name games status gamesPlaying avatar steamid', (err, accounts) => {
+    SteamAccounts.find({ userId: req.session.userId }, 'persona_name games status gamesPlaying avatar steamid forcedStatus', (err, accounts) => {
         if (err) {
             throw err;
         }
@@ -186,11 +186,9 @@ router.post('/dashboard/setstatus', isLoggedIn, async function (req, res) {
 
     let status = req.body.status;
 
-    if(stauts != "Online" || status != "Invisible" || status != "Away" || status != "Snooze" || status != "Busy"){
+    if (status != "Online" && status != "Invisible" && status != "Away" && status != "Snooze" && status != "Busy") {
         return res.status(400).send("Bad setstatus request.")
     }
-
-
 
     try {
         let result = await AccountHandler.setStatus(req.session.userId, req.body.accountId, status);
@@ -210,18 +208,12 @@ router.delete('/dashboard/deleteacc', isLoggedIn, async function (req, res) {
 
     try {
         // try to logout account
-        await AccountHandler.logoutAccount(req.session.userId, req.body.accountId);
+        let response = await AccountHandler.deleteAccount(req.session.userId, req.body.accountId);
         // At this point, the account has been logged out and its handler's been destroyed
-
+        return res.send(response)
     } catch (error) {
-        if (error !== "Account not logged in.") {
-            return res.status(400).send(error)
-        }
+        return res.status(400).send(error)
     }
-
-    // Now delete the account
-    await SteamAccounts.findOneAndDelete({ userId: req.session.userId, _id: req.body.accountId })
-    return res.send("deleted")
 })
 
 

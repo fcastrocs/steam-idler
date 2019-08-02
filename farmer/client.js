@@ -26,13 +26,14 @@ class Client extends EventEmitter {
         this.client.playGames(games);
         let self = this;
 
+        // if games is an empty array, the account will stop playing games
         setTimeout(() => {
             if (games.length > 0) {
-                self.emit("in-game", "in-game")
+                self.emit("in-game", "In-game")
             } else {
-                self.emit("in-game", "online")
+                self.emit("in-game", "Online")
             }
-        }, 2500);
+        }, 3000);
     }
 
     /************************************************************************
@@ -89,6 +90,18 @@ class Client extends EventEmitter {
 	*   "Invisible": 7                                                      *
     ************************************************************************/
     setPersona(state, name) {
+        // Save status if account loses connection
+        this.account.forcedStatus = state;
+        if (state == "Online") {
+            state = 1;
+        } else if (state == "Busy") {
+            state = 2;
+        } else if (state == "Away") {
+            state = 3;
+        } else if (state == "Invisible") {
+            state = 7
+        }
+
         this.client.setPersona(state, name)
     }
 
@@ -121,7 +134,7 @@ class Client extends EventEmitter {
         }
 
         // login response
-        this.client.on('logOnResponse', res => {
+        this.client.once('logOnResponse', res => {
 
             // LOGGED IN
             if (res.eresult == 1) {
@@ -140,13 +153,16 @@ class Client extends EventEmitter {
                 //delete login options
                 self.loginOption = {};
 
-                // set online status
-                self.setPersona(1);
-
                 // set accounts to play games
                 if (self.account.gamesPlaying && self.account.gamesPlaying.length > 0) {
                     self.playGames(self.account.gamesPlaying)
                 }
+
+                // Set persona
+                if(!self.account.forcedStatus){
+                    self.account.forcedStatus = "Online"
+                }
+                self.setPersona(self.account.forcedStatus)
 
                 return;
             }
@@ -158,7 +174,7 @@ class Client extends EventEmitter {
             else if (res.eresult == 84) {
                 self.loggedIn = false;
                 console.log(`Rate limit > user: ${self.account.user}`)
-                //self.Disconnect();
+                self.Disconnect();
                 self.connect();
                 return;
             }
@@ -184,20 +200,20 @@ class Client extends EventEmitter {
             self.Disconnect();
         });
 
-        this.client.on('games', games => {
+        this.client.once('games', games => {
             self.emit("games", games);
         })
 
-        this.client.on("persona-name", persona_name => {
+        this.client.once("persona-name", persona_name => {
             self.emit("persona-name", persona_name)
         })
 
-        this.client.on("avatar", avatar => {
+        this.client.once("avatar", avatar => {
             self.emit("avatar", avatar)
         })
 
         // sentry
-        this.client.on('updateMachineAuth', (sentry, callback) => {
+        this.client.once('updateMachineAuth', (sentry, callback) => {
             // Do not reaccept sentry if we have one already
             if (self.account.sentry) {
                 return;
@@ -220,8 +236,8 @@ class Client extends EventEmitter {
             self.emit("loginKey", loginKey)
         })*/
 
-         // Login to steam
-         this.client.LogOn(this.loginOption);
+        // Login to steam
+        this.client.LogOn(this.loginOption);
     }
 
     /************************************************************************
@@ -276,7 +292,6 @@ class Client extends EventEmitter {
     Disconnect() {
         this.loggedIn = false;
         console.log(`Disconnect > user: ${this.account.user}`)
-        this.removeAllListeners();
         this.client.Disconnect();
     }
 }
