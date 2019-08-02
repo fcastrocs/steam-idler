@@ -177,6 +177,31 @@ router.post('/dashboard/redeemkey', isLoggedIn, async function (req, res) {
     }
 })
 
+
+// Redeem key
+router.post('/dashboard/setstatus', isLoggedIn, async function (req, res) {
+    if (!req.body.accountId || !req.body.status) {
+        return res.status(400).send("Bad setstatus request.")
+    }
+
+    let status = req.body.status;
+
+    if(stauts != "Online" || status != "Invisible" || status != "Away" || status != "Snooze" || status != "Busy"){
+        return res.status(400).send("Bad setstatus request.")
+    }
+
+
+
+    try {
+        let result = await AccountHandler.setStatus(req.session.userId, req.body.accountId, status);
+
+        return res.send(result);
+    } catch (error) {
+        return res.status(400).send(error)
+    }
+})
+
+
 // Removes a steam account
 router.delete('/dashboard/deleteacc', isLoggedIn, async function (req, res) {
     if (!req.body.accountId) {

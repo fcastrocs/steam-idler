@@ -27,8 +27,10 @@ function buildAccount(account) {
         buttons = `
             <button type="button" class="btn btn-primary btn-sm acc-login" hidden>Login</button>
             <button type="button" class="btn btn-primary btn-sm acc-logout">Logout</button>
-            <button type="button" class="btn btn-primary btn-sm idle-game">Idle</button>
+            <button type="button" class="btn btn-primary btn-sm set-status">Status</button>
             <button type="button" class="btn btn-primary btn-sm redeem-key">Redeem Key</button>
+            <button type="button" class="btn btn-primary btn-sm idle-game">Idle / Farm</button>
+            
             <button type="button" class="btn btn-primary btn-sm get-game">Get Games</button>
             <button type="button" class="btn btn-primary btn-sm btn-danger delete-acc">Delete</button>`
     } else if (account.status === "offline") {

@@ -60,7 +60,7 @@ class AccountHandler extends EventEmitter {
                     this.saveToHandler(doc.userId, doc._id.toString(), client)
 
                     //update account properties after login
-                    doc.games = options.games;
+                    doc.games = this.addGames(options.games, doc.games);
                     doc.persona_name = options.persona_name;
                     doc.avatar = options.avatar;
 
@@ -250,7 +250,7 @@ class AccountHandler extends EventEmitter {
                 self.saveToHandler(userId, accountId, client);
 
                 //update account properties after login
-                doc.games = options.games;
+                doc.games = self.addGames(options.games, doc.games);
                 doc.persona_name = options.persona_name;
                 doc.avatar = options.avatar;
                 doc.status = "online"

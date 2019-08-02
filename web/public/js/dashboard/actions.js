@@ -463,7 +463,14 @@ $(() => {
         })
     })
 
-
+    /**************************************************** 
+    *           STEAM - REDEEM KEY                      *
+    * **************************************************/
+    // Open redeem key modal
+    $("#content-body").on('click', ".set-status", function () {
+        let accountId = $(this).closest("div.account").attr("data-id")
+        $("#set-status-modal").modal("toggle")
+    })
 
 
 

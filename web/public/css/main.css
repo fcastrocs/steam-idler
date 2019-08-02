@@ -68,3 +68,42 @@ body{
     border-bottom: 2px inset rgb(0, 119, 255);
     border-radius: 0px 0px 10px 10px;
 }
+
+
+/*  MODAL CSS */
+
+.modal{
+    background-color: rgba(12, 65, 109, 0.089);
+}
+.modal-header{
+
+}
+
+.modal-content{
+    margin-top: 29px !important; 
+    background: rgba(14, 30, 51, 1);
+    border: solid 4px rgb(74, 106, 167);
+    border-radius: 10px;
+    padding: 10px !important;
+}
+
+.modal-buttons{
+    margin-top: 10px;
+    float:right;
+}
+
+.modal-submit{
+    width: 115px;
+}
+
+input{
+    background: rgba(74, 106, 167, .8) !important;
+    color: white !important;
+    letter-spacing: 2px;
+}
+
+.input-group-text{
+    width: auto !important;
+}
+
+/*  END MODAL CSS */

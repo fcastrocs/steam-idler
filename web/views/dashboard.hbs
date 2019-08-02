@@ -34,9 +34,6 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Add Steam Account</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
             </div>
             <div class="modal-body">
 
@@ -87,7 +84,7 @@
 
                     <div class="modal-buttons">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary" id="add-account">Add account</button>
+                        <button type="submit" class="btn btn-primary modal-submit" id="add-account">Add account</button>
                     </div>
 
                 </form>
@@ -127,7 +124,7 @@
                     <div class="modal-buttons">
                         <button type="button" class="btn btn-secondary activate-free-game-close"
                             data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary" id="activate-free-game"
+                        <button type="submit" class="btn btn-primary modal-submit" id="activate-free-game"
                             data-id="">Activate</button>
                     </div>
                 </form>
@@ -169,7 +166,7 @@
                     <div class="modal-buttons">
                         <button type="button" class="btn btn-secondary redeem-key-close"
                             data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary" id="redeem-key" data-id="">Activate</button>
+                        <button type="submit" class="btn btn-primary modal-submit" id="redeem-key" data-id="">Activate</button>
                     </div>
                 </form>
             </div>
@@ -184,9 +181,6 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Change Nickname</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
             </div>
             <div class="modal-body">
                 <form id="change-nick-form">
@@ -200,8 +194,66 @@
                     </div>
                     <div class="modal-buttons">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary" id="change-nick-button" data-id="">Change Nick</button>
+                        <button type="submit" class="btn btn-primary modal-submit" id="change-nick-button" data-id="">Change
+                            Nick</button>
                     </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- SET STATUS -->
+<div class="modal fade" id="set-status-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" id="set-status-dialog" role="document">
+        <div class="modal-content" id="set-status-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Set status</h5>
+            </div>
+            <div class="modal-body">
+                <form id="set-status-form">
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="status" id="status1" value="Invisible">
+                        <label class="form-check-label" for="status1">
+                            Invisible
+                        </label>
+                    </div>
+
+                    <div class="form-check disabled">
+                        <input class="form-check-input" type="radio" name="status" id="status2" value="Online" disabled>
+                        <label class="form-check-label" for="status2">
+                            Online
+                        </label>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="status" id="status3" value="Away">
+                        <label class="form-check-label" for="status3">
+                            Away
+                        </label>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="status" id="status4" value="Snooze">
+                        <label class="form-check-label" for="status4">
+                            Snooze
+                        </label>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="status" id="status5" value="Busy">
+                        <label class="form-check-label" for="status5">
+                            Busy
+                        </label>
+                    </div>
+
+                    <div class="modal-buttons">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary modal-submit" id="set-status-button" data-id="">Set</button>
+                    </div>
+
                 </form>
             </div>
         </div>

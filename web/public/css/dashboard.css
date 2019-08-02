@@ -1,15 +1,15 @@
 .account{
     display: inline-block;
     width: 230px;
-    height: 303px;
+    height: 327px;
     color: white;
     text-align: left;
     border-bottom-right-radius: 5px;
     border-bottom-left-radius: 5px;
     vertical-align: top;
     margin: 10px;
-
 }
+
 
 .account-in-game{
     background: linear-gradient(0deg, rgba(143,185,59, 0.45) 0%, rgba(17,74,121,1) 100%);
@@ -103,7 +103,7 @@
 .account-buttons{
     background: rgba(0, 0, 0, 0.2);
     text-align: center;
-    height: 53px;
+    height: 74px;
     vertical-align: bottom
 }
 
@@ -112,81 +112,52 @@
     line-height: 0px;
     margin: 1px;
     padding: 1px;
+    width: 80px;
+    font-size: 12px;
 }
 
 
 
+/* SET STATUS MODAL */
+
+#set-status-dialog, #set-status-content{
+    width: 250px;
+    margin: 20px auto;
+    padding: 5px;
+}
+
+/* END SET STATUS MODAL */
 
 
 
-
-
-
-
+/* REDEEM CD-KEY MODAL */
 
 #cd-key{
     text-transform: uppercase;
 }
 
+/* END REDEEM CD-KEY MODAL */
 
 
 
-/* Add account modal */
+/* ADD ACCOUT MODAL */
 
-.modal-buttons{
-    float:right;
-}
-
-.modal-content{
-    background-color: rgba(19, 54, 87, .9);
-    border: solid 3px rgb(74, 106, 167);
-    width: 450px;
-    margin: auto;
-}
-
-.modal-header{
-    background-color: rgba(9, 34, 58, 0.9);
-    padding: 5px;
-    padding-left: 20px;
-}
-
-.input-group-text{
-    width: auto !important;
-}
-
-input{
-    background: rgba(74, 106, 167, .8) !important;
-    color: white !important;
-    letter-spacing: 2px;
-}
-
-#guardcode{
+input[name="emailGuard"] { 
+    text-align: center;
     text-transform: uppercase;
 }
 
+
 #email-guard{
-    width: 210px;
+    width: 215px;
+    text-align: center;
 }
 
+/* END ADD ACCOUT MODAL */
 
 
 
-
-/*  GENERAL CSS */
-
-.modal-content{
-    background: rgba(14, 30, 51, 0.918);
-    border: solid 3px rgb(74, 106, 167);
-}
-
-
-
-
-
-
-
-
-/* Games idle modal */
+/* IDLE MODAL */
 
 .game-img{
     margin: 5px;
@@ -215,17 +186,14 @@ input{
     padding: 5px;
 }
 
-.modal-buttons{
-    width: 100%;
-    text-align: right
-}
+/* END IDLE MODAL */
 
 
 
 
 
 
-
+/* NO ACCOUNTS IN DASHBOARD */
 
 #big-add-acc-button{
     margin: 50px 30px;
@@ -236,3 +204,5 @@ input{
 #no-accounts-text{
     margin-top: 15px;
 }
+
+/* END NO ACCOUNTS IN DASHBOARD */
