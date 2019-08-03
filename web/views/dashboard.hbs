@@ -13,18 +13,27 @@
         <div id="sidebar-greet">Hello {{{username}}}</div>
 
 
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border text-info" id="sidebar-spinner" role="status" hidden></div>
+        </div>
+
+        <div class="alert alert-primary" role="alert" id="sidebar-msg" hidden></div>
+        <div class="alert alert-danger" role="alert" id="sidebar-errMsg" hidden></div>
+
+
         <div id="sidebar-menu">
-            <div class="sidebar-button" data-toggle="modal" data-target="#add-acc-modal" type="button">Add Account
-            </div>
+            <button type="button" class="btn sidebar-button" data-toggle="modal" data-target="#add-acc-modal">Add
+                Account
+            </button>
 
             <div class="separator-text">All Accounts Actions</div>
-            <div class="sidebar-button" id="sidebar-login" type="button">Login</div>
-            <div class="sidebar-button" id="sidebar-logout" type="button">Logout</div>
-            <div class="sidebar-button" id="sidebar-status" type="button">Status</div>
-            <div class="sidebar-button" id="sidebar-getGame" type="button">Get Game</div>
-            <div class="sidebar-button" id="sidebar-stopIdling" type="button">Stop Idling</div>
-            <div class="sidebar-button" type="button">Farm All Cards</div>
-            <div class="sidebar-button" type="button">Stop Farming</div>
+            <button type="button" class="btn sidebar-button" id="sidebar-login">Login</button>
+            <button type="button" class="btn sidebar-button" id="sidebar-logout">Logout</button>
+            <button type="button" class="btn sidebar-button" id="sidebar-status">Status</button>
+            <button type="button" class="btn sidebar-button" id="sidebar-getGame">Get Game</button>
+            <button type="button" class="btn sidebar-button" id="sidebar-stopIdling">Stop Idling</button>
+            <button type="button" class="btn sidebar-button">Farm All Cards</button>
+            <button type="button" class="btn sidebar-button">Stop Farming</button>
         </div>
     </div>
 
@@ -105,18 +114,18 @@
                 <h5 class="modal-title">Activate Free Games</h5>
             </div>
             <div class="modal-body">
+
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-info" id="spinner-activate-game" role="status" hidden></div>
+                </div>
+
                 <div class="alert alert-primary" role="alert" id="activate-game-msg" hidden></div>
                 <div class="alert alert-danger" role="alert" id="activate-game-errMsg" hidden></div>
 
                 <!-- activated games will be displayed here -->
-                <div class="activated-games" hidden>
-                    <div class="activated-game-body"></div>
-                    <button type="button" class="btn btn-secondary activate-free-game-close float-right"
-                        data-dismiss="modal">Close</button>
-                </div>
-
-                 <div class="d-flex justify-content-center">
-                    <div class="spinner-border text-info" id="spinner-activate-game" role="status" hidden></div>
+                <div id="activated-games" hidden>
+                    <div id="activated-game-body"></div>
+                    <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">Close</button>
                 </div>
 
                 <form id="activate-game-form">
@@ -130,8 +139,7 @@
                         </div>
                     </div>
                     <div class="modal-buttons">
-                        <button type="button" class="btn btn-secondary activate-free-game-close"
-                            data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary modal-submit" id="activate-free-game"
                             data-id="">Activate</button>
                     </div>
@@ -174,7 +182,8 @@
                     <div class="modal-buttons">
                         <button type="button" class="btn btn-secondary redeem-key-close"
                             data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary modal-submit" id="redeem-key" data-id="">Activate</button>
+                        <button type="submit" class="btn btn-primary modal-submit" id="redeem-key"
+                            data-id="">Activate</button>
                     </div>
                 </form>
             </div>
@@ -202,7 +211,8 @@
                     </div>
                     <div class="modal-buttons">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary modal-submit" id="change-nick-button" data-id="">Change</button>
+                        <button type="submit" class="btn btn-primary modal-submit" id="change-nick-button"
+                            data-id="">Change</button>
                     </div>
                 </form>
             </div>
@@ -250,8 +260,10 @@
                     </div>
 
                     <div class="modal-buttons">
-                        <button type="button" id="set-status-modal-close" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary modal-submit" id="set-status-button" data-id="">Set</button>
+                        <button type="button" id="set-status-modal-close" class="btn btn-secondary"
+                            data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary modal-submit" id="set-status-button"
+                            data-id="">Set</button>
                     </div>
 
                 </form>

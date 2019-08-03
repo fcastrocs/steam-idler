@@ -162,7 +162,11 @@ class Client extends EventEmitter {
                 if(!self.account.forcedStatus){
                     self.account.forcedStatus = "Online"
                 }
-                self.setPersona(self.account.forcedStatus)
+                
+                
+                setTimeout(() => {
+                    self.setPersona(self.account.forcedStatus)
+                }, 5000);
 
                 return;
             }

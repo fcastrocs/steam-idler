@@ -48,14 +48,19 @@ body{
 }
 
 .sidebar-button{
-    margin-top: 5px;
-    padding: 5px;
-    text-align: center;
-    background: #021727;
+    display: block;
+    width: 100%;
+    border-radius: 0px;
+    border: solid 1px black;
+    background-color: rgb(18, 31, 49);
+    color: white;
+    font-size: 13px;
 }
 
 .sidebar-button:hover{
-    background: rgb(0, 119, 255);
+    border-bottom: solid 1px rgb(255, 255, 255);
+    color: white;
+
 }
 
 #box{
@@ -107,3 +112,8 @@ input{
 }
 
 /*  END MODAL CSS */
+
+
+.spinner-border{
+    margin: 10px 0px;
+}

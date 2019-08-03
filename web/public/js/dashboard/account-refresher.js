@@ -1,27 +1,8 @@
 $(() => {
     // Refresh account status every interval seconds
-    let interval = 5000;
+    let interval = 60000;
     setInterval(() => {
-        $.get('steamacc/get', (accounts) => {
-            for (let i in accounts) {
-                // find account div
-                let self = $(`.account[data-id="${accounts[i]._id}"]`)
-                let status = self.attr("data-realstatus")
-
-                // Check if status has changed
-                if (status === accounts[i].status) {
-                    //also check forced status
-                    let forcedStatus = self.find(".status").first().text();
-                    if(forcedStatus == accounts[i].forcedStatus){
-                        continue;
-                    }
-                }
-
-                let account = buildAccount(accounts[i])
-
-                // Replace old acc with this one
-                self.replaceWith(account);
-            }
-        })
+        refreshDashboard();
+        console.log("dashboard refreshed")
     }, interval);
 })

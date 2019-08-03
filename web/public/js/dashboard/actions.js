@@ -91,28 +91,10 @@ $(() => {
         self.find(".login-wait").first().attr("hidden", false);
 
         $.post('/dashboard/loginaccount', { accountId: accountId }, res => {
-
+            console.log("here")
             // disable login-wait spinner
-            self.find("div .login-wait").first().attr("hidden", true);
-            // enable all buttons
-            self.find(".account-buttons").first().show(0)
-
-            // hide login button
-            $(this).attr('hidden', true);
-
-            // show correct buttons
-            let buttons = self.find(".account-buttons").first()
-            buttons.find("button.acc-login").attr("hidden", true);
-            buttons.find("button.acc-logout").attr("hidden", false);
-            buttons.find("button.set-status").attr("hidden", false);
-            buttons.find("button.idle-game").attr("hidden", false);
-            buttons.find("button.redeem-key").attr("hidden", false);
-            buttons.find("button.get-game").attr("hidden", false);
-
-            // change appropiate css
-            self.removeClass("account-Offline").addClass(`account-${res}`)
-            self.find(".info .status").first().removeClass("status-Offline").addClass(`status-${res}`).text(res)
-            self.find("a .avatar").first().removeClass("avatar-Offline").addClass(`avatar-Online`);
+            self.find(".login-wait").first().attr("hidden", true);
+            refreshDashboard()
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
@@ -126,7 +108,6 @@ $(() => {
         let self = $(this).closest("div.account")
         let accountId = self.attr("data-id");
 
-
         // disable all buttons
         self.find(".account-buttons").first().hide(0);
         // enable login-wait spinner
@@ -135,22 +116,7 @@ $(() => {
         $.post('/dashboard/logoutaccount', { accountId: accountId }, () => {
             // disable login-wait spinner
             self.find("div .login-wait").first().attr("hidden", true);
-            // enable all buttons
-            self.find(".account-buttons").first().show(0)
-
-            // hide all buttons except login and delete
-            let buttons = self.find(".account-buttons").first()
-            buttons.find("button.acc-login").attr("hidden", false);
-            buttons.find("button.acc-logout").attr("hidden", true);
-            buttons.find("button.set-status").attr("hidden", true);
-            buttons.find("button.idle-game").attr("hidden", true);
-            buttons.find("button.redeem-key").attr("hidden", true);
-            buttons.find("button.get-game").attr("hidden", true);
-
-            // change appropiate css
-            self.removeClass().addClass(`account account-Offline`)
-            self.find(".info .status").first().removeClass().addClass(`status status-Offline`).text("Offline")
-            self.find("a .avatar").first().removeClass().addClass(`avatar avatar-Offline`);
+            refreshDashboard()
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
@@ -180,7 +146,6 @@ $(() => {
             //set ingame status
             self.find("a img.avatar").removeClass().addClass(`avatar avatar-In-game`);
             self.find(".games-idle").first().modal('toggle');
-
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
@@ -335,11 +300,10 @@ $(() => {
         $("#activate-free-game-modal").modal("toggle")
     })
 
-
-    // close activate game modal
-    $(".activate-free-game-close").click(function () {
-        $(".activated-games").hide(0);
-        $(".activated-game-body").html('');
+    // modal hide
+    $('#activate-free-game-modal').on('hidden.bs.modal', function () {
+        $("#activated-games").hide(0);
+        $("#activated-game-body").html('');
         $("#activate-game-form").show(0);
         $("input[name=appId]").val("");
         $("#activate-game-msg").hide(0).text("")
@@ -360,36 +324,24 @@ $(() => {
             return
         }
 
-        $("#activate-game-msg").attr("hidden", false).hide(0);
-        $("#activate-game-errMsg").attr("hidden", false).hide(0);
-        $(".activated-games").attr("hidden", false).hide(0)
+        //hide form
+        $("#activate-game-form").hide(0)
+        // show spinner
+        $("#spinner-activate-game").attr("hidden", false).show(0)
+        //clean any previous messages
+        $("#activate-game-msg").text("").hide(0)
+        $("#activate-game-errMsg").text("").hide(0)
 
         $.post('/dashboard/activatefreegame', { accountId: accountId, appIds: appIds }, games => {
-            $("#activate-game-form").hide(0)
             $("#activate-game-errMsg").hide(0);
-            $("#activate-game-msg").show(0).text("Successfully added games")
-
-            let gamesDiv = ""
-            for (let j in games) {
-                let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
-                gamesDiv += `<img class="game-img" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
-            }
-
-            $(".activated-game-body").append(gamesDiv)
-
-            //now build it for .games-body
-            gamesDiv = ""
-            for (let j in games) {
-                let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
-                gamesDiv += `<img class="game-img unselected" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
-            }
-            $(`div.account[data-id="${accountId}"]`).find(".game-body").first().append(gamesDiv)
-
-
-            $(".activated-games").show(0)
-
+            $("#activate-game-msg").attr("hidden", false).text("Game(s) activated.").show(0)
+            processGames(accountId, games);
+            //hide spinner
+            $("#spinner-activate-game").hide(0)
         }).fail((xhr, status, err) => {
-            $("#activate-game-errMsg").show(0).text(xhr.responseText)
+            $("#activate-game-form").show(0)
+            $("#spinner-activate-game").hide(0)
+            $("#activate-game-errMsg").removeAttr("hidden", false).text(`${xhr.responseText}`).show(0)
         })
     })
 
