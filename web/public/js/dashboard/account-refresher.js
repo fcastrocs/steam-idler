@@ -10,7 +10,11 @@ $(() => {
 
                 // Check if status has changed
                 if (status === accounts[i].status) {
-                    continue;
+                    //also check forced status
+                    let forcedStatus = self.find(".status").first().text();
+                    if(forcedStatus == accounts[i].forcedStatus){
+                        continue;
+                    }
                 }
 
                 let account = buildAccount(accounts[i])

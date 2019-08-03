@@ -11,7 +11,7 @@ class AccountHandler extends EventEmitter {
         super();
 
         this.userAccounts = new Object();
-        this.initializeHandlers()
+        //this.initializeHandlers()
     }
 
     // Brings all accounts in user handlers back online
@@ -300,7 +300,7 @@ class AccountHandler extends EventEmitter {
             }
 
             // Remove handler
-            self.removeFromHandler(userId, accountId);
+            await self.removeFromHandler(userId, accountId);
 
             //finally update account status to offline
             doc.status = "Offline";
@@ -500,13 +500,14 @@ class AccountHandler extends EventEmitter {
 
         // Get handler
         let handler = await SteamAccHandler.findOne({ userId: userId })
-        if (!handler) {
+        if (!handler || !handler.accountIds) {
             return;
         }
         handler.accountIds = handler.accountIds.filter(accId => {
             return accId.toString() !== accountId
         });
-        handler.save();
+
+        return await handler.save();
     }
 
     // Returns accounts client if it's online

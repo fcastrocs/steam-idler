@@ -346,8 +346,8 @@ $(() => {
         $("#activate-game-errMsg").hide(0).text("")
     })
 
-
-    $("#activate-game-form").submit(function (e) {
+    // form submit
+    $("body").on('submit', "#activate-game-form", function (e) {
         e.preventDefault();
 
         let accountId = $("#activate-free-game").attr("data-id");
@@ -476,7 +476,7 @@ $(() => {
         $("#set-status-modal").modal("toggle")
     })
 
-    $("#set-status-form").submit(function (e) {
+    $("body").on('submit', "#set-status-form", function (e) {
         e.preventDefault();
         let accountId = $("#set-status-button").attr("data-id");
         let status = $('input[name="status"]:checked').val();

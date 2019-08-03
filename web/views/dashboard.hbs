@@ -2,6 +2,7 @@
 
 <script src="../static/js/dashboard/functions.js"></script>
 <script src="../static/js/dashboard/actions.js"></script>
+<script src="../static/js/dashboard/all-acc-actions.js"></script>
 <script src="../static/js/dashboard/fetch-accounts.js"></script>
 <script src="../static/js/dashboard/account-refresher.js"></script>
 
@@ -13,15 +14,17 @@
 
 
         <div id="sidebar-menu">
-            <div id="sidebar-button" data-toggle="modal" data-target="#add-acc-modal" type="button">Add Account
+            <div class="sidebar-button" data-toggle="modal" data-target="#add-acc-modal" type="button">Add Account
             </div>
 
             <div class="separator-text">All Accounts Actions</div>
-            <div id="sidebar-button" type="button">Connect</div>
-            <div id="sidebar-button" type="button">Disconnect</div>
-            <div id="sidebar-button" type="button">Farm All Cards</div>
-            <div id="sidebar-button" type="button">Stop Farming</div>
-            <div id="sidebar-button" type="button">Activate Free Game</div>
+            <div class="sidebar-button" id="sidebar-login" type="button">Login</div>
+            <div class="sidebar-button" id="sidebar-logout" type="button">Logout</div>
+            <div class="sidebar-button" id="sidebar-status" type="button">Status</div>
+            <div class="sidebar-button" id="sidebar-getGame" type="button">Get Game</div>
+            <div class="sidebar-button" id="sidebar-stopIdling" type="button">Stop Idling</div>
+            <div class="sidebar-button" type="button">Farm All Cards</div>
+            <div class="sidebar-button" type="button">Stop Farming</div>
         </div>
     </div>
 
@@ -111,6 +114,11 @@
                     <button type="button" class="btn btn-secondary activate-free-game-close float-right"
                         data-dismiss="modal">Close</button>
                 </div>
+
+                 <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-info" id="spinner-activate-game" role="status" hidden></div>
+                </div>
+
                 <form id="activate-game-form">
                     <p>Example to activate two games: 730, 570 </p>
                     <div class="form-group">
@@ -242,7 +250,7 @@
                     </div>
 
                     <div class="modal-buttons">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" id="set-status-modal-close" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary modal-submit" id="set-status-button" data-id="">Set</button>
                     </div>
 

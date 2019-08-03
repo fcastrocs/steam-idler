@@ -47,14 +47,14 @@ body{
     text-align: center;
 }
 
-#sidebar-button{
+.sidebar-button{
     margin-top: 5px;
     padding: 5px;
     text-align: center;
     background: #021727;
 }
 
-#sidebar-button:hover{
+.sidebar-button:hover{
     background: rgb(0, 119, 255);
 }
 
