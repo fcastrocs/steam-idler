@@ -481,7 +481,8 @@ class AccountHandler extends EventEmitter {
             user: acc.user,
             pass: Security.decrypt(acc.pass),
             sentry: Security.decrypt_buffer(acc.sentry),
-            gamesPlaying: acc.gamesPlaying
+            gamesPlaying: acc.gamesPlaying,
+            forcedStatus: acc.forcedStatus
         }
 
         if (acc.shared_secret) {
