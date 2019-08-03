@@ -166,7 +166,7 @@ class Client extends EventEmitter {
                 
                 setTimeout(() => {
                     self.setPersona(self.account.forcedStatus)
-                }, 5000);
+                }, 10000);
 
                 return;
             }
