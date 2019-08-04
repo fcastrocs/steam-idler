@@ -1,7 +1,7 @@
 $(() => {
 
     $.ajaxSetup({
-        timeout: 60000
+        timeout: 120000
     });
 
     /**************************************************** 
@@ -58,7 +58,7 @@ $(() => {
                 $("#shared-secret").hide(0);
                 $("#username").hide(0);
                 $("#password").hide(0);
-                $("#email-guard").removeAttr("hidden"); //show email guard input
+                $("#email-guard").attr("hidden", false).show(0) //show email guard input
             } else if (xhr.responseText === "Bad User/Pass") {
                 $('#add-acc-errMsg').show(0).text("Bad user/pass")
                 $("input[name='pass").val("")
@@ -67,7 +67,7 @@ $(() => {
                 $("#username").hide();
                 $("#password").hide();
                 $("#shared-secret").hide();
-                $("#email-guard").removeAttr("hidden").show(0);
+                $("#email-guard").attr("hidden", false).show(0);
                 $("input[name='emailGuard").val("")
             } else if (xhr.responseText == "Invalid shared secret") {
                 $('#add-acc-errMsg').show(0).text(xhr.responseText)
@@ -91,10 +91,9 @@ $(() => {
         self.find(".login-wait").first().attr("hidden", false);
 
         $.post('/dashboard/loginaccount', { accountId: accountId }, res => {
-            console.log("here")
             // disable login-wait spinner
             self.find(".login-wait").first().attr("hidden", true);
-            refreshDashboard()
+            refreshAccounts();
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
@@ -116,7 +115,7 @@ $(() => {
         $.post('/dashboard/logoutaccount', { accountId: accountId }, () => {
             // disable login-wait spinner
             self.find("div .login-wait").first().attr("hidden", true);
-            refreshDashboard()
+            refreshAccounts();
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
@@ -143,18 +142,19 @@ $(() => {
         }
 
         $.post('/dashboard/playgames', { accountId: accountId, games: games }, () => {
-            //set ingame status
-            self.find("a img.avatar").removeClass().addClass(`avatar avatar-In-game`);
+            //close the modal
             self.find(".games-idle").first().modal('toggle');
+            setTimeout(() => refreshAccounts(), 500);
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
     })
 
-    // stop games idle
+    // stop games idle button click
     $("#content-body").on('click', ".stop-idle", function () {
         let self = $(this).closest("div.account");
 
+        //check if accounts is idling
         let games = self.find(".start-idle").attr("data-games")
         if (!games) {
             alert("Not playing any games");
@@ -162,16 +162,14 @@ $(() => {
         }
 
         let accountId = self.attr("data-id");
+
         $.post('/dashboard/stopgames', { accountId: accountId }, () => {
-            self.find("a img.avatar").removeClass().addClass(`avatar avatar-Online`);
-            self.find(".start-idle").first().attr("data-games", "");
+            //close the modal
             self.find(".games-idle").first().modal('toggle');
-            // Remove selected imaged
-            self.find(".game-body").first().children(".game-img").each(function () {
-                if ($(this).hasClass("selected")) {
-                    $(this).removeClass("selected").addClass("unselected")
-                }
-            })
+            setTimeout(() => refreshAccounts(), 500);
+            // Remove selected games in idle modal
+            unselectGames(self);
+
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
@@ -241,7 +239,7 @@ $(() => {
         $("#change-nick-modal").modal("toggle")
     })
 
-
+    // form submit
     $("#change-nick-form").submit(function (e) {
         e.preventDefault();
 
@@ -261,6 +259,10 @@ $(() => {
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
+    })
+
+    $('#change-nick-modal').on('hidden.bs.modal', function () {
+        $("input[name='nick']").val("");
     })
 
 
@@ -302,8 +304,8 @@ $(() => {
 
     // modal hide
     $('#activate-free-game-modal').on('hidden.bs.modal', function () {
-        $("#activated-games").hide(0);
-        $("#activated-game-body").html('');
+        $(".activated-games").hide(0);
+        $(".activated-game-body").html('');
         $("#activate-game-form").show(0);
         $("input[name=appId]").val("");
         $("#activate-game-msg").hide(0).text("")
@@ -357,8 +359,8 @@ $(() => {
     })
 
 
-    // close activate game modal
-    $(".redeem-key-close").click(function () {
+    // close redeem key modal
+    $('#redeem-key-modal').on('hidden.bs.modal', function () {
         $(".activated-games").hide(0);
         $(".activated-game-body").html('');
         $("#redeem-key-form").show(0);
@@ -367,7 +369,7 @@ $(() => {
         $("#redeem-key-errMsg").hide(0).text("")
     })
 
-
+    // cdkey form submit
     $("#redeem-key-form").submit(function (e) {
         e.preventDefault();
 
@@ -381,38 +383,25 @@ $(() => {
             return
         }
 
-        $("#redeem-key-msg").attr("hidden", false).hide(0);
-        $("#redeem-key-errMsg").attr("hidden", false).hide(0);
-        $("#activated-games").attr("hidden", false).hide(0)
+        $("#spinner-redeem-key").attr("hidden", false).show(0);
 
+        // hide form
+        $("#redeem-key-form").hide(0)
+        // clear previous messages
+        $("#redeem-key-msg").hide(0).text("")
+        $("#redeem-key-errMsg").hide(0).text("")
 
         $.post('/dashboard/redeemkey', { accountId: accountId, cdkey: cdkey }, games => {
-            $("#redeem-key-form").hide(0)
-            $("#redeem-key-errMsg").hide(0);
-            $("#redeem-key-msg").show(0).text("Successfully added games")
-
-            let gamesDiv = ""
-            for (let j in games) {
-                let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
-                gamesDiv += `<img class="game-img" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
-            }
-
-            $(".activated-game-body").append(gamesDiv)
-
-            //now build it for .games-body
-            gamesDiv = ""
-            for (let j in games) {
-                let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
-                gamesDiv += `<img class="game-img unselected" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
-            }
-            $(`div.account[data-id="${accountId}"]`).find(".game-body").first().append(gamesDiv)
-
-            $(".activated-games").show(0)
-
+            $("#redeem-key-msg").attr("hidden", false).text("Successfully added games").show(0);
+            processGames(accountId, games)
+            $("#spinner-redeem-key").hide(0);
         }).fail((xhr, status, err) => {
-            $("#redeem-key-errMsg").show(0).text(xhr.responseText)
+            $("#redeem-key-errMsg").attr("hidden", false).text(xhr.responseText).show(0);
+            $("#redeem-key-form").show(0)
+            $("#spinner-redeem-key").hide(0);
         })
     })
+
 
     /**************************************************** 
     *             STEAM - SET STATUS                    *
@@ -421,33 +410,31 @@ $(() => {
     $("#content-body").on('click', ".set-status", function () {
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id")
-        //disable and check current status
+        //check current status
         let status = self.find(".status").first().text();
-        $(`input[value="${status}"]`).attr("checked", true).attr("disabled", true);
+        $(`input[value="${status}"]`).prop('checked', true);
+        //open modal
         $("#set-status-button").attr("data-id", accountId)
         $("#set-status-modal").modal("toggle")
     })
 
+    // set status submit
     $("body").on('submit', "#set-status-form", function (e) {
         e.preventDefault();
         let accountId = $("#set-status-button").attr("data-id");
         let status = $('input[name="status"]:checked').val();
         $.post('/dashboard/setstatus', { status: status, accountId: accountId }, function (res) {
-            //change css
-            let self = $(`div.account[data-id="${accountId}"]`)
-            self.removeClass().addClass(`account account-${status}`)
-            //change status
-            let oldStatus = self.find(".status").first().text();
-            self.find(".status").first().removeClass().addClass(`status status-${status}`).text(status)
-
-            //uncheck and enable old status
-            $(`input[value="${oldStatus}"]`).attr("checked", false).attr("disabled", false);
             $("#set-status-modal").modal("toggle")
+            setTimeout(() => {
+                refreshAccounts();
+            }, 500);
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
     })
 
-
-
+    // set status modal close
+    $('#set-status-modal').on('hidden.bs.modal', function () {
+        $("#set-status-form").find("input:checked").first().prop('checked', false);
+    })
 })

@@ -1,8 +1,7 @@
 $(() => {
     // Refresh account status every interval seconds
-    let interval = 60000;
+    let interval = 30000;
     setInterval(() => {
-        refreshDashboard();
-        console.log("dashboard refreshed")
+        refreshAccounts();
     }, interval);
 })

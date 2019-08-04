@@ -1,9 +1,9 @@
 <link rel="stylesheet" type="text/css" href="../static/css/dashboard.css">
 
-<script src="../static/js/dashboard/functions.js"></script>
-<script src="../static/js/dashboard/actions.js"></script>
-<script src="../static/js/dashboard/all-acc-actions.js"></script>
 <script src="../static/js/dashboard/fetch-accounts.js"></script>
+<script src="../static/js/dashboard/functions.js"></script>
+<script src="../static/js/dashboard/single-acc-actions.js"></script>
+<script src="../static/js/dashboard/all-acc-actions.js"></script>
 <script src="../static/js/dashboard/account-refresher.js"></script>
 
 <!-- container -->
@@ -12,14 +12,12 @@
 
         <div id="sidebar-greet">Hello {{{username}}}</div>
 
-
         <div class="d-flex justify-content-center">
             <div class="spinner-border text-info" id="sidebar-spinner" role="status" hidden></div>
         </div>
 
         <div class="alert alert-primary" role="alert" id="sidebar-msg" hidden></div>
         <div class="alert alert-danger" role="alert" id="sidebar-errMsg" hidden></div>
-
 
         <div id="sidebar-menu">
             <button type="button" class="btn sidebar-button" data-toggle="modal" data-target="#add-acc-modal">Add
@@ -123,8 +121,8 @@
                 <div class="alert alert-danger" role="alert" id="activate-game-errMsg" hidden></div>
 
                 <!-- activated games will be displayed here -->
-                <div id="activated-games" hidden>
-                    <div id="activated-game-body"></div>
+                <div class="activated-games" hidden>
+                    <div class="activated-game-body"></div>
                     <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">Close</button>
                 </div>
 
@@ -163,6 +161,11 @@
             <div class="modal-body">
                 <div class="alert alert-primary" role="alert" id="redeem-key-msg" hidden></div>
                 <div class="alert alert-danger" role="alert" id="redeem-key-errMsg" hidden></div>
+
+
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-info" id="spinner-redeem-key" role="status" hidden></div>
+                </div>
 
                 <!-- activated games will be displayed here -->
                 <div class="activated-games" hidden>

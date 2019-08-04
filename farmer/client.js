@@ -24,16 +24,12 @@ class Client extends EventEmitter {
     playGames(games) {
         this.account.gamesPlaying = games;
         this.client.playGames(games);
-        let self = this;
 
-        // if games is an empty array, the account will stop playing games
-        setTimeout(() => {
-            if (games.length > 0) {
-                self.emit("in-game", "In-game")
-            } else {
-                self.emit("in-game", "Online")
-            }
-        }, 3000);
+        if (games.length > 0) {
+            return "In-game"
+        } else {
+            return "Online"
+        }
     }
 
     /************************************************************************
@@ -159,10 +155,10 @@ class Client extends EventEmitter {
                 }
 
                 // Set persona
-                if(!self.account.forcedStatus){
+                if (!self.account.forcedStatus) {
                     self.account.forcedStatus = "Online"
                 }
-                
+
                 self.setPersona(self.account.forcedStatus)
 
                 return;

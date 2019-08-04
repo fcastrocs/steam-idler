@@ -106,27 +106,9 @@ function buildAccount(account) {
     return acc;
 }
 
-// shows games activated in modal, and adds them to account
-function processGames(accountId, games) {
-    // Show activated games in modal
-    let gamesDiv = ""
-    for (let j in games) {
-        let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
-        gamesDiv += `<img class="game-img" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
-    }
-    $("#activated-game-body").html(gamesDiv)
-    $("#activated-games").attr("hidden", false).show(0);
 
-    //show activated games in idle modal
-    gamesDiv = ""
-    for (let j in games) {
-        let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
-        gamesDiv += `<img class="game-img unselected" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
-    }
-    $(`div.account[data-id="${accountId}"]`).find(".game-body").first().append(gamesDiv)
-}
-
-function refreshDashboard() {
+// Refreshes accounts if its status change
+function refreshAccounts() {
     $.get('steamacc/get', (accounts) => {
         for (let i in accounts) {
             // find account div
@@ -135,6 +117,10 @@ function refreshDashboard() {
 
             // Check if status has changed
             if (status === accounts[i].status) {
+                // don't check forced status for offline accounts
+                if (status === "Offline") {
+                    continue;
+                }
                 //also check forced status
                 let forcedStatus = self.find(".status").first().text();
                 if (forcedStatus == accounts[i].forcedStatus) {
@@ -148,4 +134,42 @@ function refreshDashboard() {
             self.replaceWith(account);
         }
     })
+}
+
+
+// shows games activated in modal, and adds them to account
+function processGames(accountId, games) {
+    // Show activated games in modal
+    let gamesDiv = ""
+    for (let j in games) {
+        let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
+        gamesDiv += `<img class="game-img" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
+    }
+    $(".activated-game-body").html(gamesDiv)
+    $(".activated-games").attr("hidden", false).show(0);
+
+    //show activated games in idle modal
+    gamesDiv = ""
+    for (let j in games) {
+        let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
+        gamesDiv += `<img class="game-img unselected" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
+    }
+    $(`div.account[data-id="${accountId}"]`).find(".game-body").first().append(gamesDiv)
+}
+
+// Remove selected games in idle modal
+function unselectGames(obj) {
+    obj.find(".game-body").first().children(".game-img").each(function () {
+        if ($(this).hasClass("selected")) {
+            $(this).removeClass("selected").addClass("unselected")
+        }
+    })
+}
+
+function getAllAccountIds() {
+    let accountIds = []
+    $(".account").each(function () {
+        accountIds.push($(this).attr("data-id"))
+    })
+    return accountIds;
 }

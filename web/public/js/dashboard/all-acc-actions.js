@@ -1,15 +1,5 @@
 $(() => {
 
-    function checkCompletedReq(received, sent) {
-        if (received == sent) {
-            $("#sidebar-menu").show(0)
-            $("#sidebar-spinner").attr("hidden", true);
-            $("#sidebar-msg").delay(4000).hide(0);
-            $("#sidebar-errMsg").delay(4000).hide(0);
-            refreshDashboard();
-        }
-    }
-
     /**************************************************** 
      *               LOGIN ALL ACCS                     *
      * **************************************************/
@@ -171,7 +161,7 @@ $(() => {
                     activated += 1
                     $("#activate-game-msg").removeAttr("hidden", false).text(`Game(s) activated in ${activated} accounts.`).show(0)
                     processGames(accountId, games)
-
+                    // hide the spinner on last response
                     if (index == accountIds.length - 1) {
                         $("#spinner-activate-game").hide(0)
                     }
@@ -204,14 +194,41 @@ $(() => {
             alert("You do not have any accounts.")
             return;
         }
+
+        //hide sidebar and show spinner
+        $("#sidebar-menu").hide(0);
+        $("#sidebar-spinner").attr("hidden", false);
+
+        let goodResponse = 0;
+        let badResponse = 0;
+        let interval = 0
+
+        accountIds.forEach(accountId => {
+            interval += 100;
+            setTimeout(() => {
+                $.post('/dashboard/stopgames', { accountId: accountId }, () => {
+                    goodResponse++;
+                    $("#sidebar-msg").attr("hidden", false).text(`${goodResponse} accounts stopped idling.`).show(0);
+                    checkCompletedReq((goodResponse + badResponse), accountIds.length)
+                }).fail((xhr, status, err) => {
+                    badResponse++;
+                    checkCompletedReq((goodResponse + badResponse), accountIds.length)
+                })
+            }, interval);
+        })
+
     })
 
-    function getAllAccountIds() {
-        let accountIds = []
-        $(".account").each(function () {
-            accountIds.push($(this).attr("data-id"))
-        })
-        return accountIds;
+
+    function checkCompletedReq(received, sent) {
+        if (received == sent) {
+            $("#sidebar-menu").show(0)
+            $("#sidebar-spinner").attr("hidden", true);
+            $("#sidebar-msg").delay(4000).hide(0);
+            $("#sidebar-errMsg").delay(4000).hide(0);
+            refreshAccounts();
+        }
     }
+
 
 })

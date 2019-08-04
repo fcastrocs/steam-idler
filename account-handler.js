@@ -49,8 +49,6 @@ class AccountHandler extends EventEmitter {
                     let options = this.setupLoginOptions(doc);
                     let client = await this.steamConnect(options);
                     
-                    doc.status = "Online"
-                    
                     //save and store client
                     this.saveToHandler(doc.userId, doc._id.toString(), client)
 
@@ -58,6 +56,7 @@ class AccountHandler extends EventEmitter {
                     doc.games = this.addGames(options.games, doc.games);
                     doc.persona_name = options.persona_name;
                     doc.avatar = options.avatar;
+                    doc.status = options.status;
 
                     await this.saveAccount(doc)
                 } catch (error) {
@@ -104,13 +103,14 @@ class AccountHandler extends EventEmitter {
             }
 
             // Play games
-            client.playGames(games)
+            let status = client.playGames(games)
 
             //save playing games to account and force correct status
             let account = await self.getAccount(userId, accountId);
             account.gamesPlaying = games;
+            account.status = status;
             await self.saveAccount(account);
-            resolve("okay");
+            resolve(account.status);
         })
     }
 
@@ -176,17 +176,6 @@ class AccountHandler extends EventEmitter {
                 }
             })
 
-            client.on("in-game", async (res) => {
-                //find acc by user
-                let doc = await self.getAccount(null, null, account.user);
-                if (!doc) {
-                    return;
-                }
-
-                doc.status = res
-                await self.saveAccount(doc);
-            })
-
             // connection has been lost after being logged in
             client.on("connection-lost", async () => {
                 //find acc by user
@@ -243,7 +232,7 @@ class AccountHandler extends EventEmitter {
                 doc.games = self.addGames(options.games, doc.games);
                 doc.persona_name = options.persona_name;
                 doc.avatar = options.avatar;
-                doc.status = "Online"
+                doc.status = options.status;
                 await self.saveAccount(doc)
                 return resolve(doc.forcedStatus)
             } catch (error) {
@@ -488,6 +477,14 @@ class AccountHandler extends EventEmitter {
         if (acc.shared_secret) {
             options.shared_secret = Security.decrypt(acc.shared_secret)
         }
+
+        //set correct status
+        if(acc.gamesPlaying.length == 0){
+            options.status = "Online"
+        }else{
+            options.status = "In-game"
+        }
+
         return options;
     }
 
@@ -608,11 +605,6 @@ class AccountHandler extends EventEmitter {
         // save the handler.
         handler.save()
     }
-
-
-
-
-
 
 }
 
