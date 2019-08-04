@@ -1,6 +1,6 @@
 "use strict";
 
-const Client = require('./farmer/client.js')
+const Client = require('./steam/client')
 const EventEmitter = require('events').EventEmitter;
 const SteamAccount = require('./models/steam-accounts')
 const SteamAccHandler = require('./models/steamacc-handler')
