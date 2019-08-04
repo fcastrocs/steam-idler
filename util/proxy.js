@@ -1,4 +1,4 @@
-const request = require('request-promise');
+const request = require('request-promise-native');
 const Proxy = require('../models/proxy');
 
 // Returns proxy list from proxyscrape.com

@@ -5,7 +5,7 @@ const EventEmitter = require('events').EventEmitter;
 const GetProxy = require('../util/proxy').GetProxy;
 const GetSteamCM = require('../util/steamcm').GetSteamCM
 const crypto = require('crypto');
-const SteamTotp = require('steam-totp');
+const SteamTotp = require('./steam/node_modules/steam-totp');
 
 class Client extends EventEmitter {
     constructor(account) {
@@ -135,6 +135,15 @@ class Client extends EventEmitter {
             // LOGGED IN
             if (res.eresult == 1) {
                 self.loggedIn = true;
+
+                //generate the webcookie
+                res.webapi_authenticate_user_nonce
+
+
+
+
+
+
 
                 self.emit("steamid", res.client_supplied_steamid);
 

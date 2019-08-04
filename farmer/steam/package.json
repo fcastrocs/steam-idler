@@ -16,6 +16,7 @@
     "bytebuffer": "^5.0.1",
     "protobufjs": "^5.0.3",
     "socks": "^2.2.2",
+    "steam-totp": "^2.1.0",
     "vdf": "0.0.2"
   }
 }

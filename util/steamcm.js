@@ -1,4 +1,4 @@
-const request = require('request-promise');
+const request = require('request-promise-native');
 const SteamCM = require('../models/steamcm')
 
 //Fetch Steam CMs and save to database
