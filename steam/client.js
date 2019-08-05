@@ -4,14 +4,30 @@ const Steam = require('./index')
 const EventEmitter = require('events').EventEmitter;
 const GetProxy = require('../util/proxy').GetProxy;
 const GetSteamCM = require('../util/steamcm').GetSteamCM
-const crypto = require('crypto');
+const Crypto = require('crypto');
 const SteamTotp = require('steam-totp');
+const Request = require("request-promise-native")
+const SocksProxyAgent = require('socks-proxy-agent');
+const SteamCrypto = require("@doctormckay/steam-crypto")
+const cheerio = require('cheerio')
 
 class Client extends EventEmitter {
     constructor(account) {
         super();
+
+        this.account = {
+            user: account.user,
+            pass: account.pass,
+            emailGuard: account.emailGuard,
+            sentry: account.sentry,
+            shared_secret: account.shared_secret,
+            status: account.status,
+            forcedStatus: account.forcedStatus,
+            gamesPlaying: account.gamesPlaying,
+            skipFarmingInfo: account.skipFarmingInfo
+        }
+
         this.loggedIn = false;
-        this.account = account;
         this.connect();
     }
 
@@ -101,6 +117,166 @@ class Client extends EventEmitter {
         this.client.setPersona(state, name)
     }
 
+    async GenerateWebCookie(nonce, steamid, retries) {
+        let self = this;
+        return new Promise(async (resolve, reject) => {
+
+            if (!retries) {
+                retries = 0;
+            }
+
+            retries++;
+
+            // too many tries, get a new proxy
+            if (retries == 4) {
+                console.log(`GenerateWebCookie too many tries > user: ${self.account.user}`)
+                self.RenewConnection()
+            }
+
+            if (!self.loggedIn) {
+                return resolve(null);
+            }
+
+            let sessionKey = SteamCrypto.generateSessionKey();
+            let encryptedNonce = SteamCrypto.symmetricEncryptWithHmacIv(nonce, sessionKey.plain);
+
+            let data = {
+                steamid: steamid,
+                sessionkey: sessionKey.encrypted,
+                encrypted_loginkey: encryptedNonce
+            };
+
+            let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+            let agent = new SocksProxyAgent(proxy);
+
+            let options = {
+                url: `https://api.steampowered.com/ISteamUserAuth/AuthenticateUser/v1`,
+                method: 'POST',
+                agent: agent,
+                formData: data,
+                json: true,
+                timeout: 3500
+            }
+
+            try {
+                let data = await Request(options);
+                // will this happen???
+                if (!data.authenticateuser) {
+                    console.log(data)
+                }
+                let sessionId = Crypto.randomBytes(12).toString('hex')
+                let steamLogin = data.authenticateuser.token
+                let steamLoginSecure = data.authenticateuser.tokensecure
+                let cookie = `sessionid=${sessionId}; steamLogin=${steamLogin}; steamLoginSecure=${steamLoginSecure};`
+                return resolve(cookie);
+            } catch (error) {
+                console.log(`GenerateWebCookie retry ${retries} > user: ${self.account.user}`)
+
+                setTimeout(async () => {
+                    let cookie = await self.GenerateWebCookie(nonce, steamid, retries)
+                    return resolve(cookie)
+                }, 2000);
+            }
+        })
+    }
+
+    async GetCardsData(cookie, steamid, retries) {
+        let self = this;
+        return new Promise(async (resolve, reject) => {
+            if (!retries) {
+                retries = 0;
+            }
+
+            retries++;
+
+            // too many tries, get a new proxy
+            if (retries == 4) {
+                console.log(`GetCardsData too many tries > user: ${self.account.user}`)
+                self.RenewConnection()
+            }
+
+            if (!self.loggedIn) {
+                return resolve(null);
+            }
+
+            let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+            let agent = new SocksProxyAgent(proxy);
+
+            let options = {
+                url: `https://steamcommunity.com/profiles/${steamid}/badges`,
+                method: 'GET',
+                agent: agent,
+                timeout: 3500,
+                headers: {
+                    "User-Agent": "Valve/Steam HTTP Client 1.0",
+                    "Cookie": cookie
+                }
+            }
+
+            try {
+                let data = await Request(options)
+                return resolve(data);
+            } catch (error) {
+                console.log(`GetCardsData retry ${retries} > user: ${self.account.user}`)
+                setTimeout(async () => {
+                    let data = await self.GetCardsData(cookie, steamid, retries);
+                    return resolve(data)
+                }, 2000);
+            }
+        })
+    }
+
+    GetGameFarmingInfo(data) {
+        const $ = cheerio.load(data);
+
+        let games = [];
+
+        $(".badge_row").each(function () {
+            // check for remaining cards
+            let progress = $(this).find(".progress_info_bold").text();
+            if (!progress) {
+                return;
+            }
+
+            progress = Number(progress.replace(/[^0-9\.]+/g, ""));
+            if (progress === 0) {
+                return;
+            }
+
+            // Get play time
+            let playTime = $(this).find(".badge_title_stats_playtime").text();
+            if (!playTime) {
+                return;
+            }
+            playTime = Number(playTime.replace(/[^0-9\.]+/g, ""));
+
+
+            // Get game title
+            $(this).find(".badge_view_details").remove();
+            let gameTitle = $(this).find(".badge_title").text();
+            if (!gameTitle) {
+                return;
+            }
+            gameTitle = gameTitle.replace(/&nbsp;/g, '')
+            gameTitle = gameTitle.trim();
+
+            // Get appID
+            let link = $(this).find(".badge_row_overlay").attr("href")
+            link = link.substring(link.indexOf("gamecards"), link.length);
+            let appId = Number(link.replace(/[^0-9\.]+/g, ""));
+
+            let obj = {
+                gameTitle: gameTitle,
+                appId, appId,
+                playTime: playTime,
+                cardsRemaining: progress
+            }
+
+            games.push(obj)
+        })
+        return games;
+    }
+
     /************************************************************************
      * 					        LOGIN TO STEAM					            *
      ************************************************************************/
@@ -130,33 +306,45 @@ class Client extends EventEmitter {
         }
 
         // login response
-        this.client.once('logOnResponse', res => {
+        this.client.once('logOnResponse', async (res) => {
+            //delete login options
+            self.loginOption = {};
 
             // LOGGED IN
             if (res.eresult == 1) {
                 self.loggedIn = true;
 
-                //generate the webcookie
-                res.webapi_authenticate_user_nonce
+                let loginResp = {
+                    steamid: res.client_supplied_steamid
+                };
+
+                // Generate web cookie
+                let nonce = res.webapi_authenticate_user_nonce
+
+                let webCookie = await self.GenerateWebCookie(nonce, loginResp.steamid);
+                if (!webCookie) {
+                    return;
+                }
+
+                // should farming info be skip
+                if (!self.account.skipFarmingInfo) {
+                    let data = await self.GetCardsData(webCookie, loginResp.steamid);
+                    if (!data) {
+                        return;
+                    }
+
+                    loginResp.farmingInfo = self.GetGameFarmingInfo(data)
+                }
 
 
-
-
-
-
-
-                self.emit("steamid", res.client_supplied_steamid);
+                console.log(`Steam Login > user: ${self.account.user}`)
+                self.emit("login-res", loginResp)
 
                 // reloggedin after connection lost
                 if (self.reconnecting) {
                     self.reconnecting = false;
                     self.emit("connection-gained");
                 }
-
-                console.log(`Successful login > user: ${self.account.user}`)
-
-                //delete login options
-                self.loginOption = {};
 
                 // set accounts to play games
                 if (self.account.gamesPlaying && self.account.gamesPlaying.length > 0) {
@@ -179,7 +367,7 @@ class Client extends EventEmitter {
             // RATE LIMIT
             else if (res.eresult == 84) {
                 self.loggedIn = false;
-                console.log(`Rate limit > user: ${self.account.user}`)
+                //console.log(`Rate limit > user: ${self.account.user}`)
                 self.Disconnect();
                 self.connect();
                 return;
@@ -226,7 +414,7 @@ class Client extends EventEmitter {
             }
 
             // get SHA1
-            let shasum = crypto.createHash('sha1');
+            let shasum = Crypto.createHash('sha1');
             shasum.end(sentry.bytes);
             sentry = shasum.read();
 
@@ -234,6 +422,8 @@ class Client extends EventEmitter {
             callback({ sha_file: sentry });
             // store sentry for relogins
             self.account.sentry = sentry;
+            // clear email guard
+            self.account.emailGuard = null
 
             self.emit("sentry", sentry);
         });
@@ -288,6 +478,7 @@ class Client extends EventEmitter {
 
         // connection successful 
         self.client.once('connected', () => {
+            self.proxy = proxy;
             self.login();
         })
     }
@@ -297,8 +488,14 @@ class Client extends EventEmitter {
     ************************************************************************/
     Disconnect() {
         this.loggedIn = false;
-        console.log(`Disconnect > user: ${this.account.user}`)
+        //console.log(`Disconnect > user: ${this.account.user}`)
         this.client.Disconnect();
+    }
+
+
+    RenewConnection() {
+        this.Disconnect();
+        this.connect();
     }
 }
 

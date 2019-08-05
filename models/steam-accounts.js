@@ -13,7 +13,8 @@ let steamAcc = new Schema({
     steamid: {type: String, required: true},
     gamesPlaying: [{ type: Object }],
     persona_name: {type: String, required: true},
-    avatar: {type: String, required: true}
+    avatar: {type: String, required: true},
+    farmingInfo: [{ type: Object, default: null}]
 });
 
 module.exports = mongoose.model('SteamAccount', steamAcc);

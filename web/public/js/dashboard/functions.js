@@ -57,6 +57,11 @@ function buildAccount(account) {
         buttons = `<button type="button" class="btn btn-primary btn-sm delete-acc">Delete Acc</button>`
     }
 
+    // farming info
+    let cardsLeft = 0
+    account.farmingInfo.forEach((game)=>{
+        cardsLeft += game.cardsRemaining;
+    })
 
     let acc = `
         <div class="account account-${account.forcedStatus}" data-id="${account._id}" data-realstatus="${account.status}">
@@ -69,8 +74,8 @@ function buildAccount(account) {
             
             <div class="info">
                 <div class="status status-${account.forcedStatus}">${account.forcedStatus}</div>
-                <div class="cards-left">Cards left: todo</div>
-                <div class="games-left">Games left to idle: todo</div>
+                <div class="cards-left">Cards left: ${cardsLeft}</div>
+                <div class="games-left">Games left to farm: ${account.farmingInfo.length}</div>
             </div>
 
             <div class="account-buttons">

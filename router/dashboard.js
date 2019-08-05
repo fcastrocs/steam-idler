@@ -23,7 +23,7 @@ router.get(`/dashboard/:username`, isLoggedIn, (req, res) => {
 
 // Returns all accounts for this user
 router.get('/dashboard/steamacc/get', isLoggedIn, (req, res) => {
-    SteamAccounts.find({ userId: req.session.userId }, 'persona_name games status gamesPlaying avatar steamid forcedStatus', (err, accounts) => {
+    SteamAccounts.find({ userId: req.session.userId }, 'persona_name games status gamesPlaying avatar steamid forcedStatus farmingInfo', (err, accounts) => {
         if (err) {
             throw err;
         }

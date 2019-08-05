@@ -48,7 +48,7 @@ class AccountHandler extends EventEmitter {
                 try {
                     let options = this.setupLoginOptions(doc);
                     let client = await this.steamConnect(options);
-                    
+
                     //save and store client
                     this.saveToHandler(doc.userId, doc._id.toString(), client)
 
@@ -129,8 +129,13 @@ class AccountHandler extends EventEmitter {
             // Register needed events
 
             // account has logged in
-            client.once('steamid', steamid => {
-                account.steamid = steamid;
+            client.once('login-res', res => {
+                event_count++;
+                account.steamid = res.steamid;
+                account.farmingInfo = res.farmingInfo;
+                if (event_count === 4) {
+                    return resolve(client);
+                }
             })
 
             // login error has occurred
@@ -141,14 +146,14 @@ class AccountHandler extends EventEmitter {
 
             // sentry has been accepted
             client.once("sentry", sentry => {
-                account.sentry = sentry
+                account.sentry = Security.encrypt(sentry)
             })
 
             // games in account
             client.once("games", games => {
                 event_count++;
                 account.games = games
-                if (event_count === 3) {
+                if (event_count === 4) {
                     return resolve(client);
                 }
             })
@@ -162,7 +167,7 @@ class AccountHandler extends EventEmitter {
                 } else {
                     account.persona_name = persona_name
                 }
-                if (event_count === 3) {
+                if (event_count === 4) {
                     return resolve(client);
                 }
             })
@@ -171,7 +176,7 @@ class AccountHandler extends EventEmitter {
             client.once("avatar", avatar => {
                 event_count++;
                 account.avatar = avatar
-                if (event_count === 3) {
+                if (event_count === 4) {
                     return resolve(client);
                 }
             })
@@ -311,32 +316,31 @@ class AccountHandler extends EventEmitter {
                 return reject("Account already in DB.");
             }
 
-            let options = account;
-
             //try to login to steam
             try {
-                let client = await self.steamConnect(options);
+                let client = await self.steamConnect(account);
 
                 //save account to database
                 let steamacc = new SteamAccount({
                     userId: userId,
-                    user: options.user,
-                    pass: Security.encrypt(options.pass),
+                    user: account.user,
+                    pass: Security.encrypt(account.pass),
                     status: "Online",
                     forcedStatus: "Online",
-                    games: options.games,
-                    steamid: options.steamid,
-                    persona_name: options.persona_name,
-                    avatar: options.avatar
+                    games: account.games,
+                    steamid: account.steamid,
+                    persona_name: account.persona_name,
+                    avatar: account.avatar,
+                    farmingInfo: account.farmingInfo
                 })
 
                 // Only 2FA accs get shared secret
-                if (options.shared_secret) {
-                    steamacc.shared_secret = Security.encrypt(options.shared_secret);
+                if (account.shared_secret) {
+                    steamacc.shared_secret = Security.encrypt(account.shared_secret);
                 }
                 // 2FA accs don't get sentry
-                if(options.sentry){
-                    steamacc.sentry = Security.encrypt(options.sentry);
+                if (account.sentry) {
+                    steamacc.sentry = account.sentry;
                 }
 
                 // Save to database
@@ -345,7 +349,6 @@ class AccountHandler extends EventEmitter {
                 //save and store account to handler
                 self.saveToHandler(userId, doc._id, client);
                 return resolve(doc)
-
             } catch (error) {
                 return reject(error);
             }
@@ -479,11 +482,14 @@ class AccountHandler extends EventEmitter {
         }
 
         //set correct status
-        if(acc.gamesPlaying.length == 0){
+        if (acc.gamesPlaying.length == 0) {
             options.status = "Online"
-        }else{
+        } else {
             options.status = "In-game"
         }
+
+        //don't get farming info
+        options.skipFarmingInfo = true;
 
         return options;
     }
