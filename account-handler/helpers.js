@@ -199,9 +199,8 @@ module.exports.getAllUserHandlers = async function () {
 }
 
 
-
 // Save steam account to database
-module.exports.saveAccount = async function (account) {
+module.exports.saveAccount = function (account) {
     return new Promise(resolve => {
         account.save((err, doc) => {
             if (err) {

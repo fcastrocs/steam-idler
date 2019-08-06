@@ -1,14 +1,7 @@
 "use strict";
 
-const EventEmitter = require('events').EventEmitter;
-const SteamAccount = require('../models/steam-accounts')
-const SteamAccHandler = require('../models/steamacc-handler')
-
-
-class AccountHandler extends EventEmitter {
+module.exports = class AccountHandler {
     constructor() {
-        super();
-
         // add helper functions
         let functionsObj = require("./helpers");
         let funcNames = Object.keys(functionsObj);
@@ -40,11 +33,15 @@ class AccountHandler extends EventEmitter {
         }
 
         this.userAccounts = new Object();
+        this.reCheckInterval = 31 * 60 * 1000; // 31 mins
 
         this.init();
     }
 
-    // Sets all accounts offline status and brings online accounts in handlers
+    /**
+     * Initializes all accounts in database that should be online/farming/idling
+     * First, sets all accounts Offline status, then initializes
+     */
     async init() {
         //first change status of all accounts to offline
         let accounts = await this.getAllAccounts();
@@ -71,15 +68,18 @@ class AccountHandler extends EventEmitter {
         }
     }
 
-
+    /**
+     * Brings online user accounts
+     * Sets account to idle/farm
+     */
     async bringOnline(handler) {
         let accountIds = handler.accountIds
         if (accountIds.length == 0) {
             return;
         }
 
+        // loop through all user's accounts
         for (let i in accountIds) {
-
             // find account
             let doc = await this.getAccount(null, accountIds[i], null)
             if (!doc) {
@@ -101,7 +101,7 @@ class AccountHandler extends EventEmitter {
                 doc.avatar = options.avatar;
                 doc.status = options.status;
 
-                // Restart farming or idling
+                // Restart farming or idling, this will also save the account
                 this.farmingIdlingRestart(client, doc)
             } catch (error) {
                 //could not login to account, update it's status
@@ -111,5 +111,3 @@ class AccountHandler extends EventEmitter {
         }
     }
 }
-
-module.exports = AccountHandler;

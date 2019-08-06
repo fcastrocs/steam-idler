@@ -5,23 +5,33 @@ const Client = require('../steam/client');
 const Security = require("../util/security");
 const SteamAccount = require('../models/steam-accounts')
 
+/**
+ * Change accounts persona name / nick
+ * Saves account changes to database
+ * Returns a promise
+ */
 module.exports.changeNick = async function (userId, accountId, name) {
     let client = this.isAccountOnline(userId, accountId);
     if (!client) {
         return Promise.reject("Account is not online.");
     }
-    client.setPersona(1, name)
 
     let account = await this.getAccount(userId, accountId);
     if (!account) {
         return Promise.reject("Account not found.")
     }
+
+    client.setPersona(account.forcedStatus, name);
     account.persona_name = name;
     await this.saveAccount(account);
-    return Promise.resolve(name);
+    return Promise.resolve("okay");
 }
 
-
+/**
+ * Starts idling games
+ * Saves account changes to database
+ * Returns a promise
+ */
 module.exports.playGames = async function (userId, accountId, games) {
     let self = this;
     return new Promise(async function (resolve, reject) {
@@ -31,11 +41,15 @@ module.exports.playGames = async function (userId, accountId, games) {
             return reject("Account is not online.");
         }
 
-        // Play games
-        let status = client.playGames(games)
-
         //save playing games to account and force correct status
         let account = await self.getAccount(userId, accountId);
+        if (!account) {
+            return Promise.reject("Account not found.")
+        }
+
+        // Play games
+        let status = client.playGames(games);
+
         account.gamesPlaying = games;
         account.status = status;
         await self.saveAccount(account);
@@ -43,7 +57,11 @@ module.exports.playGames = async function (userId, accountId, games) {
     })
 }
 
-// connect to steam and register events
+/**
+ * Connects to account to steam
+ * Registers steam events
+ * Resolves once we get needed data
+ */
 module.exports.steamConnect = async function (account) {
     let self = this;
     // Resolve promise once we get needed data
@@ -52,8 +70,6 @@ module.exports.steamConnect = async function (account) {
 
         // Create client
         let client = new Client(account);
-
-        // Register needed events
 
         // account has logged in
         client.once('login-res', res => {
@@ -138,6 +154,11 @@ module.exports.steamConnect = async function (account) {
     })
 }
 
+/**
+ * Logins account to steam
+ * Restarts idling/farming process
+ * Returns a promise
+ */
 module.exports.loginAccount = async function (userId, accountId) {
     let self = this;
     return new Promise(async function (resolve, reject) {
@@ -167,7 +188,7 @@ module.exports.loginAccount = async function (userId, accountId) {
             // Restart farming or idling
             self.farmingIdlingRestart(client, doc)
 
-            return resolve(doc.forcedStatus)
+            return resolve("Okay")
         } catch (error) {
             //login error
             doc.status = error;
@@ -179,6 +200,10 @@ module.exports.loginAccount = async function (userId, accountId) {
 
 
 
+/**
+ * Deletes an account
+ * Returns a promise
+ */
 module.exports.deleteAccount = async function (userId, accountId) {
     //Find account in DB
     let doc = await this.getAccount(userId, accountId)
@@ -186,17 +211,24 @@ module.exports.deleteAccount = async function (userId, accountId) {
     if (!doc) {
         return Promise.reject("Account not found.")
     }
-    // check account if account is logged in
+
+    // try to remove account from handler
     let client = this.isAccountOnline(userId, accountId);
     if (client) {
         this.removeFromHandler(userId, accountId);
     }
+
+    // stop farming process
+    clearInterval(client.farmingReCheckId);
 
     await doc.delete();
     return Promise.resolve("deleted");
 }
 
 
+/**
+ * Logout account from steam
+ */
 module.exports.logoutAccount = async function (userId, accountId) {
     let self = this;
     return new Promise(async function (resolve, reject) {
@@ -216,13 +248,16 @@ module.exports.logoutAccount = async function (userId, accountId) {
             return resolve("Offline")
         }
 
-        // Remove handler
+        // stop farming process
+        clearInterval(client.farmingReCheckId);
+
+        // Remove account from handler
         await self.removeFromHandler(userId, accountId);
 
         //finally update account status to offline
         doc.status = "Offline";
         await self.saveAccount(doc)
-        return resolve("Offline");
+        return resolve("Okay");
     })
 }
 

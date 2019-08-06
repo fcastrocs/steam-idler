@@ -2,6 +2,12 @@
 * 					          FARMING FUNCTIONS					        *
 ************************************************************************/
 
+
+/**
+ * Starts farming process.
+ * Saves account to database
+ * Returns a promise
+ */
 module.exports.startFarming = async function (userId, accountId, client, doc) {
     let self = this;
 
@@ -29,8 +35,9 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
         return Promise.reject("No games to farm.");
     }
 
-    // Get farming games
-    doc.gamesPlaying = this.getAllAppIds(doc.farmingData);
+    // Get games with cards lefts
+    doc.gamesPlaying = this.getAllGameAppIds(doc.farmingData);
+
     // Play games
     doc.status = client.playGames(doc.gamesPlaying)
 
@@ -40,12 +47,11 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
     // save account
     this.saveAccount(doc);
 
-    // Recheck every 31 mins
-    let reCheckInterval = 31 * 60 * 1000;
-    client.farmingReCheckId = setInterval(() => reCheck(), reCheckInterval);
+    // set interval
+    client.farmingReCheckId = setInterval(() => reCheck(), this.reCheckInterval);
 
     // set nextFarmingCheck
-    doc.nextFarmingCheck = Date.now() + reCheckInterval
+    doc.nextFarmingCheck = Date.now() + self.reCheckInterval
 
     async function reCheck() {
         // account not logged in, stop farming algorithm
@@ -55,7 +61,7 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
         }
 
         // update nextFarmingCheck
-        doc.nextFarmingCheck = Date.now() + reCheckInterval
+        doc.nextFarmingCheck = Date.now() + self.reCheckInterval
 
         // restart game idling
         await self.restartIdling(doc.gamesPlaying, client)
@@ -71,7 +77,7 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
         }
 
         // Get games to idle
-        doc.gamesPlaying = self.getAllAppIds(doc.farmingData);
+        doc.gamesPlaying = self.getAllGameAppIds(doc.farmingData);
         client.playGames(doc.gamesPlaying);
         self.saveAccount(doc);
     }
@@ -79,7 +85,11 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
     return Promise.resolve("okay")
 }
 
-// Does not fail, retries after 8 seconds
+/**
+ * Gets farming data for account.
+ * Function does not fail.
+ * Returns a promise
+ */
 module.exports.getFarmingData = async function (client) {
     return new Promise(async resolve => {
         (async function attempt() {
@@ -95,7 +105,12 @@ module.exports.getFarmingData = async function (client) {
     })
 }
 
-// stops farming
+
+/**
+ * Stops farming processs
+ * Saves account to database
+ * Returns a promise
+ */
 module.exports.stopFarming = async function (userId, accountId, client, doc) {
     if (!client) {
         // check account is online
@@ -124,7 +139,11 @@ module.exports.stopFarming = async function (userId, accountId, client, doc) {
     return Promise.resolve("okay")
 }
 
-// Restarts game idling with 5 secs delay
+
+/**
+ * Restarts idling games with a 5 second delay
+ * Returns a promise
+ */
 module.exports.restartIdling = async function (games, client) {
     return new Promise(resolve => {
         client.playGames([]);
@@ -135,16 +154,10 @@ module.exports.restartIdling = async function (games, client) {
     })
 }
 
-// returns the appId for the game
-module.exports.getReadyToFarmGame = function (farmingData) {
-    for (let i in farmingData) {
-        if (farmingData[i].playTime >= 3.0) {
-            return farmingData[i].appId;
-        }
-    }
-}
-
-module.exports.getAllAppIds = function (farmingData) {
+/**
+ * Returns all game appIds from farmingData 
+ */
+module.exports.getAllGameAppIds = function (farmingData) {
     let appId = [];
     for (let i in farmingData) {
         appId.push({ game_id: farmingData[i].appId })
