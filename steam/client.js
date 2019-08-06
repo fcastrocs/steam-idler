@@ -23,8 +23,7 @@ class Client extends EventEmitter {
             shared_secret: account.shared_secret,
             status: account.status,
             forcedStatus: account.forcedStatus,
-            gamesPlaying: account.gamesPlaying,
-            skipFarmingInfo: account.skipFarmingInfo
+            skipFarmingData: account.skipFarmingData
         }
 
         this.loggedIn = false;
@@ -38,7 +37,10 @@ class Client extends EventEmitter {
     *    on fail: does not fail                                             *
     ************************************************************************/
     playGames(games) {
-        this.account.gamesPlaying = games;
+        if (!this.loggedIn) {
+            return;
+        }
+
         this.client.playGames(games);
 
         if (games.length > 0) {
@@ -55,6 +57,10 @@ class Client extends EventEmitter {
     *    on fail: "Could not activate this game."                           *
     ************************************************************************/
     activateFreeGame(appIds) {
+        if (!this.loggedIn) {
+            return;
+        }
+
         let self = this;
         return new Promise((resolve, reject) => {
             // register the event first
@@ -76,6 +82,10 @@ class Client extends EventEmitter {
 	*    on fail: String with error message                                 *
     ************************************************************************/
     redeemKey(cdkey) {
+        if (!this.loggedIn) {
+            return;
+        }
+
         let self = this;
         return new Promise((resolve, reject) => {
             // register the event first
@@ -102,6 +112,10 @@ class Client extends EventEmitter {
 	*   "Invisible": 7                                                      *
     ************************************************************************/
     setPersona(state, name) {
+        if (!this.loggedIn) {
+            return;
+        }
+
         // Save status if account loses connection
         this.account.forcedStatus = state;
         if (state == "Online") {
@@ -117,119 +131,136 @@ class Client extends EventEmitter {
         this.client.setPersona(state, name)
     }
 
-    async GenerateWebCookie(nonce, steamid, retries) {
+    /************************************************************************
+    *  					    Generate web cookie            			        * 
+    ************************************************************************/
+    async GenerateWebCookie(nonce) {
+        if (!this.loggedIn) {
+            return Promise.reject()
+        }
+
         let self = this;
         return new Promise(async (resolve, reject) => {
-
-            if (!retries) {
-                retries = 0;
-            }
-
-            retries++;
-
-            // too many tries, get a new proxy
-            if (retries == 4) {
-                console.log(`GenerateWebCookie too many tries > user: ${self.account.user}`)
-                self.RenewConnection()
-            }
-
-            if (!self.loggedIn) {
-                return resolve(null);
-            }
-
-            let sessionKey = SteamCrypto.generateSessionKey();
-            let encryptedNonce = SteamCrypto.symmetricEncryptWithHmacIv(nonce, sessionKey.plain);
-
-            let data = {
-                steamid: steamid,
-                sessionkey: sessionKey.encrypted,
-                encrypted_loginkey: encryptedNonce
-            };
-
-            let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
-            let agent = new SocksProxyAgent(proxy);
-
-            let options = {
-                url: `https://api.steampowered.com/ISteamUserAuth/AuthenticateUser/v1`,
-                method: 'POST',
-                agent: agent,
-                formData: data,
-                json: true,
-                timeout: 3500
-            }
-
-            try {
-                let data = await Request(options);
-                // will this happen???
-                if (!data.authenticateuser) {
-                    console.log(data)
+            (async function attempt(retries) {
+                if (!retries) {
+                    retries = 0;
                 }
-                let sessionId = Crypto.randomBytes(12).toString('hex')
-                let steamLogin = data.authenticateuser.token
-                let steamLoginSecure = data.authenticateuser.tokensecure
-                let cookie = `sessionid=${sessionId}; steamLogin=${steamLogin}; steamLoginSecure=${steamLoginSecure};`
-                return resolve(cookie);
-            } catch (error) {
-                console.log(`GenerateWebCookie retry ${retries} > user: ${self.account.user}`)
 
-                setTimeout(async () => {
-                    let cookie = await self.GenerateWebCookie(nonce, steamid, retries)
-                    return resolve(cookie)
-                }, 2000);
-            }
+                retries++;
+
+                // too many tries, get a new proxy
+                if (retries == 3) {
+                    console.log(`GenerateWebCookie too many tries > user: ${self.account.user}`)
+                    self.RenewConnection()
+                    return reject();
+                }
+
+                let sessionKey = SteamCrypto.generateSessionKey();
+                let encryptedNonce = SteamCrypto.symmetricEncryptWithHmacIv(nonce, sessionKey.plain);
+
+                let data = {
+                    steamid: self.steamid,
+                    sessionkey: sessionKey.encrypted,
+                    encrypted_loginkey: encryptedNonce
+                };
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://api.steampowered.com/ISteamUserAuth/AuthenticateUser/v1`,
+                    method: 'POST',
+                    agent: agent,
+                    formData: data,
+                    json: true,
+                    timeout: 4000
+                }
+
+                try {
+                    let data = await Request(options);
+                    // will this happen???
+                    if (!data.authenticateuser) {
+                        setTimeout(() => {
+                            attempt(retries);
+                        }, 2000);
+                    } else {
+                        let sessionId = Crypto.randomBytes(12).toString('hex')
+                        let steamLogin = data.authenticateuser.token
+                        let steamLoginSecure = data.authenticateuser.tokensecure
+                        self.webCookie = `sessionid=${sessionId}; steamLogin=${steamLogin}; steamLoginSecure=${steamLoginSecure};`
+                        return resolve();
+                    }
+                } catch (error) {
+                    console.log(`GenerateWebCookie retry ${retries} > user: ${self.account.user}`)
+                    setTimeout(() => {
+                        attempt(retries);
+                    }, 2000);
+                }
+
+            })();
         })
     }
 
-    async GetCardsData(cookie, steamid, retries) {
+    /************************************************************************
+    *  					    Get farming data                                *
+    * returns array of objs   { title, appId, playTime, cardsRemaining }    * 
+    ************************************************************************/
+    async GetFarmingData() {
+        if (!this.webCookie) {
+            return Promise.reject()
+        }
+
+        if (!this.loggedIn) {
+            return Promise.reject()
+        }
+
         let self = this;
         return new Promise(async (resolve, reject) => {
-            if (!retries) {
-                retries = 0;
-            }
-
-            retries++;
-
-            // too many tries, get a new proxy
-            if (retries == 4) {
-                console.log(`GetCardsData too many tries > user: ${self.account.user}`)
-                self.RenewConnection()
-            }
-
-            if (!self.loggedIn) {
-                return resolve(null);
-            }
-
-            let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
-            let agent = new SocksProxyAgent(proxy);
-
-            let options = {
-                url: `https://steamcommunity.com/profiles/${steamid}/badges`,
-                method: 'GET',
-                agent: agent,
-                timeout: 3500,
-                headers: {
-                    "User-Agent": "Valve/Steam HTTP Client 1.0",
-                    "Cookie": cookie
+            (async function attempt(retries) {
+                if (!retries) {
+                    retries = 0;
                 }
-            }
 
-            try {
-                let data = await Request(options)
-                return resolve(data);
-            } catch (error) {
-                console.log(`GetCardsData retry ${retries} > user: ${self.account.user}`)
-                setTimeout(async () => {
-                    let data = await self.GetCardsData(cookie, steamid, retries);
-                    return resolve(data)
-                }, 2000);
-            }
+                retries++;
+
+                // too many tries, get a new proxy
+                if (retries == 3) {
+                    console.log(`GetCardsData too many tries > user: ${self.account.user}`)
+                    self.RenewConnection()
+                    return reject();
+                }
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://steamcommunity.com/profiles/${self.steamid}/badges`,
+                    method: 'GET',
+                    agent: agent,
+                    timeout: 4000,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    }
+                }
+
+                try {
+                    let data = await Request(options)
+                    return resolve(self.ParseFarmingData(data));
+                } catch (error) {
+                    console.log(`GetCardsData retry ${retries} > user: ${self.account.user}`)
+                    setTimeout(async () => {
+                        attempt(retries)
+                    }, 2000);
+                }
+            })();
         })
     }
 
-    GetGameFarmingInfo(data) {
-        const $ = cheerio.load(data);
+    ParseFarmingData(data) {
+        const $ = cheerio.load(data, { decodeEntities: false });
 
-        let games = [];
+        let farmingData = [];
 
         $(".badge_row").each(function () {
             // check for remaining cards
@@ -266,15 +297,15 @@ class Client extends EventEmitter {
             let appId = Number(link.replace(/[^0-9\.]+/g, ""));
 
             let obj = {
-                gameTitle: gameTitle,
-                appId, appId,
+                title: gameTitle,
+                appId: appId.toString(),
                 playTime: playTime,
                 cardsRemaining: progress
             }
 
-            games.push(obj)
+            farmingData.push(obj)
         })
-        return games;
+        return farmingData;
     }
 
     /************************************************************************
@@ -310,45 +341,45 @@ class Client extends EventEmitter {
             //delete login options
             self.loginOption = {};
 
-            // LOGGED IN
+            /************************************************************************
+            * 					        SUCESSFUL LOGIN					            *
+            ************************************************************************/
             if (res.eresult == 1) {
                 self.loggedIn = true;
 
+                self.steamid = res.client_supplied_steamid
+
                 let loginResp = {
-                    steamid: res.client_supplied_steamid
+                    steamid: self.steamid
                 };
 
-                // Generate web cookie
-                let nonce = res.webapi_authenticate_user_nonce
-
-                let webCookie = await self.GenerateWebCookie(nonce, loginResp.steamid);
-                if (!webCookie) {
+                // generate web cookie
+                try {
+                    await self.GenerateWebCookie(res.webapi_authenticate_user_nonce);
+                } catch (error) {
+                    // could not generate web cookie, account will relogin.
                     return;
                 }
 
-                // should farming info be skip
-                if (!self.account.skipFarmingInfo) {
-                    let data = await self.GetCardsData(webCookie, loginResp.steamid);
-                    if (!data) {
+                // skip farming data if specified
+                if (!self.account.skipFarmingData) {
+                    try {
+                        loginResp.farmingData = await self.GetFarmingData();
+                        // prevent farming data fetch if account loses connection
+                        self.account.skipFarmingData = true;
+                    } catch (error) {
+                        // could not get farming data, account will relogin.
                         return;
                     }
-
-                    loginResp.farmingInfo = self.GetGameFarmingInfo(data)
                 }
-
 
                 console.log(`Steam Login > user: ${self.account.user}`)
                 self.emit("login-res", loginResp)
 
-                // reloggedin after connection lost
+                // notify connection has been gained after connection lost
                 if (self.reconnecting) {
                     self.reconnecting = false;
                     self.emit("connection-gained");
-                }
-
-                // set accounts to play games
-                if (self.account.gamesPlaying && self.account.gamesPlaying.length > 0) {
-                    self.playGames(self.account.gamesPlaying)
                 }
 
                 // Set persona
@@ -360,10 +391,12 @@ class Client extends EventEmitter {
 
                 return;
             }
-            // EMAIL GUARD
+
+            // EMAIL GUARD 
             else if (res.eresult == 63) {
                 res = "Email guard code needed"
             }
+
             // RATE LIMIT
             else if (res.eresult == 84) {
                 self.loggedIn = false;
@@ -372,17 +405,21 @@ class Client extends EventEmitter {
                 self.connect();
                 return;
             }
+
             // 2FA
             else if (res.eresult == 85) {
                 res = "2FA code needed"
             }
+
             // InvalidLoginAuthCode
             else if (res.eresult == 65) {
                 res = "Invalid guard code"
             }
+
             else if (res.eresult == 88) {
                 res = "Invalid shared secret"
             }
+            
             // INVALID USER/PASS
             else {
                 res = "Bad User/Pass"
@@ -465,7 +502,7 @@ class Client extends EventEmitter {
 
         // Connection lost
         self.client.once('error', err => {
-            // emit this event to update as offline.
+            // notify connection has been lost
             if (self.loggedIn) {
                 self.reconnecting = true;
                 self.emit("connection-lost");
@@ -488,6 +525,7 @@ class Client extends EventEmitter {
     ************************************************************************/
     Disconnect() {
         this.loggedIn = false;
+        this.webCookie = false;
         //console.log(`Disconnect > user: ${this.account.user}`)
         this.client.Disconnect();
     }

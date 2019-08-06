@@ -23,7 +23,8 @@ router.get(`/dashboard/:username`, isLoggedIn, (req, res) => {
 
 // Returns all accounts for this user
 router.get('/dashboard/steamacc/get', isLoggedIn, (req, res) => {
-    SteamAccounts.find({ userId: req.session.userId }, 'persona_name games status gamesPlaying avatar steamid forcedStatus farmingInfo', (err, accounts) => {
+    let query = "persona_name games status gamesPlaying avatar steamid forcedStatus farmingData isFarming nextFarmingCheck"
+    SteamAccounts.find({ userId: req.session.userId }, query, (err, accounts) => {
         if (err) {
             throw err;
         }
@@ -198,6 +199,34 @@ router.post('/dashboard/setstatus', isLoggedIn, async function (req, res) {
         return res.status(400).send(error)
     }
 })
+
+
+
+/************************************************************************
+* 					          FARMING ROUTES					        *
+************************************************************************/
+// Redeem key
+router.post('/dashboard/startfarming', isLoggedIn, async function (req, res) {
+    if (!req.body.accountId) {
+        return res.status(400).send("Bad startfarming request.")
+    }
+
+    try {
+        let result = await AccountHandler.startFarming(req.session.userId, req.body.accountId);
+        console.log(result)
+        return res.send(result);
+    } catch (error) {
+        console.log(error)
+        return res.status(400).send(error)
+    }
+})
+
+
+
+
+
+
+
 
 
 // Removes a steam account

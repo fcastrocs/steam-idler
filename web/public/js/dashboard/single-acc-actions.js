@@ -437,4 +437,30 @@ $(() => {
     $('#set-status-modal').on('hidden.bs.modal', function () {
         $("#set-status-form").find("input:checked").first().prop('checked', false);
     })
+
+
+    /**************************************************** 
+    *                  STEAM - FARMING                  *
+    * **************************************************/
+    $("#content-body").on('click', ".farming", function () {
+        let self = $(this).closest("div.account");
+        //open modal
+        self.find(".farming-modal").modal("toggle")
+    })
+
+    // start game idle
+    $("#content-body").on('click', ".start-farming", function () {
+        let self = $(this).closest("div.account");
+        let accountId = self.attr("data-id");
+
+        $.post('/dashboard/startfarming', { accountId: accountId }, function (res) {
+            console.log(res);
+        }).fail((xhr, status, err) => {
+            alert(xhr.responseText)
+        })
+
+    })
+
+
+
 })

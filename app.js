@@ -14,7 +14,7 @@ module.exports = new AccountHandler();
 
 // Init express
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
 
 // set HTTP headers appropriately to counter web vulnerabilities
 app.use(helmet())

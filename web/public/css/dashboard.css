@@ -1,7 +1,7 @@
 .account{
     display: inline-block;
     width: 230px;
-    height: 327px;
+    height: 370px;
     color: white;
     text-align: left;
     border-bottom-right-radius: 5px;
@@ -119,7 +119,7 @@
 .account-buttons{
     background: rgba(0, 0, 0, 0.2);
     text-align: center;
-    height: 74px;
+    height: 98px;
     vertical-align: bottom
 }
 
@@ -222,3 +222,21 @@ input[name="emailGuard"] {
 }
 
 /* END NO ACCOUNTS IN DASHBOARD */
+
+
+
+
+
+.game-farming-info{
+    border: solid 1px rgb(74, 106, 167);
+    background: rgb(27, 46, 80);
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px auto;
+    font-size: 12px;
+}
+
+.game-title{
+    font-size: 18px;
+    font-weight: bolder;
+}

@@ -29,7 +29,9 @@ function buildAccount(account) {
             <button type="button" class="btn btn-primary btn-sm set-status">Status</button>
             <button type="button" class="btn btn-primary btn-sm idle-game">Idle</button>
             <button type="button" class="btn btn-primary btn-sm redeem-key">Redeem Key</button>
+            <button type="button" class="btn btn-primary btn-sm farming">Farming</button>
             <button type="button" class="btn btn-primary btn-sm get-game">Get Games</button>
+            <button type="button" class="btn btn-primary btn-sm iventory">Inventory</button>
             <button type="button" class="btn btn-primary btn-sm btn-danger delete-acc">Delete</button>`
     } else if (account.status === "Offline") {
         account.forcedStatus = "Offline"
@@ -57,14 +59,43 @@ function buildAccount(account) {
         buttons = `<button type="button" class="btn btn-primary btn-sm delete-acc">Delete Acc</button>`
     }
 
-    // farming info
+
+    // farming modal
     let cardsLeft = 0
-    account.farmingInfo.forEach((game)=>{
+    let farmingInfo = "";
+    account.farmingData.forEach((game) => {
         cardsLeft += game.cardsRemaining;
+        farmingInfo += `<div class="game-farming-info">
+                            <div class="game-title" data-id="${game.appId}">${game.title}</div>
+                            <div class="play-time">Play time: ${game.playTime}</div>
+                            <div class="cards-remaining">Cards Remaining: ${game.cardsRemaining}</div>
+                        </div>`
     })
 
+    // farming next check timer
+    let farmingMode = ""
+    if (account.isFarming && account.status !== "Offline") {
+        let id = setInterval(() => {
+            let diff = account.nextFarmingCheck - Date.now();
+            if (diff < 1) {
+                $(`div[data-id="${account._id}"]`).find(".farming-mode").text("Farming: updating")
+                clearInterval(id)
+                return;
+            }
+            var date = new Date(diff);
+            var minutes = "0" + date.getMinutes();
+            var seconds = "0" + date.getSeconds();
+            var nextCheck = minutes.substr(-2) + ':' + seconds.substr(-2);
+
+            farmingMode = `Farming: ${nextCheck}`
+            $(`div[data-id="${account._id}"]`).find(".farming-mode").text(farmingMode)
+        }, 1000)
+    } else {
+        farmingMode = "off"
+    }
+
     let acc = `
-        <div class="account account-${account.forcedStatus}" data-id="${account._id}" data-realstatus="${account.status}">
+        <div class="account account-${account.forcedStatus}" data-id="${account._id}" data-realstatus="${account.status}" data-farmcheck="${account.nextFarmingCheck}">
 
             <div class="nick">${account.persona_name}</div>
 
@@ -75,7 +106,8 @@ function buildAccount(account) {
             <div class="info">
                 <div class="status status-${account.forcedStatus}">${account.forcedStatus}</div>
                 <div class="cards-left">Cards left: ${cardsLeft}</div>
-                <div class="games-left">Games left to farm: ${account.farmingInfo.length}</div>
+                <div class="games-left">Games left to farm: ${account.farmingData.length}</div>
+                <div class="farming-mode">Farming: ${farmingMode}</div>
             </div>
 
             <div class="account-buttons">
@@ -86,7 +118,7 @@ function buildAccount(account) {
                 <div class="spinner-border text-primary login-wait" role="status" hidden></div>
             </div>
 
-            <div class="modal fade games-idle tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal fade games-idle" tabindex="-1" role="dialog" aria-hidden="true">
                 <div class="modal-dialog games-dialog" role="document">
                     <div class="modal-content games-content">
                         <div class="modal-header">
@@ -107,6 +139,30 @@ function buildAccount(account) {
                 </div>
             </div>
 
+
+            <div class="modal fade farming-modal" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog farming-dialog" role="document">
+                    <div class="modal-content farming-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Farming Info</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body farming-body">
+                            <div class="farming-info">
+                                ${farmingInfo}
+                            </div>
+                            <div class="modal-buttons">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-danger">Stop</button>
+                                <button type="button" class="btn btn-primary modal-submit start-farming">Start</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>`
     return acc;
 }
@@ -118,20 +174,36 @@ function refreshAccounts() {
         for (let i in accounts) {
             // find account div
             let self = $(`.account[data-id="${accounts[i]._id}"]`)
-            let status = self.attr("data-realstatus")
 
-            // Check if status has changed
-            if (status === accounts[i].status) {
-                // don't check forced status for offline accounts
-                if (status === "Offline") {
-                    continue;
-                }
-                //also check forced status
-                let forcedStatus = self.find(".status").first().text();
-                if (forcedStatus == accounts[i].forcedStatus) {
-                    continue;
+            let checkTimeChanged = false;
+            let realStatusChanged = false;
+            let forcedStatusChanged = false;
+
+            // account is farming
+            if (accounts[i].isFarming) {
+                let nextCheck = parseInt(self.attr("data-farmcheck"));
+                // farming check time hasnt changed
+                if (nextCheck != accounts[i].nextFarmingCheck) {
+                    checkTimeChanged = true;
                 }
             }
+
+            // real status changed
+            if (self.attr("data-realstatus") !== accounts[i].status) {
+                realStatusChanged = true;
+            }
+
+            // check if forced status changed
+            if (self.find(".status").first().text() != accounts[i].forcedStatus) {
+                forcedStatusChanged = true;
+            }
+
+
+            // nothing changed
+            if (!checkTimeChanged && !realStatusChanged && !forcedStatusChanged) {
+                continue;
+            }
+
 
             let account = buildAccount(accounts[i])
 
