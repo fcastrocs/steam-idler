@@ -25,10 +25,10 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
             return Promise.reject("Account not found.");
         }
 
-    }
+        if (doc.isFarming) {
+            return Promise.reject("Account is already farming");
+        }
 
-    if (doc.isFarming) {
-        return Promise.reject("Account is already farming");
     }
 
     if (doc.farmingData.length == 0) {
