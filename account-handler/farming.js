@@ -7,10 +7,6 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
 
     // don't get client or doc if they were passed
     if (!client) {
-        if (doc.isFarming) {
-            return Promise.reject("Account is already farming");
-        }
-
         // check account is online
         client = this.isAccountOnline(userId, accountId);
         if (!client) {
@@ -23,6 +19,10 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
             return Promise.reject("Account not found.");
         }
 
+    }
+
+    if (doc.isFarming) {
+        return Promise.reject("Account is already farming");
     }
 
     if (doc.farmingData.length == 0) {
