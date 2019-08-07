@@ -197,8 +197,9 @@ function refreshAccounts() {
                 realStatusChanged = true;
             }
 
-            // check if forced status changed
-            if (self.find(".status").first().text() != accounts[i].forcedStatus) {
+            // check if forced status changed while account is online
+            let status = self.find(".status").first().text()
+            if (status != accounts[i].forcedStatus && (accounts[i].status !== "Offline")) {
                 forcedStatusChanged = true;
             }
 
@@ -207,7 +208,6 @@ function refreshAccounts() {
             if (!checkTimeChanged && !realStatusChanged && !forcedStatusChanged) {
                 continue;
             }
-
 
             let account = buildAccount(accounts[i])
 

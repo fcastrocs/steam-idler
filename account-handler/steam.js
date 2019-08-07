@@ -76,6 +76,7 @@ module.exports.steamConnect = async function (account) {
             event_count++;
             account.steamid = res.steamid;
             account.farmingData = res.farmingData;
+            account.inventory = res.inventory;
             if (event_count === 4) {
                 return resolve(client);
             }
@@ -184,6 +185,7 @@ module.exports.loginAccount = async function (userId, accountId) {
             doc.persona_name = options.persona_name;
             doc.avatar = options.avatar;
             doc.status = options.status;
+            doc.inventory = options.inventory;
 
             // Restart farming or idling
             self.farmingIdlingRestart(client, doc)
@@ -289,7 +291,8 @@ module.exports.addAccount = async function (userId, account) {
                 steamid: account.steamid,
                 persona_name: account.persona_name,
                 avatar: account.avatar,
-                farmingData: account.farmingData
+                farmingData: account.farmingData,
+                inventory: account.inventory
             })
 
             // Only 2FA accs get shared secret
