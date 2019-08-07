@@ -449,18 +449,36 @@ $(() => {
     })
 
     // start game idle
-    $("#content-body").on('click', ".start-farming", function () {
+    $("#content-body").on('click', ".start-farming", function (e) {
+        e.preventDefault();
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id");
-
+        // Show spinner
+        self.find(".farming-modal-spinner").attr("hidden", false);
+        // Hide farming info
+        self.find(".farming-info").attr("hidden", true);
+        // clear error msg txt
+        self.find(".farming-errMsg").text("").attr("hidden", true);
         $.post('/dashboard/startfarming', { accountId: accountId }, function (res) {
-            console.log(res);
-        }).fail((xhr, status, err) => {
-            alert(xhr.responseText)
-        })
+            // Hide spinner
+            self.find(".farming-modal-spinner").attr("hidden", true);
+            // Show farming info
+            self.find(".farming-info").attr("hidden", false);
 
+            self.find(".farming-modal").modal("toggle");
+        }).fail((xhr, status, err) => {
+            // set error message
+            self.find(".farming-errMsg").text(xhr.responseText).attr("hidden", false)
+            // Hide spinner
+            self.find(".farming-modal-spinner").attr("hidden", true);
+            // Show farming info
+            self.find(".farming-info").attr("hidden", false);
+        })
     })
 
-
+    // on close modal
+    $(document).on('hidden.bs.modal', ".farming-modal", function () {
+        $(this).find(".farming-errMsg").text("").attr("hidden", true)
+    })
 
 })

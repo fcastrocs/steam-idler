@@ -1,5 +1,6 @@
 // builds account div
 function buildAccount(account) {
+
     // build idle games modal data
     let games = account.games
     let data_games = "";
@@ -18,7 +19,6 @@ function buildAccount(account) {
         gamesDiv += `<img class="game-img ${selected_unselected}" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
     }
     data_games = data_games.trim()
-
 
     // Set correct buttons
     let buttons = ""
@@ -39,9 +39,11 @@ function buildAccount(account) {
             <button type="button" class="btn btn-primary btn-sm acc-login">Login</button>
             <button type="button" class="btn btn-primary btn-sm acc-logout" hidden>Logout</button>
             <button type="button" class="btn btn-primary btn-sm set-status" hidden>Status</button>
-            <button type="button" class="btn btn-primary btn-sm redeem-key" hidden>Redeem Key</button>
             <button type="button" class="btn btn-primary btn-sm idle-game" hidden>Idle</button>
+            <button type="button" class="btn btn-primary btn-sm redeem-key" hidden>Redeem Key</button>
+            <button type="button" class="btn btn-primary btn-sm farming" hidden>Farming</button>
             <button type="button" class="btn btn-primary btn-sm get-game" hidden>Get Games</button>
+            <button type="button" class="btn btn-primary btn-sm iventory" hidden>Inventory</button>
             <button type="button" class="btn btn-primary btn-sm btn-danger delete-acc">Delete</button>`
     } else if (account.status === "Reconnecting") {
         account.forcedStatus = "Reconnecting"
@@ -49,20 +51,21 @@ function buildAccount(account) {
             <button type="button" class="btn btn-primary btn-sm acc-login" hidden>Login</button>
             <button type="button" class="btn btn-primary btn-sm acc-logout" hidden>Logout</button>
             <button type="button" class="btn btn-primary btn-sm set-status" hidden>Status</button>
-            <button type="button" class="btn btn-primary btn-sm redeem-key" hidden>Redeem Key</button>
             <button type="button" class="btn btn-primary btn-sm idle-game" hidden>Idle</button>
+            <button type="button" class="btn btn-primary btn-sm redeem-key" hidden>Redeem Key</button>
+            <button type="button" class="btn btn-primary btn-sm farming" hidden>Farming</button>
             <button type="button" class="btn btn-primary btn-sm get-game" hidden>Get Games</button>
-            <button type="button" class="btn btn-primary btn-sm btn-danger delete-acc" hidden>Delete</button>`
+            <button type="button" class="btn btn-primary btn-sm iventory" hidden>Inventory</button>
+            <button type="button" class="btn btn-primary btn-sm btn-danger delete-acc">Delete</button>`
     }
     else { // bad account
         account.forcedStatus = "Bad"
         buttons = `<button type="button" class="btn btn-primary btn-sm delete-acc">Delete Acc</button>`
     }
 
-
     // farming modal
     let cardsLeft = 0
-    let farmingInfo = "";
+    let farmingInfo = "<div>No games to farm</div>";
     account.farmingData.forEach((game) => {
         cardsLeft += game.cardsRemaining;
         farmingInfo += `<div class="game-farming-info">
@@ -72,8 +75,8 @@ function buildAccount(account) {
                         </div>`
     })
 
-    // farming next check timer
-    let farmingMode = ""
+    // set farming next check coutdown
+    let farmingStatus = ""
     if (account.isFarming && account.status !== "Offline") {
         let id = setInterval(() => {
             let diff = account.nextFarmingCheck - Date.now();
@@ -87,11 +90,11 @@ function buildAccount(account) {
             var seconds = "0" + date.getSeconds();
             var nextCheck = minutes.substr(-2) + ':' + seconds.substr(-2);
 
-            farmingMode = `Farming: ${nextCheck}`
-            $(`div[data-id="${account._id}"]`).find(".farming-mode").text(farmingMode)
+            farmingStatus = `Farming: ${nextCheck}`
+            $(`div[data-id="${account._id}"]`).find(".farming-mode").text(farmingStatus)
         }, 1000)
     } else {
-        farmingMode = "off"
+        farmingStatus = "off"
     }
 
     let acc = `
@@ -107,7 +110,7 @@ function buildAccount(account) {
                 <div class="status status-${account.forcedStatus}">${account.forcedStatus}</div>
                 <div class="cards-left">Cards left: ${cardsLeft}</div>
                 <div class="games-left">Games left to farm: ${account.farmingData.length}</div>
-                <div class="farming-mode">Farming: ${farmingMode}</div>
+                <div class="farming-mode">Farming: ${farmingStatus}</div>
             </div>
 
             <div class="account-buttons">
@@ -145,18 +148,19 @@ function buildAccount(account) {
                     <div class="modal-content farming-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Farming Info</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
                         </div>
                         <div class="modal-body farming-body">
+                            <div class="d-flex justify-content-center">
+                                <div class="spinner-border text-info farming-modal-spinner" role="status" hidden></div>
+                            </div>
+                            <div class="alert alert-danger farming-errMsg" role="alert" hidden></div>
                             <div class="farming-info">
                                 ${farmingInfo}
-                            </div>
-                            <div class="modal-buttons">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <button type="button" class="btn btn-danger">Stop</button>
-                                <button type="button" class="btn btn-primary modal-submit start-farming">Start</button>
+                                <div class="modal-buttons">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-danger">Stop</button>
+                                    <button type="button" class="btn btn-primary modal-submit start-farming">Start</button>
+                                </div>
                             </div>
                         </div>
                     </div>
