@@ -100,6 +100,7 @@ module.exports = class AccountHandler {
                 doc.persona_name = options.persona_name;
                 doc.avatar = options.avatar;
                 doc.status = options.status;
+                doc.inventory = options.inventory
 
                 // Restart farming or idling, this will also save the account
                 this.farmingIdlingRestart(client, doc)
