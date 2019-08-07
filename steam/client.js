@@ -308,6 +308,73 @@ class Client extends EventEmitter {
         return farmingData;
     }
 
+
+    /************************************************************************
+    *  				Get account's steam inventory                           *
+    * returns obj                                                           * 
+    ************************************************************************/
+    async GetIventory() {
+        if (!this.webCookie) {
+            return Promise.reject()
+        }
+
+        if (!this.loggedIn) {
+            return Promise.reject()
+        }
+
+        let self = this;
+        return new Promise(async (resolve, reject) => {
+            (async function attempt(retries) {
+                if (!retries) {
+                    retries = 0;
+                }
+
+                retries++;
+
+                // too many tries, get a new proxy
+                if (retries == 3) {
+                    console.log(`GetIventory too many tries > user: ${self.account.user}`)
+                    self.RenewConnection()
+                    return reject();
+                }
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://steamcommunity.com/profiles/${self.steamid}/inventory/json/753/6`,
+                    method: 'GET',
+                    agent: agent,
+                    timeout: 4000,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    }
+                }
+
+                try {
+                    let inventory = await Request(options)
+                    inventory = JSON.parse(inventory);
+                    if (!inventory.success) {
+                        console.log(`GetIventory bad data > user: ${self.account.user}`)
+                        throw "GetIventory bad data."
+                    }
+
+                    if(inventory.rgDescriptions.length == 0){
+                        return resolve(null);
+                    }
+                    
+                    return resolve(inventory.rgDescriptions);
+                } catch (error) {
+                    console.log(`GetIventory retry ${retries} > user: ${self.account.user}`)
+                    setTimeout(async () => {
+                        attempt(retries)
+                    }, 2000);
+                }
+            })();
+        })
+    }
+
     /************************************************************************
      * 					        LOGIN TO STEAM					            *
      ************************************************************************/
@@ -373,6 +440,13 @@ class Client extends EventEmitter {
                     }
                 }
 
+                // Get inventory 
+                try {
+                    loginResp.inventory = await self.GetIventory();
+                } catch (error) {
+                    return
+                }
+
                 console.log(`Steam Login > user: ${self.account.user}`)
                 self.emit("login-res", loginResp)
 
@@ -419,7 +493,7 @@ class Client extends EventEmitter {
             else if (res.eresult == 88) {
                 res = "Invalid shared secret"
             }
-            
+
             // INVALID USER/PASS
             else {
                 res = "Bad User/Pass"
