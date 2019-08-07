@@ -5,7 +5,9 @@ const SteamAccount = require('../models/steam-accounts')
 const Security = require("../util/security");
 const SteamAccHandler = require('../models/steamacc-handler')
 
-// Restarts an account's idling or farming
+/**
+ * Restarts farming or idling process
+ */
 module.exports.farmingIdlingRestart = async function (client, doc) {
     // Restart farming 
     if (doc.isFarming) {
@@ -14,7 +16,7 @@ module.exports.farmingIdlingRestart = async function (client, doc) {
         } catch (error) {
             console.log(error);
         }
-        // restart idling
+        // Restart idling
     } else {
         if (doc.gamesPlaying.length > 0) {
             doc.status = client.playGames(doc.gamesPlaying)
@@ -25,34 +27,58 @@ module.exports.farmingIdlingRestart = async function (client, doc) {
     }
 }
 
-
-// Adds games to account.game array avoiding duplicates
-module.exports.addGames = function (games, accountGames) {
-    // trick, convert object to string and check for equality
-    for (let i in games) {
-        let game = JSON.stringify(games[i])
-        let found = false;
-
-        for (let j in accountGames) {
-            //convert to strong
-            let accGame = JSON.stringify(accountGames[j])
-            if (game === accGame) {
-                found = true;
-                break;
-            }
-        }
-
-        // push game to accountGames if it was not found
-        if (!found) {
-            accountGames.push(games[i])
-        }
+/**
+ * Adds games to account
+ * Returns games array
+ */
+module.exports.addGames = function (source, dest) {
+    for (let i in source) {
+        dest = this.addUniqueObj(source[i], dest)
     }
-    return accountGames;
+    return dest;
 }
 
+/**
+ * Add unique object to array
+ * Returns new array
+ */
+module.exports.addUniqueObj = function (obj, array) {
+    //trick is to stringify objects and compare
+    let objString = JSON.stringify(obj);
 
+    // Filter obj if found
+    let newArray = array.filter(item => {
+        let itemString = JSON.stringify(item);
+        if (itemString === objString) {
+            return false;
+        } else {
+            return true;
+        }
+    })
 
-// Set up login options
+    newArray.push(obj)
+    return newArray;
+}
+
+/**
+ * Remove obj from array
+ * returns new array
+ */
+module.exports.removeObj = function (obj, array) {
+    let objString = JSON.stringify(obj);
+    return array.filter(item => {
+        let itemString = JSON.stringify(item);
+        if (itemString === objString) {
+            return false;
+        } else {
+            return true;
+        }
+    })
+}
+
+/**
+ * setup login options
+ */
 module.exports.setupLoginOptions = function (acc) {
     let options = {
         user: acc.user,
@@ -79,7 +105,9 @@ module.exports.setupLoginOptions = function (acc) {
     return options;
 }
 
-// Saves account to handlers
+/**
+ * Save accountId to user's handler
+ */
 module.exports.saveToHandler = async function (userId, accountId, client) {
     // store the client
     // check if user doesn't have a dictionary yet
@@ -95,15 +123,7 @@ module.exports.saveToHandler = async function (userId, accountId, client) {
 
     // user already has a handler in DB
     if (handler) {
-        // Trick to make sure no duplicates. Try to remove it, then insert
-
-        // Try to remove the accountId from the handler
-        handler.accountIds = handler.accountIds.filter(accId => {
-            return accId.toString() !== accountId
-        });
-
-        // if it was deleted, push it again
-        handler.accountIds.push(accountId)
+        handler.accountIds = this.addUniqueObj(accountId, handler.accountIds);
     }
     else {
         // user doesnt have a handler yet.
@@ -116,7 +136,9 @@ module.exports.saveToHandler = async function (userId, accountId, client) {
     handler.save()
 }
 
-// Remove account from local and db handler
+/**
+ * Remove accountId from user handler
+ */
 module.exports.removeFromHandler = async function (userId, accountId) {
     // remove from local handler
     if (this.userAccounts[userId] && this.userAccounts[userId][accountId]) {
@@ -130,14 +152,13 @@ module.exports.removeFromHandler = async function (userId, accountId) {
         return;
     }
 
-    handler.accountIds = handler.accountIds.filter(accId => {
-        return accId.toString() !== accountId
-    });
-
-    return await handler.save();
+    handler.accountIds = this.removeObj(accountId, handler.accountIds)
+    handler.save();
 }
 
-// Returns accounts client if is online
+/**
+ * Returns account's client if it's online
+ */
 module.exports.isAccountOnline = function (userId, accountId) {
     let client = this.findClient(userId, accountId);
     if (!client) {
@@ -151,7 +172,9 @@ module.exports.isAccountOnline = function (userId, accountId) {
     return client;
 }
 
-// Returns client from local handler
+/**
+ * Returns client if accountId is in user's handler
+ */
 module.exports.findClient = function (userId, accountId) {
     if (!this.userAccounts[userId] || !this.userAccounts[userId][accountId]) {
         return false;
@@ -159,8 +182,9 @@ module.exports.findClient = function (userId, accountId) {
     return this.userAccounts[userId][accountId]
 }
 
-
-// Get steam account from db
+/**
+ * Get account from database
+ */
 module.exports.getAccount = async function (userId, accountId, user) {
     let query = null;
 
@@ -186,20 +210,27 @@ module.exports.getAccount = async function (userId, accountId, user) {
     return await query.exec();
 }
 
-// Get all steam accounts
+/**
+ * Returns all accounts
+ */
 module.exports.getAllAccounts = async function () {
     let query = SteamAccount.find({})
     return await query.exec();
 }
 
-// Get all user handlers
+/**
+ * Returns all user handlers
+ */
 module.exports.getAllUserHandlers = async function () {
     let query = SteamAccHandler.find();
     return await query.exec();
 }
 
 
-// Save steam account to database
+/**
+ * Saves account to database
+ * Returns document
+ */
 module.exports.saveAccount = function (account) {
     return new Promise(resolve => {
         account.save((err, doc) => {

@@ -252,7 +252,7 @@ module.exports.logoutAccount = async function (userId, accountId) {
         clearInterval(client.farmingReCheckId);
 
         // Remove account from handler
-        await self.removeFromHandler(userId, accountId);
+        self.removeFromHandler(userId, accountId);
 
         //finally update account status to offline
         doc.status = "Offline";
@@ -261,17 +261,20 @@ module.exports.logoutAccount = async function (userId, accountId) {
     })
 }
 
-
+/**
+ * Login to steam
+ * Returns promise
+ */
 module.exports.addAccount = async function (userId, account) {
     let self = this;
     return new Promise(async function (resolve, reject) {
-        //Find account in DB
+        // Find account in DB
         let doc = await self.getAccount(userId, null, account.user);
         if (doc) {
             return reject("Account already in DB.");
         }
 
-        //try to login to steam
+        // try to login to steam
         try {
             let client = await self.steamConnect(account);
 
@@ -310,7 +313,10 @@ module.exports.addAccount = async function (userId, account) {
     })
 }
 
-
+/**
+ * Activate free game to account
+ * Returns a promise
+ */
 module.exports.activateFreeGame = async function (userId, accountId, appIds) {
     // check account is logged in
     let client = this.isAccountOnline(userId, accountId);
@@ -318,7 +324,7 @@ module.exports.activateFreeGame = async function (userId, accountId, appIds) {
         return Promise.reject("Account is not online.")
     }
 
-    //find account in db
+    // find account in db
     let acc = await this.getAccount(userId, accountId, null);
     if (!acc) {
         return Promise.reject("Account not found.")
@@ -336,6 +342,10 @@ module.exports.activateFreeGame = async function (userId, accountId, appIds) {
 }
 
 
+/**
+ * Redeems a key to account
+ * Returns a promise
+ */
 module.exports.redeemKey = async function (userId, accountId, cdkey) {
     // check account is logged in
     let client = this.isAccountOnline(userId, accountId);
@@ -360,6 +370,10 @@ module.exports.redeemKey = async function (userId, accountId, cdkey) {
     }
 }
 
+/**
+ * Sets status to account
+ * Returns a promise
+ */
 module.exports.setStatus = async function (userId, accountId, status) {
     // check account is logged in
     let client = this.isAccountOnline(userId, accountId);
