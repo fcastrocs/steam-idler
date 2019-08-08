@@ -62,7 +62,7 @@ module.exports = class AccountHandler {
 
         // Bring online accounts
         for (let i in handlers) {
-            this.bringOnline(handlers[i].accountId);
+            this.bringOnline(handlers[i]);
         }
 
         return Promise.resolve();
@@ -72,14 +72,15 @@ module.exports = class AccountHandler {
      * Brings online user accounts
      * Sets account to idle/farm
      */
-    async bringOnline(accountId) {
+    async bringOnline(handler) {
+        let accountId = handler.accountId;
 
         // find account
         let doc = await this.getAccount(null, accountId, null)
         // account not found
         if(!doc){
-            console.log(`Account not found ${accountId}`)
-            return;
+            // then remove this handler
+            handler.remove();
         }
 
         try {
