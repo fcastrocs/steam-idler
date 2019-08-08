@@ -9,8 +9,53 @@ const GetAndSaveProxies = require('./util/proxy').GetAndSaveProxies;
 const GetAndSaveSteamCMs = require('./util/steamcm').GetAndSaveSteamCMs;
 const AccountHandler = require("./account-handler");
 
-// Init steam account handler
-module.exports = new AccountHandler();
+// Handler must be kept in ram at all times
+let accountHandler = new AccountHandler();
+module.exports = accountHandler;
+
+//Initialization process.
+(async function () {
+    //Connect database
+    try {
+        const DBURL = 'mongodb://machi:chivas10@ds033056.mlab.com:33056/heroku_z7f42pmp';
+        mongoose.set('useCreateIndex', true);
+        await mongoose.connect(DBURL, { useNewUrlParser: true })
+        process.env.dbconnected = true;
+        console.log('Connected to MongoDB.');
+    } catch (error) {
+        console.log(error);
+        return;
+    }
+
+
+    // Fetch Steam CM servers
+    try {
+        let res = await GetAndSaveSteamCMs();
+        console.log(res)
+    } catch (error) {
+        console.log(error)
+        return;
+    }
+
+    // Fetch proxies
+    try {
+        let res = await GetAndSaveProxies();
+        console.log(res)
+    } catch (error) {
+        console.log(error)
+        return;
+    }
+
+    //Initialize steam accounts
+    try {
+        await accountHandler.init();
+    } catch (error) {
+        console.log(error)
+    }
+
+})();
+
+
 
 // Init express
 const app = express();
@@ -56,29 +101,9 @@ app.use('/', require('./router/dashboard'))
 app.use('/', require('./router/admin'))
 
 //Start listening on port
-app.listen(port, () => console.log(`steam-farmer started on port ${port}\n`));
-
-// Connect to db
-const DBURL = 'mongodb://machi:chivas10@ds033056.mlab.com:33056/heroku_z7f42pmp';
-mongoose.set('useCreateIndex', true);
-
-mongoose.connect(DBURL, { useNewUrlParser: true }).then(async function () {
-    process.env.dbconnected = true;
-    console.log('Connected to database');
-
-    try {
-        let res = await GetAndSaveSteamCMs();
-        console.log(res)
-        res = await GetAndSaveProxies();
-        console.log(res)
-    } catch (error) {
-        console.log(error)
-    }
-}).catch(err => console.log('error connecting to mongodb'));
-
+app.listen(port, () => console.log(`App started listening on port: ${port}`));
 
 const request = require("request-promise-native");
-
 setInterval(function () {
-    request('https://steam-farmer.herokuapp.com').then(() => {}).catch(() => {})
+    request('https://steam-farmer.herokuapp.com').then(() => { }).catch(() => { })
 }, 25 * 60 * 1000); // every 5 min

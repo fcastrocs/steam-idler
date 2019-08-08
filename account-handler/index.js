@@ -34,15 +34,6 @@ module.exports = class AccountHandler {
 
         this.userAccounts = new Object();
         this.reCheckInterval = 31 * 60 * 1000; // 31 mins
-
-        let self = this;
-        (async function () {
-            try {
-                await self.init();
-            } catch (error) {
-                console.log(error)
-            }
-        })();
     }
 
     /**
@@ -69,55 +60,45 @@ module.exports = class AccountHandler {
 
         console.log("Initializing accounts.")
 
-        // Bring online accounts in handlers
+        // Bring online accounts
         for (let i in handlers) {
-            this.bringOnline(handlers[i])
+            this.bringOnline(handlers[i].accountId);
         }
 
-        return Promise.resolve("Okay");
+        return Promise.resolve();
     }
 
     /**
      * Brings online user accounts
      * Sets account to idle/farm
      */
-    async bringOnline(handler) {
-        let accountIds = handler.accountIds
-        if (accountIds.length == 0) {
-            return;
+    async bringOnline(accountId) {
+
+        // find account
+        let doc = await this.getAccount(null, accountId, null)
+
+        try {
+            // set up login options
+            let options = this.setupLoginOptions(doc);
+            let client = await this.steamConnect(options);
+
+            // save account to handler
+            this.saveToHandler(doc.userId, doc._id.toString(), client)
+
+            // update account properties after login
+            doc.games = this.addGames(options.games, doc.games);
+            doc.persona_name = options.persona_name;
+            doc.avatar = options.avatar;
+            doc.status = options.status;
+            doc.inventory = options.inventory
+
+            // Restart farming or idling, this will also save the account
+            this.farmingIdlingRestart(client, doc)
+        } catch (error) {
+            //could not login to account, update it's status
+            doc.status = error;
+            this.saveAccount(doc)
         }
 
-        // loop through all user's accounts
-        for (let i in accountIds) {
-            // find account
-            let doc = await this.getAccount(null, accountIds[i], null)
-            if (!doc) {
-                console.log(`Could not initialize account ${accountIds[i]}`)
-                continue;
-            }
-
-            try {
-                // set up login options
-                let options = this.setupLoginOptions(doc);
-                let client = await this.steamConnect(options);
-
-                // save account to handler
-                this.saveToHandler(doc.userId, doc._id.toString(), client)
-
-                // update account properties after login
-                doc.games = this.addGames(options.games, doc.games);
-                doc.persona_name = options.persona_name;
-                doc.avatar = options.avatar;
-                doc.status = options.status;
-                doc.inventory = options.inventory
-
-                // Restart farming or idling, this will also save the account
-                this.farmingIdlingRestart(client, doc)
-            } catch (error) {
-                //could not login to account, update it's status
-                doc.status = error;
-                this.saveAccount(doc)
-            }
-        }
     }
 }

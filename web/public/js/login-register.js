@@ -83,7 +83,6 @@ $(() => {
 
         let self = this;
         let data = $("#change-password").serialize();
-        console.log(data)
 
         $.post('/changepassword', data, function (res) {
             window.location = res;

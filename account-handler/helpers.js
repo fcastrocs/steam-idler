@@ -3,7 +3,7 @@
 ************************************************************************/
 const SteamAccount = require('../models/steam-accounts')
 const Security = require("../util/security");
-const SteamAccHandler = require('../models/steamacc-handler')
+const SteamAccHandler = require('../models/steam-account-handler')
 
 /**
  * Restarts farming or idling process
@@ -118,20 +118,20 @@ module.exports.saveToHandler = async function (userId, accountId, client) {
     this.userAccounts[userId][accountId] = client;
 
     // Save to DB
-    let query = SteamAccHandler.findOne({ userId: userId })
+    let query = SteamAccHandler.findOne({ userId: userId, accountId: accountId })
     let handler = await query.exec();
 
-    // user already has a handler in DB
-    if (handler) {
-        handler.accountIds = this.addUniqueObj(accountId, handler.accountIds);
+    // handler already in DB
+    if(handler){
+        return;
     }
-    else {
-        // user doesnt have a handler yet.
-        handler = new SteamAccHandler({
-            userId: userId,
-            accountIds: [accountId]
-        })
-    }
+
+    // create a new handler
+    handler = new SteamAccHandler({
+        userId: userId,
+        accountId: accountId
+    })
+
     // save the handler.
     handler.save()
 }
@@ -147,13 +147,13 @@ module.exports.removeFromHandler = async function (userId, accountId) {
     }
 
     // remove from db handler
-    let handler = await SteamAccHandler.findOne({ userId: userId })
-    if (!handler || !handler.accountIds) {
-        return;
+    let handler = await SteamAccHandler.findOne({ userId: userId, accountId, accountId })
+    // no handler found
+    if(!handler){
+        return
     }
 
-    handler.accountIds = this.removeObj(accountId, handler.accountIds)
-    handler.save();
+    handler.remove();
 }
 
 /**
