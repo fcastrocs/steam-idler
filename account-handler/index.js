@@ -38,8 +38,7 @@ module.exports = class AccountHandler {
         let self = this;
         (async function () {
             try {
-                let res = await self.init();
-                console.log(res)
+                await self.init();
             } catch (error) {
                 console.log(error)
             }
@@ -74,6 +73,8 @@ module.exports = class AccountHandler {
         for (let i in handlers) {
             this.bringOnline(handlers[i])
         }
+
+        return Promise.resolve("Okay");
     }
 
     /**
