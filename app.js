@@ -81,4 +81,4 @@ const request = require("request-promise-native");
 
 setInterval(function () {
     request('https://steam-farmer.herokuapp.com').then(() => {}).catch(() => {})
-}, 300000); // every 5 min
+}, 25 * 60 * 1000); // every 5 min
