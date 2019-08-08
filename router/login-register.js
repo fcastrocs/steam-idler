@@ -19,12 +19,12 @@ router.post('/register', async function (req, res) {
         return res.status(403).send("Bad register request.")
     }
 
-    // //check invite is valid
-    // let query = Invite.findOne({token: req.body.invitecode});
-    // let invite = await query.exec();
-    // if(!invite){
-    //     return res.status(403).send("Invalid invite code.")
-    // }
+    //check invite is valid
+    let query = Invite.findOne({token: req.body.invitecode});
+    let invite = await query.exec();
+    if(!invite){
+        return res.status(403).send("Invalid invite code.")
+    }
 
 
     // trim spaces and make it lower case.
@@ -78,7 +78,7 @@ router.post('/register', async function (req, res) {
             }
 
             //delete the invite
-            //invite.remove();
+            invite.remove();
 
             try {
                 let result = await createToken_SendVerification(doc, req.headers.host);
