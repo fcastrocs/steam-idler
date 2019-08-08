@@ -81,6 +81,7 @@ module.exports = class AccountHandler {
         if(!doc){
             // then remove this handler
             handler.remove();
+            return;
         }
 
         try {
