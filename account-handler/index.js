@@ -79,6 +79,7 @@ module.exports = class AccountHandler {
         // account not found
         if(!doc){
             console.log(`Account not found ${accountId}`)
+            return;
         }
 
         try {
