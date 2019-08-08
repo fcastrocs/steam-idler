@@ -35,11 +35,15 @@ module.exports = class AccountHandler {
         this.userAccounts = new Object();
         this.reCheckInterval = 31 * 60 * 1000; // 31 mins
 
-        try {
-            this.init();
-        } catch (error) {
-            
-        }
+        let self = this;
+        (async function () {
+            try {
+                let res = await self.init();
+                console.log(res)
+            } catch (error) {
+                console.log(error)
+            }
+        })();
     }
 
     /**
