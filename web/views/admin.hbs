@@ -1,3 +1,4 @@
+<link rel="stylesheet" type="text/css" href="../static/css/admin.css">
 <script src="../static/js/admin.js"></script>
 
 <div id="admin">
@@ -9,4 +10,16 @@
         <div>SteamCMS: {{{steamcmsCount}}}</div>
         <button type="button" class="btn btn-primary" id="renew-steamcms">Renew SteamCMS</button>
     </div>
+
+    <form id="send-invite-form" class="form-group">
+        <div class="form-group" id="form-account">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Email</span>
+                </div>
+                <input type="email" name="email" class="form-control" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Invite</button>
+    </form>
 </div>

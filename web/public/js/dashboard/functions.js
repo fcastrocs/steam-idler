@@ -31,7 +31,7 @@ function buildAccount(account) {
             <button type="button" class="btn btn-primary btn-sm redeem-key">Redeem Key</button>
             <button type="button" class="btn btn-primary btn-sm farming">Farming</button>
             <button type="button" class="btn btn-primary btn-sm get-game">Get Games</button>
-            <button type="button" class="btn btn-primary btn-sm iventory">Inventory</button>
+            <button type="button" class="btn btn-primary btn-sm acc-inventory-btn">Inventory</button>
             <button type="button" class="btn btn-primary btn-sm btn-danger delete-acc">Delete</button>`
     } else if (account.status === "Offline") {
         account.forcedStatus = "Offline"
@@ -43,7 +43,7 @@ function buildAccount(account) {
             <button type="button" class="btn btn-primary btn-sm redeem-key" hidden>Redeem Key</button>
             <button type="button" class="btn btn-primary btn-sm farming" hidden>Farming</button>
             <button type="button" class="btn btn-primary btn-sm get-game" hidden>Get Games</button>
-            <button type="button" class="btn btn-primary btn-sm iventory" hidden>Inventory</button>
+            <button type="button" class="btn btn-primary btn-sm acc-inventory-btn" hidden>Inventory</button>
             <button type="button" class="btn btn-primary btn-sm btn-danger delete-acc">Delete</button>`
     } else if (account.status === "Reconnecting") {
         account.forcedStatus = "Reconnecting"
@@ -55,7 +55,7 @@ function buildAccount(account) {
             <button type="button" class="btn btn-primary btn-sm redeem-key" hidden>Redeem Key</button>
             <button type="button" class="btn btn-primary btn-sm farming" hidden>Farming</button>
             <button type="button" class="btn btn-primary btn-sm get-game" hidden>Get Games</button>
-            <button type="button" class="btn btn-primary btn-sm iventory" hidden>Inventory</button>
+            <button type="button" class="btn btn-primary btn-sm acc-inventory-btn" hidden>Inventory</button>
             <button type="button" class="btn btn-primary btn-sm btn-danger delete-acc">Delete</button>`
     }
     else { // bad account
@@ -95,6 +95,21 @@ function buildAccount(account) {
         }, 1000)
     } else {
         farmingStatus = "off"
+    }
+
+    // inventory
+    let inventory = "";
+    if(!account.inventory){
+        inventory = "You do not have an inventory";
+    }
+    else{
+        for(let i in account.inventory){
+            if(!account.inventory.hasOwnProperty(i)){
+                continue;
+            }
+            let url = `https://steamcommunity-a.akamaihd.net/economy/image/${account.inventory[i].icon_url}/96fx96f`
+            inventory += `<img src="${url}" data-toggle="tooltip" data-placement="top" title="${account.inventory[i].market_name}">`
+        }
     }
 
     let acc = `
@@ -161,6 +176,25 @@ function buildAccount(account) {
                                     <button type="button" class="btn btn-danger">Stop</button>
                                     <button type="button" class="btn btn-primary modal-submit start-farming">Start</button>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade inventory-modal" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog inventory-dialog" role="document">
+                    <div class="modal-content iventory-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Iventory</h5>
+                        </div>
+                        <div class="modal-body inventory-body">
+                            <div class="d-flex justify-content-center">
+                                <div class="spinner-border text-info inventory-modal-spinner" role="status" hidden></div>
+                            </div>
+                            <div class="alert alert-danger iventory-errMsg" role="alert" hidden></div>
+                            <div class="iventory-info">
+                                ${inventory}
                             </div>
                         </div>
                     </div>

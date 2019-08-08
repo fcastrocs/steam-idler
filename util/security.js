@@ -27,3 +27,7 @@ module.exports.decrypt_buffer = text => {
     decrypted = Buffer.concat([decrypted, decipher.final()]);
     return decrypted;
 }
+
+module.exports.createToken = () =>{
+    return crypto.randomBytes(16).toString('hex');
+}

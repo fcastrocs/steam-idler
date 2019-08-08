@@ -481,4 +481,15 @@ $(() => {
         $(this).find(".farming-errMsg").text("").attr("hidden", true)
     })
 
+
+    /**************************************************** 
+    *                  STEAM - IVENTORY                 *
+     **************************************************/
+    $(document).on('click', ".acc-inventory-btn", function () {
+        let self = $(this).closest("div.account");
+        //open modal
+        self.find(".inventory-modal").modal("toggle")
+    })
+
+
 })

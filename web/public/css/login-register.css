@@ -1,7 +1,7 @@
 
 
 #login-form, #register-form{
-    width: 450px;
+    width: 550px;
     padding: 20px;
     background-color: rgb(12, 45, 71);
     margin:80px auto;
@@ -11,6 +11,10 @@
 
 .login-page-buttons{
     float: right;
+}
+
+.input-group-text{
+    width: 115px !important;
 }
 
 #signin-button, #register-button{
