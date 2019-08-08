@@ -47,11 +47,11 @@ module.exports = accountHandler;
     }
 
     //Initialize steam accounts
-    try {
-        await accountHandler.init();
-    } catch (error) {
-        console.log(error)
-    }
+    // try {
+    //     await accountHandler.init();
+    // } catch (error) {
+    //     console.log(error)
+    // }
 
 })();
 
@@ -106,4 +106,4 @@ app.listen(port, () => console.log(`App started listening on port: ${port}`));
 const request = require("request-promise-native");
 setInterval(function () {
     request('https://steam-farmer.herokuapp.com').then(() => { }).catch(() => { })
-}, 25 * 60 * 1000); // every 5 min
+}, 25 * 60 * 1000); // 25 mins

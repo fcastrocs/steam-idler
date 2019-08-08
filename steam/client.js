@@ -40,7 +40,6 @@ class Client extends EventEmitter {
         if (!this.loggedIn) {
             return;
         }
-
         this.client.playGames(games);
 
         if (games.length > 0) {
@@ -85,7 +84,6 @@ class Client extends EventEmitter {
         if (!this.loggedIn) {
             return;
         }
-
         let self = this;
         return new Promise((resolve, reject) => {
             // register the event first
@@ -115,7 +113,6 @@ class Client extends EventEmitter {
         if (!this.loggedIn) {
             return;
         }
-
         // Save status if account loses connection
         this.account.forcedStatus = state;
         if (state == "Online") {
@@ -145,9 +142,7 @@ class Client extends EventEmitter {
                 if (!retries) {
                     retries = 0;
                 }
-
                 retries++;
-
                 // too many tries, get a new proxy
                 if (retries == 3) {
                     console.log(`GenerateWebCookie too many tries > user: ${self.account.user}`)
@@ -191,7 +186,6 @@ class Client extends EventEmitter {
                         return resolve();
                     }
                 } catch (error) {
-                    console.log(`GenerateWebCookie retry ${retries} > user: ${self.account.user}`)
                     setTimeout(() => {
                         attempt(retries);
                     }, 2000);
@@ -248,7 +242,6 @@ class Client extends EventEmitter {
                     let data = await Request(options)
                     return resolve(self.ParseFarmingData(data));
                 } catch (error) {
-                    console.log(`GetCardsData retry ${retries} > user: ${self.account.user}`)
                     setTimeout(async () => {
                         attempt(retries)
                     }, 2000);
@@ -360,13 +353,12 @@ class Client extends EventEmitter {
                         throw "GetIventory bad data."
                     }
 
-                    if(inventory.rgDescriptions.length == 0){
+                    if (inventory.rgDescriptions.length == 0) {
                         return resolve(null);
                     }
-                    
+
                     return resolve(inventory.rgDescriptions);
                 } catch (error) {
-                    console.log(`GetIventory retry ${retries} > user: ${self.account.user}`)
                     setTimeout(async () => {
                         attempt(retries)
                     }, 2000);
@@ -382,7 +374,7 @@ class Client extends EventEmitter {
         let self = this;
 
         // Setup login options
-        this.loginOption = {
+        let loginOption = {
             account_name: this.account.user,
             password: this.account.pass,
             supports_rate_limit_response: true,
@@ -390,28 +382,26 @@ class Client extends EventEmitter {
 
         // Login with sentry file
         if (this.account.sentry) {
-            this.loginOption.sha_sentryfile = this.account.sentry
+            loginOption.sha_sentryfile = this.account.sentry
         }
 
         // Email code
         if (this.account.emailGuard) {
-            this.loginOption.auth_code = this.account.emailGuard;
+            loginOption.auth_code = this.account.emailGuard;
         }
 
         //Generate mobile code if needed
         if (this.account.shared_secret) {
-            this.loginOption.two_factor_code = SteamTotp.generateAuthCode(this.account.shared_secret);
+            loginOption.two_factor_code = SteamTotp.generateAuthCode(this.account.shared_secret);
         }
 
         // login response
         this.client.once('logOnResponse', async (res) => {
-            //delete login options
-            self.loginOption = {};
+            let code = res.eresult
+            let errMsg = ""
 
-            /************************************************************************
-            * 					        SUCESSFUL LOGIN					            *
-            ************************************************************************/
-            if (res.eresult == 1) {
+            // SUCCESSFUL LOGIN
+            if (code == 1) {
                 self.loggedIn = true;
 
                 self.steamid = res.client_supplied_steamid
@@ -460,50 +450,54 @@ class Client extends EventEmitter {
                 if (!self.account.forcedStatus) {
                     self.account.forcedStatus = "Online"
                 }
-
                 self.setPersona(self.account.forcedStatus)
-
                 return;
             }
 
+            else if (code == 5) {
+                errMsg = "Bad User/Pass"
+            }
+
             // EMAIL GUARD 
-            else if (res.eresult == 63) {
-                res = "Email guard code needed"
+            else if (code == 63) {
+                errMsg = "Email guard code needed"
+            }
+
+            // InvalidLoginAuthCode
+            else if (code == 65) {
+                errMsg = "Invalid guard code"
             }
 
             // RATE LIMIT
-            else if (res.eresult == 84) {
+            else if (code == 84) {
+                // reconnect
                 self.loggedIn = false;
-                //console.log(`Rate limit > user: ${self.account.user}`)
-                self.Disconnect();
-                self.connect();
+                self.RenewConnection()
                 return;
             }
 
             // 2FA
-            else if (res.eresult == 85) {
-                res = "2FA code needed"
+            else if (code == 85) {
+                errMsg = "2FA code needed"
             }
 
-            // InvalidLoginAuthCode
-            else if (res.eresult == 65) {
-                res = "Invalid guard code"
+            else if (code == 88) {
+                errMsg = "Invalid shared secret"
             }
-
-            else if (res.eresult == 88) {
-                res = "Invalid shared secret"
-            }
-
-            // INVALID USER/PASS
+            // Some other code
             else {
-                res = "Bad User/Pass"
+                console.log(`Login failed code: ${code} > user: ${self.account.user}`)
+                console.log(loginOption)
+                self.RenewConnection()
+                return;
             }
 
             self.loggedIn = false;
-            console.log(`${res} > user: ${self.account.user}`)
-            self.emit("loginError", res);
+            console.log(`${errMsg} > user: ${self.account.user}`)
+            self.emit("loginError", errMsg);
             self.Disconnect();
         });
+
 
         this.client.once('games', games => {
             self.emit("games", games);
@@ -521,6 +515,7 @@ class Client extends EventEmitter {
         this.client.once('updateMachineAuth', (sentry, callback) => {
             // Do not reaccept sentry if we have one already
             if (self.account.sentry) {
+                console.log(`Sentry denied > user: ${self.account.user}`)
                 return;
             }
 
@@ -539,12 +534,8 @@ class Client extends EventEmitter {
             self.emit("sentry", sentry);
         });
 
-        /*this.client.once("loginKey", loginKey => {
-            self.emit("loginKey", loginKey)
-        })*/
-
         // Login to steam
-        this.client.LogOn(this.loginOption);
+        this.client.LogOn(loginOption);
     }
 
     /************************************************************************
@@ -559,7 +550,7 @@ class Client extends EventEmitter {
 
         // connection options
         this.options = {
-            timeout: 10000, //timeout for lost connection, bad proxy
+            timeout: 12000, //timeout for lost connection, bad proxy
             proxy: {
                 ipaddress: proxy.ip,
                 port: proxy.port,
@@ -576,13 +567,13 @@ class Client extends EventEmitter {
 
         // Connection lost
         self.client.once('error', err => {
+            self.loggedIn = false;
             // notify connection has been lost
             if (self.loggedIn) {
                 self.reconnecting = true;
                 self.emit("connection-lost");
             }
 
-            self.loggedIn = false;
             console.log(`${err} > user: ${self.account.user}`)
             self.connect(); //reconnect
         })
@@ -603,7 +594,6 @@ class Client extends EventEmitter {
         //console.log(`Disconnect > user: ${this.account.user}`)
         this.client.Disconnect();
     }
-
 
     RenewConnection() {
         this.Disconnect();
