@@ -76,6 +76,10 @@ module.exports = class AccountHandler {
 
         // find account
         let doc = await this.getAccount(null, accountId, null)
+        // account not found
+        if(!doc){
+            console.log(`Account not found ${accountId}`)
+        }
 
         try {
             // set up login options
