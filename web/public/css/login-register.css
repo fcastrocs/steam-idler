@@ -1,16 +1,12 @@
 
 
-#login-form, #register-form{
+#login-form, #register-form, #change-password, #recover-form{
     width: 550px;
     padding: 20px;
     background-color: rgb(12, 45, 71);
     margin:80px auto;
     overflow: auto;
     box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.8);
-}
-
-.login-page-buttons{
-    float: right;
 }
 
 .input-group-text{

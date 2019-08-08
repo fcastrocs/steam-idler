@@ -37,3 +37,21 @@ module.exports.sendInvite = (url, email) => {
         });
     })
 }
+
+module.exports.sendRecovery = (url, email) => {
+    return new Promise((resolve, reject) => {
+        msg = {
+            to: email,
+            from: 'no-reply@steamidler.online',
+            subject: 'Recovery - Steam Idler/Farmer by Machiavelli',
+            text: `Hello, here's your recovery link.`,
+            html: `<div><a href="${url}"><strong>Recovery link</strong></a></div>`,
+        };
+        sgMail.send(msg, err => {
+            if (err) {
+                return reject("Could not send recovery link.")
+            }
+            return resolve("Recovery link email sent.")
+        });
+    })
+}

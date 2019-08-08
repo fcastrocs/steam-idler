@@ -8,6 +8,122 @@ const signup = require("./util/signup-schema")
 const Invite = require("../models/invite")
 
 
+router.post("/getrecoverylink", async function (req, res) {
+    if (req.session.loggedIn) {
+        return res.status(403).send("You are already logged in.")
+    }
+
+    if (!req.body.recoverEmail) {
+        return res.status(403).send("Bad getrecoverylink request")
+    }
+
+    // find user with this email
+    let query = User.findOne({ email: req.body.recoverEmail });
+    let user = await query.exec();
+    // user not found
+    if (!user) {
+        return res.status(403).send("A user with this email was not found.")
+    }
+
+    //user found
+    user.passwordResetToken = Security.createToken();
+    user.passwordResetExpires = Date.now() + 30 * 60 * 1000
+
+    user.save(async (err, doc) => {
+        if (err) {
+            return res.status(403).send("Unexpected error occurred. Code: 4")
+        }
+
+        //send recovery link
+        let url = `http://${req.headers.host}/recovery/${doc.username}/${doc.passwordResetToken}`
+
+        try {
+            let result = await Mailer.sendRecovery(url, doc.email);
+            return res.send(result);
+        } catch (error) {
+            return res.status(403).send(error);
+        }
+    })
+})
+
+
+router.get("/recovery/:user/:token", async function (req, res) {
+    if (req.session.loggedIn) {
+        return res.status(403).send("You are already logged in.")
+    }
+    // send to change password form
+    res.render('login-register', { recoverUser: req.params.user, recoverToken: req.params.token })
+})
+
+
+router.post("/changepassword", function (req, res) {
+    if (req.session.loggedIn) {
+        return res.status(403).send("You are already logged in.")
+    }
+
+    if (!req.body.recoverUsername || !req.body.recoverPassword || !req.body.recoverPassword2
+        || !req.body.recoverToken) {
+        return res.status(403).send("Bad changepassword request.")
+    }
+
+    // compare passwords
+    if (req.body.recoverPassword !== req.body.recoverPassword2) {
+        return res.status(403).send("Passwords do not math.")
+    }
+
+
+    signup.validate({
+        password: req.body.recoverPassword
+    }, async err => {
+        // validation failed
+        if (err) {
+            let errMsg = "";
+            for (let i in err.details) {
+                errMsg += err.details[i].message
+            }
+            return res.status(400).send(errMsg)
+        }
+
+        //validation passed
+
+        // find user
+        let query = User.findOne({
+            username: req.body.recoverUsername,
+            passwordResetToken: req.body.recoverToken
+        })
+
+        let user = await query.exec();
+        if (!user) {
+            return res.status(403).send("Invalid token or bad username.")
+        }
+
+        //user found
+        //check token validity
+        let expiryDate = new Date(user.passwordResetExpires).getTime()
+        if(expiryDate < Date.now()){
+            return res.status(403).send("Expired Token.")
+        }
+
+        // valid token
+        // remove token
+        user.passwordResetToken = ""
+        // change password 
+        user.password = Security.encrypt(req.body.recoverPassword)
+
+        // save user
+        user.save((err, doc) =>{
+            if(err){
+                return res.status(403).send("Unexpected error occurred. Code: 5")
+            }
+
+            // Redirect to login page
+            res.send("/login/?message=You+password+has+been+changed%2F")
+        })
+    })
+})
+
+
+
 // Register request
 router.post('/register', async function (req, res) {
     if (req.session.loggedIn) {
@@ -15,21 +131,24 @@ router.post('/register', async function (req, res) {
     }
 
     if (!req.body.username || !req.body.password || !req.body.email ||
-        !req.body.invitecode || !req.body.tradeurl) {
+        !req.body.invitecode || !req.body.tradeurl || !req.body.password2) {
         return res.status(403).send("Bad register request.")
     }
 
     //check invite is valid
-    let query = Invite.findOne({token: req.body.invitecode});
+    let query = Invite.findOne({ token: req.body.invitecode });
     let invite = await query.exec();
-    if(!invite){
+    if (!invite) {
         return res.status(403).send("Invalid invite code.")
+    }
+
+    if(req.body.password2 !== req.body.password){
+        return res.status(403).send("Passwords do not math.")
     }
 
 
     // trim spaces and make it lower case.
     req.body.username = req.body.username.trim().toLowerCase();
-
 
     // trim spaces and make it lower case.
     req.body.email = req.body.email.trim().toLowerCase();
@@ -101,6 +220,8 @@ router.get('/invite/:token', async function (req, res) {
     res.render('login-register', { invite: req.params.token })
 })
 
+
+// CONFIRMATION TOKEN
 router.get('/confirmation/:token', async function (req, res) {
     if (req.session.loggedIn) {
         return res.status(403).send("You are already logged in.")
@@ -138,10 +259,18 @@ router.get('/confirmation/:token', async function (req, res) {
 
 
 // Login Page
-router.get('/login', isLoggedIn, function (req, res) {
-    //user is logged in, redirect to dashboard
-    res.redirect(`/dashboard/${req.session.username}`);
+router.get('/login', function (req, res) {
+    if(req.session.loggedIn){
+        res.redirect(`/dashboard/${req.session.username}`);
+    }
+
+    if(req.query.message){
+        return res.render('login-register', { message: req.query.message })
+    }
+
+    return res.render('login-register')
 })
+
 
 // Login Request
 router.post('/login', async function (req, res) {

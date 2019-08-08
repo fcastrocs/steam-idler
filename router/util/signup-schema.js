@@ -17,6 +17,5 @@ const signup = Joi.object().keys({
     email: Joi.string().email({ minDomainSegments: 2 }).error(errors => {
         return "Bad email address.\n";
     }),
-})
-
+}).optionalKeys("username", "email")
 module.exports = signup;
