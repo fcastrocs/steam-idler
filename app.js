@@ -46,12 +46,12 @@ module.exports = accountHandler;
         return;
     }
 
-    //Initialize steam accounts
-    // try {
-    //     await accountHandler.init();
-    // } catch (error) {
-    //     console.log(error)
-    // }
+    // Initialize steam accounts
+    try {
+        await accountHandler.init();
+    } catch (error) {
+        console.log(error)
+    }
 
 })();
 
