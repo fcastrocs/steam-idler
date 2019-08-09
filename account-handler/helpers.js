@@ -7,15 +7,12 @@ const SteamAccHandler = require('../models/steam-account-handler')
 
 /**
  * Restarts farming or idling process
+ * Returns a promise with account
  */
 module.exports.farmingIdlingRestart = async function (client, doc) {
     // Restart farming 
     if (doc.isFarming) {
-        try {
-            await this.startFarming(null, null, client, doc);
-        } catch (error) {
-            console.log(error);
-        }
+        doc = await this.startFarming(null, null, client, doc);
         // Restart idling
     } else {
         if (doc.gamesPlaying.length > 0) {
@@ -23,8 +20,9 @@ module.exports.farmingIdlingRestart = async function (client, doc) {
         } else {
             doc.status = "Online"
         }
-        await this.saveAccount(doc);
+        doc = await this.saveAccount(doc);
     }
+    return Promise.resolve(doc);
 }
 
 /**
@@ -243,3 +241,20 @@ module.exports.saveAccount = function (account) {
     })
 }
 
+// Remove sensitive data from acc
+module.exports.filterSensitiveAcc = function(account){
+    return saveSada = {
+        _id: account._id,
+        games: account.games,
+        status: account.status,
+        forcedStatus: account.forcedStatus,
+        steamid: account.steamid,
+        gamesPlaying: account.gamesPlaying,
+        persona_name: account.persona_name,
+        avatar: account.avatar,
+        farmingData: account.farmingData,
+        isFarming: account.isFarming,
+        nextFarmingCheck: account.nextFarmingCheck,
+        inventory: account.inventory
+    }
+}

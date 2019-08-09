@@ -8,6 +8,23 @@ const signup = require("./util/signup-schema")
 const Invite = require("../models/invite")
 
 
+
+router.get("/logout", async function (req, res) { 
+    if(!req.session.loggedIn){
+        return res.status(403).send("You are not logged in.")
+    }
+
+    req.session.destroy((err)=>{
+        if(err){
+            return res.status(403).send("Unexpected error occurred. Code: 6");
+        }
+
+        res.render('login-register');
+    });
+
+})
+
+
 router.post("/getrecoverylink", async function (req, res) {
     if (req.session.loggedIn) {
         return res.status(403).send("You are already logged in.")

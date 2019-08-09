@@ -1,17 +1,44 @@
 <link rel="stylesheet" type="text/css" href="../static/css/dashboard.css">
 
-<script src="../static/js/dashboard/fetch-accounts.js"></script>
+<script src="../static/js/dashboard/build-accounts.js"></script>
 <script src="../static/js/dashboard/functions.js"></script>
 <script src="../static/js/dashboard/single-acc-actions.js"></script>
 <script src="../static/js/dashboard/all-acc-actions.js"></script>
-<script src="../static/js/dashboard/account-refresher.js"></script>
+<script src="../static/js/dashboard/refresher.js"></script>
+<script src="../static/js/dashboard/filters.js"></script>
 
 <!-- container -->
 <div>
+    <div id="header">
+        <span id="user-info">
+            <span id="greet">Hello {{{username}}}</span>
+            <img src="{{path}}/static/images/icon-settings.png" alt="settings" id="settings-icon">
+            <a href="{{path}}/logout" id="user-logout">Logout</a>
+        </span>
+
+        <span class="dropdown" id="filter-dropdown-box">
+            <button class="btn btn-secondary dropdown-toggle" id="filters-dropdown-btn" type="button"
+                id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Filters
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <a href="#" class="filter-btn" id="show-all-filter">All</a>
+                <a href="#" class="filter-btn" id="show-online-filter">Online</a>
+                <a href="#" class="filter-btn" id="show-idling-filter">In-Game</a>
+                <a href="#" class="filter-btn" id="show-notingame-filter">Not In-Game</a>
+                <a href="#" class="filter-btn" id="show-farming-filter">Farming</a>
+                <a href="#" class="filter-btn" id="show-farmable-filter">Farmable</a>
+                <a href="#" class="filter-btn" id="show-offline-filter">Offline</a>
+                <a href="#" class="filter-btn" id="show-reconnecting-filter">Reconnecting</a>
+                <a href="#" class="filter-btn" id="show-bad-filter">Bad</a>
+            </div>
+        </span>
+
+        <span id="current-filter-txt">Showing All</span>
+
+    </div>
+
     <div id="sidebar">
-
-        <div id="sidebar-greet">Hello {{{username}}}</div>
-
         <div class="d-flex justify-content-center">
             <div class="spinner-border text-info" id="sidebar-spinner" role="status" hidden></div>
         </div>
@@ -20,7 +47,8 @@
         <div class="alert alert-danger" role="alert" id="sidebar-errMsg" hidden></div>
 
         <div id="sidebar-menu">
-            <button type="button" class="btn sidebar-button" data-toggle="modal" data-target="#add-acc-modal">Add
+            <button type="button" class="btn sidebar-button" data-toggle="modal" data-target="#add-acc-modal"
+                id="sidebar-addacc">Add
                 Account
             </button>
 

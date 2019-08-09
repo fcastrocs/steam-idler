@@ -487,7 +487,6 @@ class Client extends EventEmitter {
             // Some other code
             else {
                 console.log(`Login failed code: ${code} > user: ${self.account.user}`)
-                console.log(loginOption)
                 self.RenewConnection()
                 return;
             }
@@ -567,15 +566,14 @@ class Client extends EventEmitter {
 
         // Connection lost
         self.client.once('error', err => {
-            self.loggedIn = false;
             // notify connection has been lost
             if (self.loggedIn) {
+                self.loggedIn = false;
                 self.reconnecting = true;
                 self.emit("connection-lost");
             }
-
-            console.log(`${err} > user: ${self.account.user}`)
-            self.connect(); //reconnect
+            console.log(`Reconnecting: ${err} > user: ${self.account.user}`)
+            self.connect()
         })
 
         // connection successful 

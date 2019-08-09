@@ -1,9 +1,9 @@
 
 
 #login-form, #register-form, #change-password, #recover-form{
-    width: 550px;
+    width: 400px;
     padding: 20px;
-    background-color: rgb(12, 45, 71);
+    background: linear-gradient(0deg,  rgb(1, 45, 82), rgb(2, 75, 134) 100%);
     margin:80px auto;
     overflow: auto;
     box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.8);
@@ -13,6 +13,6 @@
     width: 115px !important;
 }
 
-#signin-button, #register-button{
-    width: 200px;
+#signin-button, #register-button, #recover-button, #changepass-button{
+    width: 150px;
 }

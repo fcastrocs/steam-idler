@@ -81,19 +81,15 @@ $(() => {
     /**************************************************** 
     *               STEAM - LOGIN                       *
     * **************************************************/
-    $("#content-body").on('click', ".acc-login", function () {
+    $("#content-body").on('click', ".acc-login-btn", function () {
         let self = $(this).closest("div.account")
         let accountId = self.attr("data-id");
-
         // disable all buttons
-        self.find(".account-buttons").first().hide(0);
-        // enable login-wait spinner
-        self.find(".login-wait").first().attr("hidden", false);
-
-        $.post('/dashboard/loginaccount', { accountId: accountId }, res => {
-            // disable login-wait spinner
-            self.find(".login-wait").first().attr("hidden", true);
-            refreshAccounts();
+        self.find(".account-buttons").hide();
+        // enable spinner
+        self.find(".acc-spinner").prop("hidden", false);
+        $.post('/dashboard/loginaccount', { accountId: accountId }, doc => {
+            updateAccountStatus(doc);
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
@@ -103,22 +99,151 @@ $(() => {
     /**************************************************** 
     *               STEAM - LOGOUT                      *
     * **************************************************/
-    $("#content-body").on('click', ".acc-logout", function () {
+    $("#content-body").on('click', ".acc-logout-btn", function () {
         let self = $(this).closest("div.account")
         let accountId = self.attr("data-id");
-
         // disable all buttons
-        self.find(".account-buttons").first().hide(0);
-        // enable login-wait spinner
-        self.find(".login-wait").first().attr("hidden", false);
+        self.find(".account-buttons").hide();
+        // enable spinner
+        self.find(".acc-spinner").prop("hidden", false);
 
-        $.post('/dashboard/logoutaccount', { accountId: accountId }, () => {
-            // disable login-wait spinner
-            self.find("div .login-wait").first().attr("hidden", true);
-            refreshAccounts();
+        $.post('/dashboard/logoutaccount', { accountId: accountId }, (doc) => {
+            updateAccountStatus(doc);
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
+    })
+
+
+    /*************************************************** 
+    *               STEAM - DELETE ACC                 *
+    ***************************************************/
+    $("#content-body").on('click', ".acc-delete-acc-btn", function () {
+        let self = $(this).closest("div.account");
+        let accountId = self.attr("data-id");
+
+        let res = confirm("Are you sure you want to delete this account?");
+        if (res !== true) {
+            return;
+        }
+
+        $.ajax({
+            url: '/dashboard/deleteacc',
+            type: 'delete',
+            data: { accountId: accountId },
+            success: data => {
+                self.remove();
+            },
+            error: (xhr, status, error) => {
+                alert(xhr.responseText)
+            }
+        });
+    })
+
+    /**************************************************** 
+    *               STEAM - CHANGE NICK                 *
+    * **************************************************/
+    // open modal
+    $("#content-body").on('click', ".nick", function () {
+        let accountId = $(this).closest("div.account").attr("data-id");
+        $("#change-nick-button").attr("data-id", accountId);
+        $("#change-nick-modal").modal("toggle")
+    })
+
+    // form submit
+    $("#change-nick-form").submit(function (e) {
+        e.preventDefault();
+        let accountId = $("#change-nick-button").attr("data-id");
+        // get nick value
+        let nickname = $("input[name='nick']").val();
+        if (!nickname) {
+            return
+        }
+        $.post('/dashboard/changenick', { nickname: nickname, accountId: accountId }, function (nick) {
+            $("#change-nick-modal").modal("toggle")
+            $(`div.account[data-id=${accountId}]`).find(".nick").text(nick)
+        }).fail((xhr, status, err) => {
+            alert(xhr.responseText)
+        })
+    })
+
+    $('#change-nick-modal').on('hidden.bs.modal', function () {
+        $("input[name='nick']").val("");
+    })
+
+    /**************************************************** 
+    *             STEAM - SET STATUS                    *
+    * **************************************************/
+    // Open set status modal
+    $(document).on('click', ".acc-set-status-btn", function () {
+        let self = $(this).closest("div.account");
+        let accountId = self.attr("data-id")
+        //check radio btn with current status
+        let status = self.find(".status").text();
+        $(`input[value="${status}"]`).prop('checked', true);
+        //open modal
+        $("#set-status-button").attr("data-id", accountId)
+        $("#set-status-modal").modal("toggle")
+    })
+
+    // set status submit
+    $(document).on('submit', "#set-status-form", function (e) {
+        e.preventDefault();
+        let accountId = $("#set-status-button").attr("data-id");
+        let status = $('input[name="status"]:checked').val();
+        $.post('/dashboard/setstatus', { status: status, accountId: accountId }, function (doc) {
+            $("#set-status-modal").modal("toggle")
+            setTimeout(() => updateAccountStatus(doc), 300);
+        }).fail((xhr, status, err) => {
+            alert(xhr.responseText)
+        })
+    })
+
+    // set status modal close
+    $('#set-status-modal').on('hidden.bs.modal', function () {
+        $("#set-status-form").find("input:checked").first().prop('checked', false);
+    })
+
+    /**************************************************** 
+    *                  STEAM - FARMING                  *
+    ***************************************************/
+    $(document).on('click', ".acc-farming-btn", function () {
+        let self = $(this).closest("div.account");
+        //open modal
+        self.find(".farming-modal").modal("toggle")
+    })
+
+    // stop farming
+    $(document).on('click', ".stop-farming-btn", function (e) {
+        let self = $(this).closest("div.account");
+        let accountId = self.attr("data-id");
+        $.post('/dashboard/stopfarming', { accountId: accountId }, doc => {
+            self.find(".farming-modal").modal("toggle");
+            setTimeout(() => updateAccountStatus(doc), 300);
+        }).fail((xhr, status, err) => {
+            self.find(".farming-errMsg").text(xhr.responseText).prop("hidden", false);
+        })
+    })
+
+    // start farming
+    $(document).on('click', ".start-farming-btn", function (e) {
+        e.preventDefault();
+        let self = $(this).closest("div.account");
+        let accountId = self.attr("data-id");
+        // clear error msg txt
+        self.find(".farming-errMsg").text("").prop("hidden", true);
+        $.post('/dashboard/startfarming', { accountId: accountId }, doc => {
+            self.find(".farming-modal").modal("toggle");
+            setTimeout(() => updateAccountStatus(doc), 300);
+        }).fail((xhr, status, err) => {
+            // set error message
+            self.find(".farming-errMsg").text(xhr.responseText).prop("hidden", false)
+        })
+    })
+
+    // on close modal
+    $(document).on('hidden.bs.modal', ".farming-modal", function () {
+        $(this).find(".farming-errMsg").text("").prop("hidden", true)
     })
 
 
@@ -127,60 +252,60 @@ $(() => {
     *               STEAM - PLAY GAME                   *
     * **************************************************/
     // Open correct modal
-    $("#content-body").on('click', ".idle-game", function () {
-        $(this).closest("div.account").find(".games-idle").first().modal('toggle');
+    $(document).on('click', ".acc-idle-game-btn", function () {
+        $(this).closest("div.account").find(".idle-modal").modal('toggle');
     })
 
     // start game idle
-    $("#content-body").on('click', ".start-idle", function () {
+    $(document).on('click', ".start-idle-btn", function () {
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id");
         let games = $(this).attr("data-games")
         if (!games) {
-            alert("No games selected.")
+            self.find(".idle-errMsg").text("Select a game to idle.").prop("hidden", false)
             return
         }
-
-        $.post('/dashboard/playgames', { accountId: accountId, games: games }, () => {
+        $.post('/dashboard/playgames', { accountId: accountId, games: games }, doc => {
             //close the modal
-            self.find(".games-idle").first().modal('toggle');
-            setTimeout(() => refreshAccounts(), 500);
+            self.find(".idle-modal").modal('toggle');
+            setTimeout(() => updateAccountStatus(doc), 300);
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
     })
 
     // stop games idle button click
-    $("#content-body").on('click', ".stop-idle", function () {
+    $(document).on('click', ".stop-idle-btn", function () {
         let self = $(this).closest("div.account");
-
         //check if accounts is idling
-        let games = self.find(".start-idle").attr("data-games")
+        let games = self.find(".start-idle-btn").attr("data-games")
         if (!games) {
-            alert("Not playing any games");
+            self.find(".idle-errMsg").text("Account is not idling.").prop("hidden", false)
             return;
         }
 
         let accountId = self.attr("data-id");
-
-        $.post('/dashboard/stopgames', { accountId: accountId }, () => {
+        $.post('/dashboard/stopgames', { accountId: accountId }, (doc) => {
             //close the modal
-            self.find(".games-idle").first().modal('toggle');
-            setTimeout(() => refreshAccounts(), 500);
-            // Remove selected games in idle modal
-            unselectGames(self);
-
+            self.find(".idle-modal").modal('toggle');
+            setTimeout(() => updateAccountStatus(doc), 300);
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
     })
 
+    // on close modal
+    $(document).on('hidden.bs.modal', ".idle-modal", function () {
+        $(this).find(".idle-errMsg").text("Account is not idling.").prop("hidden", true)
+    })
+
+
     // game image click
-    $("#content-body").on('click', ".game-img", function () {
+    $(document).on('click', ".game-img", function () {
         // Get gameID
         let gameId = $(this).attr("data-gameId");
 
-        let start_idle_button = $(this).closest(".modal-body").find("div .start-idle")
+        let start_idle_button = $(this).closest(".modal-body").find("div .start-idle-btn")
         let games = start_idle_button.attr("data-games");
 
         //not selected
@@ -229,74 +354,12 @@ $(() => {
     })
 
 
-    /**************************************************** 
-    *               STEAM - CHANGE NICK                 *
-    * **************************************************/
-    // open modal
-    $("#content-body").on('click', ".nick", function () {
-        let accountId = $(this).closest("div.account").attr("data-id");
-        $("#change-nick-button").attr("data-id", accountId);
-        $("#change-nick-modal").modal("toggle")
-    })
-
-    // form submit
-    $("#change-nick-form").submit(function (e) {
-        e.preventDefault();
-
-        let accountId = $("#change-nick-button").attr("data-id");
-
-
-        //form handler
-        let nickname = $("input[name='nick']").val();
-        if (!nickname) {
-            return
-        }
-
-        $.post('/dashboard/changenick', { nickname: nickname, accountId: accountId }, function (nick) {
-            $("#change-nick-modal").modal("toggle")
-            $("input[name='nick']").val("");
-            $(`div.account[data-id=${accountId}]`).find(".nick").first().text(nick)
-        }).fail((xhr, status, err) => {
-            alert(xhr.responseText)
-        })
-    })
-
-    $('#change-nick-modal').on('hidden.bs.modal', function () {
-        $("input[name='nick']").val("");
-    })
-
-
-    /**************************************************** 
-    *               STEAM - DELETE ACC                  *
-    * **************************************************/
-    $("#content-body").on('click', ".delete-acc", function () {
-        let self = $(this).closest("div.account");
-        let accountId = self.attr("data-id");
-
-        let res = confirm("Are you sure you want to delete this account?");
-        if (res !== true) {
-            return;
-        }
-
-        $.ajax({
-            url: '/dashboard/deleteacc',
-            type: 'delete',
-            data: { accountId: accountId },
-            success: data => {
-                self.remove();
-            },
-            error: (xhr, status, error) => {
-                alert(xhr.responseText)
-            }
-        });
-    })
-
 
     /**************************************************** 
     *           STEAM - ACTIVATE FREE GAME              *
     * **************************************************/
     // Open activate game modal
-    $("#content-body").on('click', ".get-game", function () {
+    $("#content-body").on('click', ".acc-get-game-btn", function () {
         let accountId = $(this).closest("div.account").attr("data-id")
         $("#activate-free-game").attr("data-id", accountId)
         $("#activate-free-game-modal").modal("toggle")
@@ -304,12 +367,12 @@ $(() => {
 
     // modal hide
     $('#activate-free-game-modal').on('hidden.bs.modal', function () {
-        $(".activated-games").hide(0);
+        $(".activated-games").prop("hidden", true);
         $(".activated-game-body").html('');
-        $("#activate-game-form").show(0);
+        $("#activate-game-form").prop("hidden", false)
         $("input[name=appId]").val("");
-        $("#activate-game-msg").hide(0).text("")
-        $("#activate-game-errMsg").hide(0).text("")
+        $("#activate-game-msg").prop("hidden", true).text("")
+        $("#activate-game-errMsg").prop("hidden", true).text("")
     })
 
     // form submit
@@ -327,23 +390,23 @@ $(() => {
         }
 
         //hide form
-        $("#activate-game-form").hide(0)
+        $("#activate-game-form").prop("hidden", true)
         // show spinner
-        $("#spinner-activate-game").attr("hidden", false).show(0)
+        $("#spinner-activate-game").prop("hidden", false)
         //clean any previous messages
-        $("#activate-game-msg").text("").hide(0)
-        $("#activate-game-errMsg").text("").hide(0)
+        $("#activate-game-msg").text("").prop("hidden", true)
+        $("#activate-game-errMsg").text("").prop("hidden", true)
 
         $.post('/dashboard/activatefreegame', { accountId: accountId, appIds: appIds }, games => {
-            $("#activate-game-errMsg").hide(0);
-            $("#activate-game-msg").attr("hidden", false).text("Game(s) activated.").show(0)
+            $("#activate-game-errMsg").prop("hidden", true)
+            $("#activate-game-msg").prop("hidden", false).text("Game(s) activated.")
             processGames(accountId, games);
             //hide spinner
-            $("#spinner-activate-game").hide(0)
+            $("#spinner-activate-game").prop("hidden", true)
         }).fail((xhr, status, err) => {
-            $("#activate-game-form").show(0)
-            $("#spinner-activate-game").hide(0)
-            $("#activate-game-errMsg").removeAttr("hidden", false).text(`${xhr.responseText}`).show(0)
+            $("#activate-game-form").prop("hidden", false)
+            $("#spinner-activate-game").prop("hidden", true)
+            $("#activate-game-errMsg").prop("hidden", false).text(`${xhr.responseText}`)
         })
     })
 
@@ -361,18 +424,17 @@ $(() => {
 
     // close redeem key modal
     $('#redeem-key-modal').on('hidden.bs.modal', function () {
-        $(".activated-games").hide(0);
+        $(".activated-games").prop("hidden", true);
         $(".activated-game-body").html('');
-        $("#redeem-key-form").show(0);
+        $("#redeem-key-form").prop("hidden", false);
         $("input[name=cdkey]").val("");
-        $("#redeem-key-msg").hide(0).text("")
-        $("#redeem-key-errMsg").hide(0).text("")
+        $("#redeem-key-msg").prop("hidden", true).text("")
+        $("#redeem-key-errMsg").prop("hidden", true).text("")
     })
 
     // cdkey form submit
     $("#redeem-key-form").submit(function (e) {
         e.preventDefault();
-
         let accountId = $("#redeem-key").attr("data-id");
         if (!accountId) {
             return;
@@ -383,102 +445,23 @@ $(() => {
             return
         }
 
-        $("#spinner-redeem-key").attr("hidden", false).show(0);
+        $("#spinner-redeem-key").prop("hidden", false)
 
         // hide form
-        $("#redeem-key-form").hide(0)
+        $("#redeem-key-form").prop("hidden", true)
         // clear previous messages
-        $("#redeem-key-msg").hide(0).text("")
-        $("#redeem-key-errMsg").hide(0).text("")
+        $("#redeem-key-msg").prop("hidden", true).text("")
+        $("#redeem-key-errMsg").prop("hidden", true).text("")
 
         $.post('/dashboard/redeemkey', { accountId: accountId, cdkey: cdkey }, games => {
-            $("#redeem-key-msg").attr("hidden", false).text("Successfully added games").show(0);
+            $("#redeem-key-msg").prop("hidden", false).text("Successfully added games")
             processGames(accountId, games)
-            $("#spinner-redeem-key").hide(0);
+            $("#spinner-redeem-key").prop("hidden", true)
         }).fail((xhr, status, err) => {
-            $("#redeem-key-errMsg").attr("hidden", false).text(xhr.responseText).show(0);
-            $("#redeem-key-form").show(0)
-            $("#spinner-redeem-key").hide(0);
+            $("#redeem-key-errMsg").prop("hidden", false).text(xhr.responseText)
+            $("#redeem-key-form").prop("hidden", false)
+            $("#spinner-redeem-key").prop("hidden", true)
         })
-    })
-
-
-    /**************************************************** 
-    *             STEAM - SET STATUS                    *
-    * **************************************************/
-    // Open set status modal
-    $("#content-body").on('click', ".set-status", function () {
-        let self = $(this).closest("div.account");
-        let accountId = self.attr("data-id")
-        //check current status
-        let status = self.find(".status").first().text();
-        $(`input[value="${status}"]`).prop('checked', true);
-        //open modal
-        $("#set-status-button").attr("data-id", accountId)
-        $("#set-status-modal").modal("toggle")
-    })
-
-    // set status submit
-    $("body").on('submit', "#set-status-form", function (e) {
-        e.preventDefault();
-        let accountId = $("#set-status-button").attr("data-id");
-        let status = $('input[name="status"]:checked').val();
-        $.post('/dashboard/setstatus', { status: status, accountId: accountId }, function (res) {
-            $("#set-status-modal").modal("toggle")
-            setTimeout(() => {
-                refreshAccounts();
-            }, 500);
-        }).fail((xhr, status, err) => {
-            alert(xhr.responseText)
-        })
-    })
-
-    // set status modal close
-    $('#set-status-modal').on('hidden.bs.modal', function () {
-        $("#set-status-form").find("input:checked").first().prop('checked', false);
-    })
-
-
-    /**************************************************** 
-    *                  STEAM - FARMING                  *
-    * **************************************************/
-    $("#content-body").on('click', ".farming", function () {
-        let self = $(this).closest("div.account");
-        //open modal
-        self.find(".farming-modal").modal("toggle")
-    })
-
-    // start game idle
-    $("#content-body").on('click', ".start-farming", function (e) {
-        e.preventDefault();
-        let self = $(this).closest("div.account");
-        let accountId = self.attr("data-id");
-        // Show spinner
-        self.find(".farming-modal-spinner").attr("hidden", false);
-        // Hide farming info
-        self.find(".farming-info").attr("hidden", true);
-        // clear error msg txt
-        self.find(".farming-errMsg").text("").attr("hidden", true);
-        $.post('/dashboard/startfarming', { accountId: accountId }, function (res) {
-            // Hide spinner
-            self.find(".farming-modal-spinner").attr("hidden", true);
-            // Show farming info
-            self.find(".farming-info").attr("hidden", false);
-
-            self.find(".farming-modal").modal("toggle");
-        }).fail((xhr, status, err) => {
-            // set error message
-            self.find(".farming-errMsg").text(xhr.responseText).attr("hidden", false)
-            // Hide spinner
-            self.find(".farming-modal-spinner").attr("hidden", true);
-            // Show farming info
-            self.find(".farming-info").attr("hidden", false);
-        })
-    })
-
-    // on close modal
-    $(document).on('hidden.bs.modal', ".farming-modal", function () {
-        $(this).find(".farming-errMsg").text("").attr("hidden", true)
     })
 
 
@@ -490,6 +473,5 @@ $(() => {
         //open modal
         self.find(".inventory-modal").modal("toggle")
     })
-
 
 })

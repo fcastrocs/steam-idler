@@ -1,7 +1,7 @@
 <link rel="stylesheet" type="text/css" href="{{path}}/static/css/login-register.css">
 <script src="{{path}}/static/js/login-register.js"></script>
 
-<!-- Login form -->
+<!-- LOGIN -->
 <form id="login-form">
     <p>Login</p>
     <div class="text-success">{{{message}}}</div>
@@ -30,27 +30,7 @@
     </div>
 </form>
 
-
-<!-- Recover form -->
-<form id="recover-form" hidden>
-    <p>Recover account</p>
-    <div class="alert alert-success" hidden></div>
-    <div class="alert alert-danger" hidden></div>
-    <div id="recover-form-box">
-        <div class="form-group" id="form-account">
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Email</span>
-                </div>
-                <input type="email" name="recoverEmail" class="form-control" required>
-            </div>
-        </div>
-        <button type="submit" class="btn btn-primary float-right">Recover</button>
-    </div>
-</form>
-
-
-<!-- Register form -->
+<!-- REGISTER -->
 <form id="register-form" hidden>
     <p>Register</p>
     <div class="alert alert-success" hidden></div>
@@ -115,15 +95,33 @@
                 <input type="text" name="tradeurl" class="form-control" required>
             </div>
         </div>
-        <div class="login-page-buttons">
+        <div class="float-right">
             <button type="submit" class="btn btn-primary" id="register-button">Register</button>
         </div>
     </div>
 </form>
 
+<!-- RECOVER ACCOUNT -->
+<form id="recover-form" hidden>
+    <p>Recover account</p>
+    <div class="alert alert-success" hidden></div>
+    <div class="alert alert-danger" hidden></div>
+    <div id="recover-form-box">
+        <div class="form-group" id="form-account">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Email</span>
+                </div>
+                <input type="email" name="recoverEmail" class="form-control" required>
+            </div>
+        </div>
+        <div class="float-right">
+            <button type="submit" class="btn btn-primary float-right" id="recover-button">Recover</button>
+        </div>
+    </div>
+</form>
 
-
-<!-- Change password form -->
+<!-- CHANGE PASSWORD -->
 <form id="change-password" hidden>
     <p>Recover account</p>
     <div class="alert alert-danger" hidden></div>
@@ -165,7 +163,7 @@
         </div>
     </div>
 
-    <div class="login-page-buttons">
-        <button type="submit" class="btn btn-primary">Change password</button>
+    <div class="float-right">
+        <button type="submit" class="btn btn-primary" id="changepass-button">Change password</button>
     </div>
 </form>

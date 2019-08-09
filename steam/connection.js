@@ -59,8 +59,10 @@ class Connection extends EventEmitter{
 
   // Destroy the connection and remove listeners
   DestroyConnection(){
-    this.socket.destroy();
-    this.socket.removeAllListeners();
+    if(this.socket){
+      this.socket.destroy();
+      this.socket.removeAllListeners();
+    }
   }
 
   // Sends data to steam

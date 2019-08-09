@@ -22,19 +22,24 @@ router.get(`/dashboard/:username`, isLoggedIn, (req, res) => {
 /* STEAM ACCOUNT ROUTES */
 
 // Returns all accounts for this user
-router.get('/dashboard/steamacc/get', isLoggedIn, (req, res) => {
-    let query = "persona_name games status gamesPlaying avatar steamid forcedStatus farmingData isFarming nextFarmingCheck inventory"
-    SteamAccounts.find({ userId: req.session.userId }, query, (err, accounts) => {
-        if (err) {
-            throw err;
-        }
-
-        if (!accounts) {
-            return res.send(null);
-        }
-
-        res.send(accounts)
-    })
+router.get('/steamaccount', isLoggedIn, async (req, res) => {
+    let query = {}
+    let fetch = "persona_name games status gamesPlaying avatar steamid forcedStatus farmingData isFarming nextFarmingCheck inventory"
+    // Return all accounts
+    if (!req.body.accountId) {
+        query = SteamAccounts.find({ userId: req.session.userId }, fetch);
+    }
+    // Return a single account
+    else {
+        query = SteamAccounts.findOne({ userId: req.session.userId, _id: req.body.accountId }, fetch)
+    }
+    
+    try {
+        let result = await query.exec();
+        return res.send(result);
+    } catch (error) {
+        return res.status(400).send("Could not fetch steam account(s).")
+    }
 })
 
 // Adds a new steam account to the collection
@@ -205,7 +210,6 @@ router.post('/dashboard/setstatus', isLoggedIn, async function (req, res) {
 /************************************************************************
 * 					          FARMING ROUTES					        *
 ************************************************************************/
-// Redeem key
 router.post('/dashboard/startfarming', isLoggedIn, async function (req, res) {
     if (!req.body.accountId) {
         return res.status(400).send("Bad startfarming request.")
@@ -213,10 +217,21 @@ router.post('/dashboard/startfarming', isLoggedIn, async function (req, res) {
 
     try {
         let result = await AccountHandler.startFarming(req.session.userId, req.body.accountId);
-        console.log(result)
         return res.send(result);
     } catch (error) {
-        console.log(error)
+        return res.status(400).send(error)
+    }
+})
+
+router.post('/dashboard/stopfarming', isLoggedIn, async function (req, res) {
+    if (!req.body.accountId) {
+        return res.status(400).send("Bad stopfarming request.")
+    }
+
+    try {
+        let result = await AccountHandler.stopFarming(req.session.userId, req.body.accountId);
+        return res.send(result);
+    } catch (error) {
         return res.status(400).send(error)
     }
 })

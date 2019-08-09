@@ -1,37 +1,20 @@
 body{
-    background: #121c27;
-    font-family: "Motiva Sans", Sans-serif;
-    color:#EFEFEF;
-    font-size: 16px;
-    letter-spacing: 1px;
-}
-
-#title{
-    font-size: 14px;
-    color: white;
-    display: inline;
-}
-
-#header{
-    z-index: 1;
-    height: 54px;
-    width: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    background: #233a57;
-    padding: 5px;
-}
-
-#sidebar{
-    z-index: 1;
-    width: 180px;
+    background: linear-gradient(to bottom, rgb(3, 23, 39) 0%, rgb(0, 54, 85) 100%);
     height: 100%;
-    position: fixed;
-    left: 0;
-    top: 54px;
-    background: #233a57;
+    margin: 0;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    font-family: "Motiva Sans", Sans-serif;
+    font-weight: normal;
+    color:#EFEFEF;
+    font-size: 14px;
 }
+
+a{
+    display:block;
+    color: rgb(163, 192, 255); 
+}
+
 
 #content-body{
     position: absolute;
@@ -42,38 +25,6 @@ body{
     height: calc(100% - 53px);
 }
 
-#sidebar-greet{
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-.sidebar-button{
-    display: block;
-    width: 100%;
-    border-radius: 0px;
-    border: solid 1px black;
-    background-color: rgb(18, 31, 49);
-    color: white;
-    font-size: 13px;
-}
-
-.sidebar-button:hover{
-    border-bottom: solid 1px rgb(255, 255, 255);
-    color: white;
-
-}
-
-#box{
-    height: calc(100% - 54px);
-}
-
-.separator-text{
-    text-align: center;
-    margin-top: 30px;
-    border-bottom: 2px inset rgb(0, 119, 255);
-    border-radius: 0px 0px 10px 10px;
-}
-
 
 /*  MODAL CSS */
 
@@ -82,7 +33,7 @@ body{
 }
 
 .modal-header{
-
+    padding: 5px;
 }
 
 .modal-content{
@@ -113,7 +64,6 @@ input{
 }
 
 /*  END MODAL CSS */
-
 
 .spinner-border{
     margin: 10px 0px;

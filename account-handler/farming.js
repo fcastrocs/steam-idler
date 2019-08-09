@@ -6,7 +6,7 @@
 /**
  * Starts farming process.
  * Saves account to database
- * Returns a promise
+ * Returns a promise with account
  */
 module.exports.startFarming = async function (userId, accountId, client, doc) {
     let self = this;
@@ -37,21 +37,16 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
 
     // Get games with cards lefts
     doc.gamesPlaying = this.getAllGameAppIds(doc.farmingData);
-
     // Play games
     doc.status = client.playGames(doc.gamesPlaying)
-
     // turn on farming mode
     doc.isFarming = true;
-
-    // save account
-    this.saveAccount(doc);
-
-    // set interval
-    client.farmingReCheckId = setInterval(() => reCheck(), this.reCheckInterval);
-
     // set nextFarmingCheck
     doc.nextFarmingCheck = Date.now() + self.reCheckInterval
+    // save account
+    doc = await this.saveAccount(doc);
+    // set interval
+    client.farmingReCheckId = setInterval(() => reCheck(), this.reCheckInterval);
 
     async function reCheck() {
         // account not logged in, stop farming algorithm
@@ -82,7 +77,8 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
         self.saveAccount(doc);
     }
 
-    return Promise.resolve("okay")
+    doc = self.filterSensitiveAcc(doc)
+    return Promise.resolve(doc)
 }
 
 /**
@@ -134,9 +130,9 @@ module.exports.stopFarming = async function (userId, accountId, client, doc) {
     doc.status = client.playGames([])
     doc.gamesPlaying = [];
     doc.isFarming = false;
-    await this.saveAccount(doc);
-
-    return Promise.resolve("okay")
+    doc = await this.saveAccount(doc);
+    doc = this.filterSensitiveAcc(doc);
+    return Promise.resolve(doc)
 }
 
 

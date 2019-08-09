@@ -11,26 +11,22 @@ $(() => {
             return;
         }
 
-        $("#sidebar-menu").hide(0);
-        $("#sidebar-spinner").attr("hidden", false);
+        $("#sidebar-menu").prop("hidden", true)
+        $("#sidebar-spinner").prop("hidden", false)
 
         let goodResponse = 0;
         let badResponse = 0;
-        let interval = 0
-
         accountIds.forEach(accountId => {
-            interval += 100;
-            setTimeout(() => {
-                $.post("/dashboard/loginaccount", { accountId: accountId }, () => {
-                    goodResponse++;
-                    $("#sidebar-msg").attr("hidden", false).text(`${goodResponse} accounts logged in.`).show(0);
-                    checkCompletedReq((goodResponse + badResponse), accountIds.length)
-                }).fail((xhr, status, err) => {
-                    badResponse++;
-                    //$("#sidebar-errMsg").attr("hidden", false).text(`${badResponse} of ${accountIds.length} accounts failed.`).show(0)
-                    checkCompletedReq((goodResponse + badResponse), accountIds.length)
-                })
-            }, interval);
+            $.post("/dashboard/loginaccount", { accountId: accountId }, (doc) => {
+                goodResponse++;
+                $("#sidebar-msg").prop("hidden", false).text(`${goodResponse} accounts logged in.`).show()
+                updateAccountStatus(doc);
+                checkCompletedReq((goodResponse + badResponse), accountIds.length)
+            }).fail((xhr, status, err) => {
+                badResponse++;
+                $("#sidebar-errMsg").attr("hidden", false).text(`${badResponse} accounts failed.`).show()
+                checkCompletedReq((goodResponse + badResponse), accountIds.length)
+            })
         })
 
     })
@@ -46,25 +42,23 @@ $(() => {
             return;
         }
 
-        $("#sidebar-menu").hide(0);
-        $("#sidebar-spinner").attr("hidden", false);
+        $("#sidebar-menu").prop("hidden", true)
+        $("#sidebar-spinner").prop("hidden", false)
 
         let goodResponse = 0;
         let badResponse = 0;
-        let interval = 0
-
         accountIds.forEach(accountId => {
-            interval += 100;
-            setTimeout(() => {
-                $.post("/dashboard/logoutaccount", { accountId: accountId }, () => {
-                    goodResponse++;
-                    $("#sidebar-msg").attr("hidden", false).text(`${goodResponse} accounts logged out.`).show(0);
-                    checkCompletedReq((goodResponse + badResponse), accountIds.length)
-                }).fail((xhr, status, err) => {
-                    badResponse++;
-                    checkCompletedReq((goodResponse + badResponse), accountIds.length)
-                })
-            }, interval);
+            $.post("/dashboard/logoutaccount", { accountId: accountId }, (doc) => {
+                goodResponse++;
+                $("#sidebar-msg").prop("hidden", false).text(`${goodResponse} accounts logged out.`).show()
+                updateAccountStatus(doc);
+                checkCompletedReq((goodResponse + badResponse), accountIds.length)
+            }).fail((xhr, status, err) => {
+                badResponse++;
+                $("#sidebar-errMsg").attr("hidden", false).text(`${badResponse} accounts failed.`).show()
+                checkCompletedReq((goodResponse + badResponse), accountIds.length)
+            })
+
         })
     })
 
@@ -78,7 +72,7 @@ $(() => {
     })
 
 
-    $("body").on('submit', "#all-set-status-form", function (e) {
+    $(document).on('submit', "#all-set-status-form", function (e) {
         e.preventDefault();
         // Change form id so it goes back to actions.js
         $("#all-set-status-form").removeAttr('id').attr("id", "set-status-form");
@@ -92,31 +86,60 @@ $(() => {
 
         let status = $('input[name="status"]:checked').val();
 
-        $("#sidebar-menu").hide(0);
-        $("#sidebar-spinner").attr("hidden", false);
+        $("#sidebar-menu").prop("hidden", true)
+        $("#sidebar-spinner").prop("hidden", false)
 
         let goodResponse = 0;
         let badResponse = 0;
-        let interval = 0
-
         accountIds.forEach(accountId => {
-            interval += 100;
-            setTimeout(() => {
-                $.post("/dashboard/setstatus", { accountId: accountId, status: status }, () => {
-                    goodResponse++;
-                    $("#sidebar-msg").attr("hidden", false).text(`${goodResponse} accounts set status.`).show(0);
-                    checkCompletedReq((goodResponse + badResponse), accountIds.length)
-                }).fail((xhr, status, err) => {
-                    badResponse++;
-                    checkCompletedReq((goodResponse + badResponse), accountIds.length)
-                })
-            }, interval);
+            $.post("/dashboard/setstatus", { accountId: accountId, status: status }, (doc) => {
+                goodResponse++;
+                $("#sidebar-msg").prop("hidden", false).text(`${goodResponse} accounts set status.`).show()
+                updateAccountStatus(doc);
+                checkCompletedReq((goodResponse + badResponse), accountIds.length)
+            }).fail((xhr, status, err) => {
+                badResponse++;
+                $("#sidebar-errMsg").attr("hidden", false).text(`${badResponse} accounts failed.`).show()
+                checkCompletedReq((goodResponse + badResponse), accountIds.length)
+            })
         })
     })
 
     // Change form id so it goes back to actions.js
     $("#set-status-modal-close").click(() => {
         $("#all-set-status-form").removeAttr('id').attr("id", "set-status-form");
+    })
+
+    /**************************************************** 
+    *             STOP IDLING ALL ACCOUNTS              *
+    * **************************************************/
+    $("#sidebar-stopIdling").click(() => {
+        let accountIds = getAllAccountIds();
+
+        if (accountIds.length == 0) {
+            alert("You do not have any accounts.")
+            return;
+        }
+
+        //hide sidebar and show spinner
+        $("#sidebar-menu").prop("hidden", true)
+        $("#sidebar-spinner").prop("hidden", false)
+
+        let goodResponse = 0;
+        let badResponse = 0;
+        accountIds.forEach(accountId => {
+            $.post('/dashboard/stopgames', { accountId: accountId }, (doc) => {
+                goodResponse++;
+                $("#sidebar-msg").attr("hidden", false).text(`${goodResponse} accounts stopped idling.`).show();
+                checkCompletedReq((goodResponse + badResponse), accountIds.length)
+                updateAccountStatus(doc);
+            }).fail((xhr, status, err) => {
+                badResponse++;
+                $("#sidebar-errMsg").attr("hidden", false).text(`${badResponse} accounts failed.`).show()
+                checkCompletedReq((goodResponse + badResponse), accountIds.length)
+            })
+        })
+
     })
 
 
@@ -144,91 +167,49 @@ $(() => {
         }
 
         // hide the form
-        $("#all-activate-game-form").hide(0);
+        $("#all-activate-game-form").prop("hidden", true)
         // show spinner
-        $("#spinner-activate-game").attr("hidden", false).show(0)
+        $("#spinner-activate-game").prop("hidden", false)
         //clean any previous messages
-        $("#activate-game-msg").text("").hide(0)
-        $("#activate-game-errMsg").text("").hide(0)
+        $("#activate-game-msg").text("").prop("hidden", true)
+        $("#activate-game-errMsg").text("").prop("hidden", true)
 
-        let interval = 0
         let activated = 0;
         let fail = 0;
         accountIds.forEach((accountId, index) => {
-            interval += 100;
-            setTimeout(() => {
-                $.post('/dashboard/activatefreegame', { accountId: accountId, appIds: appIds }, games => {
-                    activated += 1
-                    $("#activate-game-msg").removeAttr("hidden", false).text(`Game(s) activated in ${activated} accounts.`).show(0)
-                    processGames(accountId, games)
-                    // hide the spinner on last response
-                    if (index == accountIds.length - 1) {
-                        $("#spinner-activate-game").hide(0)
-                    }
-                }).fail((xhr, status, err) => {
-                    fail += 1
-                    $("#activate-game-errMsg").removeAttr("hidden", false).text(`${xhr.responseText} ${fail} accounts.`).show(0)
-                    if (index == accountIds.length - 1) {
-                        $("#spinner-activate-game").hide(0)
-                        // show forma again
-                        $("#all-activate-game-form").show(0);
-                    }
-                })
-            }, interval);
+            $.post('/dashboard/activatefreegame', { accountId: accountId, appIds: appIds }, games => {
+                activated += 1
+                $("#activate-game-msg").prop("hidden", false).text(`Game(s) activated in ${activated} accounts.`)
+                processGames(accountId, games)
+                // hide the spinner on last response
+                if (index == accountIds.length - 1) {
+                    $("#spinner-activate-game").prop("hidden", true)
+                }
+            }).fail((xhr, status, err) => {
+                fail += 1
+                $("#activate-game-errMsg").prop("hidden", false).text(`${xhr.responseText} ${fail} accounts.`)
+                if (index == accountIds.length - 1) {
+                    $("#spinner-activate-game").prop("hidden", true)
+                    // show forma again
+                    $("#all-activate-game-form").prop("hidden", false)
+                }
+            })
         })
     })
 
     // modal hide
     $('#activate-free-game-modal').on('hidden.bs.modal', function () {
         $("#all-activate-game-form").removeAttr('id').attr("id", "activate-game-form");
-        $("#activate-game-form").show(0)
-    })
-
-    /**************************************************** 
-    *             STOP IDLING ALL ACCOUNTS              *
-    * **************************************************/
-    $("#sidebar-stopIdling").click(() => {
-        let accountIds = getAllAccountIds();
-
-        if (accountIds.length == 0) {
-            alert("You do not have any accounts.")
-            return;
-        }
-
-        //hide sidebar and show spinner
-        $("#sidebar-menu").hide(0);
-        $("#sidebar-spinner").attr("hidden", false);
-
-        let goodResponse = 0;
-        let badResponse = 0;
-        let interval = 0
-
-        accountIds.forEach(accountId => {
-            interval += 100;
-            setTimeout(() => {
-                $.post('/dashboard/stopgames', { accountId: accountId }, () => {
-                    goodResponse++;
-                    $("#sidebar-msg").attr("hidden", false).text(`${goodResponse} accounts stopped idling.`).show(0);
-                    checkCompletedReq((goodResponse + badResponse), accountIds.length)
-                }).fail((xhr, status, err) => {
-                    badResponse++;
-                    checkCompletedReq((goodResponse + badResponse), accountIds.length)
-                })
-            }, interval);
-        })
-
+        $("#activate-game-form").prop("hidden", false)
     })
 
 
     function checkCompletedReq(received, sent) {
         if (received == sent) {
-            $("#sidebar-menu").show(0)
-            $("#sidebar-spinner").attr("hidden", true);
-            $("#sidebar-msg").delay(4000).hide(0);
-            $("#sidebar-errMsg").delay(4000).hide(0);
-            refreshAccounts();
+            $("#sidebar-menu").prop("hidden", false)
+            $("#sidebar-spinner").prop("hidden", true)
+            $("#sidebar-msg").delay(5000).fadeOut();
+            $("#sidebar-errMsg").delay(5000).fadeOut();
         }
     }
-
-
 })
