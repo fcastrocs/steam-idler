@@ -49,6 +49,7 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
     client.farmingReCheckId = setInterval(() => reCheck(), this.reCheckInterval);
 
     async function reCheck() {
+        console.log(doc)
         // account not logged in, stop farming algorithm
         if (!client.loggedIn) {
             clearInterval(client.farmingReCheckId);
@@ -77,8 +78,8 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
         self.saveAccount(doc);
     }
 
-    doc = self.filterSensitiveAcc(doc)
-    return Promise.resolve(doc)
+    let filteredDoc = self.filterSensitiveAcc(doc)
+    return Promise.resolve(filteredDoc)
 }
 
 /**

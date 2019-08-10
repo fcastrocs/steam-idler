@@ -440,6 +440,7 @@ class Client extends EventEmitter {
                 // notify connection has been gained after connection lost
                 if (self.reconnecting) {
                     self.reconnecting = false;
+                    console.log('connection-gained 1')
                     self.emit("connection-gained");
                 }
 
