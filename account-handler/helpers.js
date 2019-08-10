@@ -15,6 +15,7 @@ module.exports.farmingIdlingRestart = async function (client, doc) {
         doc = await this.startFarming(null, null, client, doc);
         // Restart idling
     } else {
+        console.log("here 4")
         if (doc.gamesPlaying.length > 0) {
             doc.status = client.playGames(doc.gamesPlaying)
         } else {

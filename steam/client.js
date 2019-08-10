@@ -590,7 +590,6 @@ class Client extends EventEmitter {
     Disconnect() {
         this.loggedIn = false;
         this.webCookie = false;
-        //console.log(`Disconnect > user: ${this.account.user}`)
         this.client.Disconnect();
     }
 
