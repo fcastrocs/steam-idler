@@ -215,10 +215,11 @@ module.exports.steamConnect = async function (account) {
             if (!doc) {
                 return;
             }
+
             // stop farming interval if it exists
             clearInterval(client.farmingReCheckId);
             doc.status = "Reconnecting";
-            await self.saveAccount(doc);
+            self.saveAccount(doc);
         })
 
         // connection has been regained after being logged in

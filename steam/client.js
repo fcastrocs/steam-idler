@@ -437,9 +437,6 @@ class Client extends EventEmitter {
                     return
                 }
 
-                console.log(`Steam Login > user: ${self.account.user}`)
-                self.emit("login-res", loginResp)
-
                 // notify connection has been gained after connection lost
                 if (self.reconnecting) {
                     self.reconnecting = false;
@@ -451,6 +448,9 @@ class Client extends EventEmitter {
                     self.account.forcedStatus = "Online"
                 }
                 self.setPersona(self.account.forcedStatus)
+
+                console.log(`Steam Login > user: ${self.account.user}`)
+                self.emit("login-res", loginResp)
                 return;
             }
 
@@ -573,7 +573,7 @@ class Client extends EventEmitter {
                 self.emit("connection-lost");
             }
             console.log(`Reconnecting: ${err} > user: ${self.account.user}`)
-            self.connect()
+            self.connect();
         })
 
         // connection successful 
