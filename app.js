@@ -103,8 +103,3 @@ app.use('/', require('./router/admin'))
 
 //Start listening on port
 app.listen(port, () => console.log(`App started listening on port: ${port}`));
-
-const request = require("request-promise-native");
-setInterval(function () {
-    request('https://steam-farmer.herokuapp.com').then(() => { }).catch(() => { })
-}, 25 * 60 * 1000); // 25 mins
