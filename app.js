@@ -8,6 +8,8 @@ const helmet = require('helmet')
 const GetAndSaveProxies = require('./util/proxy').GetAndSaveProxies;
 const GetAndSaveSteamCMs = require('./util/steamcm').GetAndSaveSteamCMs;
 const AccountHandler = require("./account-handler");
+const sslRedirect = require('heroku-ssl-redirect');
+
 
 // Handler must be kept in ram at all times
 let accountHandler = new AccountHandler();
@@ -60,6 +62,9 @@ module.exports = accountHandler;
 // Init express
 const app = express();
 const port = process.env.PORT || 4000;
+
+// enable ssl redirect
+app.use(sslRedirect());
 
 // set HTTP headers appropriately to counter web vulnerabilities
 app.use(helmet())
