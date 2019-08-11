@@ -48,11 +48,11 @@ module.exports = accountHandler;
     }
 
     //Initialize steam accounts
-    try {
-        await accountHandler.init();
-    } catch (error) {
-        console.log(error)
-    }
+    // try {
+    //     await accountHandler.init();
+    // } catch (error) {
+    //     console.log(error)
+    // }
 
 })();
 
@@ -60,7 +60,8 @@ module.exports = accountHandler;
 
 // Init express
 const app = express();
-const port = process.env.PORT || 3000;
+//const port = process.env.PORT || 3000;
+const port = 8080
 
 // set HTTP headers appropriately to counter web vulnerabilities
 app.use(helmet())
