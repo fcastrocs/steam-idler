@@ -9,9 +9,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@doctormckay/steam-crypto": "^1.2.0",
     "@hapi/joi": "^15.1.0",
     "@sendgrid/mail": "^6.4.0",
+    "adm-zip": "^0.4.13",
+    "binarykvparser": "^2.2.0",
     "body-parser": "^1.19.0",
+    "buffer-crc32": "^0.2.13",
+    "bytebuffer": "^5.0.1",
     "cheerio": "^1.0.0-rc.3",
     "connect-mongo": "^3.0.0",
     "express": "^4.17.1",
@@ -19,7 +24,12 @@
     "express-session": "^1.16.2",
     "helmet": "^3.20.0",
     "mongoose": "^5.6.8",
+    "protobufjs": "^5.0.3",
     "request": "^2.88.0",
-    "request-promise-native": "^1.0.7"
+    "request-promise-native": "^1.0.7",
+    "socks": "^2.3.2",
+    "socks-proxy-agent": "^4.0.2",
+    "steam-totp": "^2.1.0",
+    "vdf": "0.0.2"
   }
 }

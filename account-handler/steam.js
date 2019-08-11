@@ -26,6 +26,7 @@ module.exports.loginAccount = async function (userId, accountId) {
         }
 
         try {
+            console.log("LOGIN TO: " + doc.user)
             let options = self.setupLoginOptions(doc);
             let client = await self.steamConnect(options);
             self.saveToHandler(userId, accountId, client);
@@ -42,6 +43,7 @@ module.exports.loginAccount = async function (userId, accountId) {
             doc = self.filterSensitiveAcc(doc);
             return resolve(doc)
         } catch (error) {
+            console.log(error);
             //login error
             doc.status = error;
             self.saveAccount(doc)
@@ -224,15 +226,11 @@ module.exports.steamConnect = async function (account) {
 
         // connection has been regained after being logged in
         client.on("connection-gained", async () => {
-            console.log('connection-gained 2')
             //find acc by user
             let doc = await self.getAccount(null, null, account.user);
             if (!doc) {
                 return;
             }
-
-            console.log(`connection-gained 3 ` + doc._id)
-
             // Restart farming or idling
             self.farmingIdlingRestart(client, doc)
         })

@@ -26,7 +26,6 @@ class Client extends EventEmitter {
             skipFarmingData: account.skipFarmingData
         }
 
-        this.loggedIn = false;
         this.connect();
     }
 
@@ -146,7 +145,6 @@ class Client extends EventEmitter {
                 // too many tries, get a new proxy
                 if (retries == 3) {
                     console.log(`GenerateWebCookie too many tries > user: ${self.account.user}`)
-                    self.RenewConnection()
                     return reject();
                 }
 
@@ -168,16 +166,14 @@ class Client extends EventEmitter {
                     agent: agent,
                     formData: data,
                     json: true,
-                    timeout: 4000
+                    timeout: 3000
                 }
 
                 try {
                     let data = await Request(options);
-                    // will this happen???
                     if (!data.authenticateuser) {
-                        setTimeout(() => {
-                            attempt(retries);
-                        }, 2000);
+                        console.log(`GenerateWebCookie bad cookie > user: ${self.account.user}`)
+                        setTimeout(() => attempt(retries), 2000);
                     } else {
                         let sessionId = Crypto.randomBytes(12).toString('hex')
                         let steamLogin = data.authenticateuser.token
@@ -186,9 +182,7 @@ class Client extends EventEmitter {
                         return resolve();
                     }
                 } catch (error) {
-                    setTimeout(() => {
-                        attempt(retries);
-                    }, 2000);
+                    setTimeout(() => attempt(retries), 2000);
                 }
 
             })();
@@ -220,7 +214,6 @@ class Client extends EventEmitter {
                 // too many tries, get a new proxy
                 if (retries == 3) {
                     console.log(`GetCardsData too many tries > user: ${self.account.user}`)
-                    self.RenewConnection()
                     return reject();
                 }
 
@@ -231,7 +224,7 @@ class Client extends EventEmitter {
                     url: `https://steamcommunity.com/profiles/${self.steamid}/badges`,
                     method: 'GET',
                     agent: agent,
-                    timeout: 4000,
+                    timeout: 3000,
                     headers: {
                         "User-Agent": "Valve/Steam HTTP Client 1.0",
                         "Cookie": self.webCookie
@@ -242,9 +235,7 @@ class Client extends EventEmitter {
                     let data = await Request(options)
                     return resolve(self.ParseFarmingData(data));
                 } catch (error) {
-                    setTimeout(async () => {
-                        attempt(retries)
-                    }, 2000);
+                    setTimeout(() => attempt(retries), 2000);
                 }
             })();
         })
@@ -327,7 +318,6 @@ class Client extends EventEmitter {
                 // too many tries, get a new proxy
                 if (retries == 3) {
                     console.log(`GetIventory too many tries > user: ${self.account.user}`)
-                    self.RenewConnection()
                     return reject();
                 }
 
@@ -338,7 +328,7 @@ class Client extends EventEmitter {
                     url: `https://steamcommunity.com/profiles/${self.steamid}/inventory/json/753/6`,
                     method: 'GET',
                     agent: agent,
-                    timeout: 4000,
+                    timeout: 3000,
                     headers: {
                         "User-Agent": "Valve/Steam HTTP Client 1.0",
                         "Cookie": self.webCookie
@@ -350,7 +340,7 @@ class Client extends EventEmitter {
                     inventory = JSON.parse(inventory);
                     if (!inventory.success) {
                         console.log(`GetIventory bad data > user: ${self.account.user}`)
-                        throw "GetIventory bad data."
+                        setTimeout(() => attempt(retries), 2000);
                     }
 
                     if (inventory.rgDescriptions.length == 0) {
@@ -359,9 +349,7 @@ class Client extends EventEmitter {
 
                     return resolve(inventory.rgDescriptions);
                 } catch (error) {
-                    setTimeout(async () => {
-                        attempt(retries)
-                    }, 2000);
+                    setTimeout(() => attempt(retries), 2000);
                 }
             })();
         })
@@ -395,7 +383,7 @@ class Client extends EventEmitter {
             loginOption.two_factor_code = SteamTotp.generateAuthCode(this.account.shared_secret);
         }
 
-        // login response
+        // LOGIN RESPONSE
         this.client.once('logOnResponse', async (res) => {
             let code = res.eresult
             let errMsg = ""
@@ -415,6 +403,7 @@ class Client extends EventEmitter {
                     await self.GenerateWebCookie(res.webapi_authenticate_user_nonce);
                 } catch (error) {
                     // could not generate web cookie, account will relogin.
+                    self.RenewConnection()
                     return;
                 }
 
@@ -422,10 +411,11 @@ class Client extends EventEmitter {
                 if (!self.account.skipFarmingData) {
                     try {
                         loginResp.farmingData = await self.GetFarmingData();
-                        // prevent farming data fetch if account loses connection
+                        // do not fetch data again.
                         self.account.skipFarmingData = true;
                     } catch (error) {
                         // could not get farming data, account will relogin.
+                        self.RenewConnection()
                         return;
                     }
                 }
@@ -434,13 +424,13 @@ class Client extends EventEmitter {
                 try {
                     loginResp.inventory = await self.GetIventory();
                 } catch (error) {
+                    self.RenewConnection()
                     return
                 }
 
                 // notify connection has been gained after connection lost
                 if (self.reconnecting) {
                     self.reconnecting = false;
-                    console.log('connection-gained 1')
                     self.emit("connection-gained");
                 }
 
@@ -471,8 +461,6 @@ class Client extends EventEmitter {
 
             // RATE LIMIT
             else if (code == 84) {
-                // reconnect
-                self.loggedIn = false;
                 self.RenewConnection()
                 return;
             }
@@ -485,7 +473,7 @@ class Client extends EventEmitter {
             else if (code == 88) {
                 errMsg = "Invalid shared secret"
             }
-            // Some other code
+            // Some other error code
             else {
                 console.log(`Login failed code: ${code} > user: ${self.account.user}`)
                 self.RenewConnection()
@@ -497,7 +485,6 @@ class Client extends EventEmitter {
             self.emit("loginError", errMsg);
             self.Disconnect();
         });
-
 
         this.client.once('games', games => {
             self.emit("games", games);
@@ -562,40 +549,41 @@ class Client extends EventEmitter {
             }
         }
 
-        // Create steam client
+        // Create the steam client, and connect to steam
         self.client = new Steam(self.options);
 
-        // Connection lost
-        self.client.once('error', err => {
-            // notify connection has been lost
-            if (self.loggedIn) {
-                self.loggedIn = false;
-                self.reconnecting = true;
-                self.emit("connection-lost");
-            }
-            console.log(`Reconnecting: ${err} > user: ${self.account.user}`)
-            self.connect();
-        })
-
-        // connection successful 
+        // SUCCESSFUL CONNECTION
         self.client.once('connected', () => {
             self.proxy = proxy;
             self.login();
         })
+
+        // CONNECTION LOST
+        self.client.once('error', err => {
+            // notify connection has been lost
+            if (self.loggedIn) {
+                self.reconnecting = true;
+                self.emit("connection-lost");
+            }
+
+            console.log(`Reconnecting: ${err} > user: ${self.account.user}`)
+            self.RenewConnection();
+        })
+
     }
 
-    /************************************************************************
-    * 					      DISCONNECT FROM STEAM					        *
-    ************************************************************************/
+    // Reconnect due to bad proxy.
+    RenewConnection() {
+        this.Disconnect();
+        let self = this;
+        setTimeout(() => self.connect(), 2000);
+    }
+
     Disconnect() {
         this.loggedIn = false;
         this.webCookie = false;
+        this.client.removeAllListeners();
         this.client.Disconnect();
-    }
-
-    RenewConnection() {
-        this.Disconnect();
-        this.connect();
     }
 }
 

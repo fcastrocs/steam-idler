@@ -4,69 +4,74 @@ const EventEmitter = require('events').EventEmitter;
 const SocksClient = require('socks').SocksClient;
 const SteamCrypto = require('@doctormckay/steam-crypto');
 
-class Connection extends EventEmitter{
+class Connection extends EventEmitter {
 
-  constructor(options){
+  constructor(options) {
     super();
     this.MAGIC = 'VT01';
     var self = this;
-    
+
     options.command = "connect";
 
     // Create the connection with steam using socks type 4
     SocksClient.createConnection(options)
-    .then(info => { //successful
-      self.socket = info.socket;
-      
-      //Socket timeout from inactivity
-      self.socket.setTimeout(options.timeout);
-      // This will take care of any other errors
-      self.socket.once('timeout', err => {
-        self.DestroyConnection();
-        self.emit("error", "socket timeout")
-      });
+      .then(info => { //successful
+        self.socket = info.socket;
 
-      // Connection ended before login
-      self.socket.once("end", err => {
-        self.DestroyConnection();
-        self.emit("error", "socket ended");
-      })
-
-      // Any errors with the connection
-      self.socket.once("error", err => {
-        self.DestroyConnection();
-        self.emit("error", "socket error");
-      })
-
-      // socket had a transmission error
-      self.socket.once("close", err => {
-        if(err){
+        //Socket timeout from inactivity
+        self.socket.setTimeout(options.timeout);
+        // This will take care of any other errors
+        self.socket.once('timeout', err => {
           self.DestroyConnection();
-          self.emit("error", "socket closed with error");
-        }
-      });
+          self.emit("error", "socket timeout")
+        });
 
-      self.socket.on('readable', err =>{
-        self.ReadPacket();
-      });
+        // Connection ended before login
+        self.socket.once("end", err => {
+          self.DestroyConnection();
+          self.emit("error", "socket ended");
+        })
 
-    })
-    .catch(err => {
-      // Errors while trying to establish connection
-      self.emit("error", "dead proxy");
-    });
+        // Any errors with the connection
+        self.socket.once("error", err => {
+          self.DestroyConnection();
+          self.emit("error", "socket error");
+        })
+
+        // socket had a transmission error
+        self.socket.once("close", err => {
+          if (err) {
+            self.DestroyConnection();
+            self.emit("error", "socket closed with error");
+          }
+        });
+
+        self.socket.on('readable', err => {
+          self.ReadPacket();
+        });
+
+      })
+      .catch(err => {
+        // Errors while trying to establish connection
+        self.emit("error", "dead proxy");
+      });
   }
 
   // Destroy the connection and remove listeners
-  DestroyConnection(){
-    if(this.socket){
-      this.socket.destroy();
-      this.socket.removeAllListeners();
+  DestroyConnection() {
+    if (!this.socket) {
+      return;
     }
+    this.socket.removeAllListeners();
+    this.socket.destroy();
   }
 
   // Sends data to steam
-  Send(data){
+  Send(data) {
+    if (!this.socket) {
+      return;
+    }
+
     // encrypt
     if (this.sessionKey) {
       if (this.useHmac) {
@@ -80,12 +85,16 @@ class Connection extends EventEmitter{
     buffer.writeUInt32LE(data.length, 0);
     buffer.write(this.MAGIC, 4);
     data.copy(buffer, 8);
-    
+
     this.socket.write(buffer);
   };
 
   // Read packet from steam
-  ReadPacket(){
+  ReadPacket() {
+    if (!this.socket) {
+      return;
+    }
+
     if (!this._packetLen) {
       var header = this.socket.read(8);
       if (!header) {
@@ -100,27 +109,27 @@ class Connection extends EventEmitter{
         return;
       }
     }
-    
+
     var packet = this.socket.read(this._packetLen);
-    
+
     if (!packet) {
-      //console.log("incomplete packet")
       this.emit('incomplete-packet', 'incomplete packet');
       return;
     }
-    
+
     delete this._packetLen;
-    
+
     // decrypt
     if (this.sessionKey) {
       try {
         packet = SteamCrypto.symmetricDecrypt(packet, this.sessionKey, this.useHmac);
       } catch (ex) {
+        console.log("ENCRYPTION ERROR")
         this.emit('encryptionError', ex);
         return;
       }
     }
-    
+
     this.emit('packet', packet);
     // keep reading until there's nothing left
     this.ReadPacket();

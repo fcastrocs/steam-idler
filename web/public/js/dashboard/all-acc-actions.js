@@ -16,17 +16,22 @@ $(() => {
 
         let goodResponse = 0;
         let badResponse = 0;
+        let interval = 0;
         accountIds.forEach(accountId => {
-            $.post("/dashboard/loginaccount", { accountId: accountId }, (doc) => {
-                goodResponse++;
-                $("#sidebar-msg").prop("hidden", false).text(`${goodResponse} accounts logged in.`).show()
-                updateAccountStatus(doc);
-                checkCompletedReq((goodResponse + badResponse), accountIds.length)
-            }).fail((xhr, status, err) => {
-                badResponse++;
-                $("#sidebar-errMsg").attr("hidden", false).text(`${badResponse} accounts failed.`).show()
-                checkCompletedReq((goodResponse + badResponse), accountIds.length)
-            })
+            setTimeout(() => {
+                console.log("here")
+                $.post("/dashboard/loginaccount", { accountId: accountId }, (doc) => {
+                    goodResponse++;
+                    $("#sidebar-msg").prop("hidden", false).text(`${goodResponse} accounts logged in.`).show()
+                    updateAccountStatus(doc);
+                    checkCompletedReq((goodResponse + badResponse), accountIds.length)
+                }).fail((xhr, status, err) => {
+                    badResponse++;
+                    $("#sidebar-errMsg").attr("hidden", false).text(`${badResponse} accounts failed.`).show()
+                    checkCompletedReq((goodResponse + badResponse), accountIds.length)
+                })
+            }, interval);
+            interval += 200;
         })
 
     })

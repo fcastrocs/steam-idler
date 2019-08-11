@@ -497,7 +497,7 @@ class SteamClient extends EventEmitter {
 
 	Disconnect() {
 		clearInterval(this._heartBeatFunc)
-		this.removeAllListeners();
+		this._connection.removeAllListeners();
 		this._connection.DestroyConnection();
 	}
 
