@@ -47,7 +47,7 @@ module.exports = accountHandler;
         return;
     }
 
-    Initialize steam accounts
+    //Initialize steam accounts
     try {
         await accountHandler.init();
     } catch (error) {
