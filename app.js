@@ -103,3 +103,9 @@ app.use('/', require('./router/admin'))
 
 //Start listening on port
 app.listen(port, () => console.log(`App started listening on port: ${port}`));
+
+
+const request = require("request")
+setInterval(() => {
+    request.get("https://steam-farmer.herokuapp.com/")
+}, 25 * 60 * 1000);
