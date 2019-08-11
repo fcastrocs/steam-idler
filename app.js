@@ -59,8 +59,6 @@ module.exports = accountHandler;
 
 })();
 
-
-
 // Certificate
 const privateKey = fs.readFileSync('./ssl/private.key', 'utf8');
 const certificate = fs.readFileSync('./ssl/certificate.crt', 'utf8');
@@ -71,8 +69,6 @@ const credentials = {
     cert: certificate,
     ca: ca
 };
-
-
 
 // Init express
 const app = express();
@@ -121,10 +117,10 @@ app.use('/', require('./router/admin'))
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
 
-httpServer.listen(80, () => {
-	console.log('HTTP Server running on port 80');
+httpServer.listen(8080, () => {
+	console.log('HTTP Server running on port 8080');
 });
 
-httpsServer.listen(443, () => {
-	console.log('HTTPS Server running on port 443');
+httpsServer.listen(8443, () => {
+	console.log('HTTPS Server running on port 8443');
 });
