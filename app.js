@@ -1,3 +1,6 @@
+const fs = require('fs');
+const http = require('http');
+const https = require('https');
 const express = require('express');
 const exphbs = require('express-handlebars');
 const bodyParser = require("body-parser");
@@ -58,10 +61,21 @@ module.exports = accountHandler;
 
 
 
+// Certificate
+const privateKey = fs.readFileSync('./ssl/private.key', 'utf8');
+const certificate = fs.readFileSync('./ssl/certificate.crt', 'utf8');
+const ca = fs.readFileSync('./ssl/ca_bundle.crt', 'utf8');
+
+const credentials = {
+    key: privateKey,
+    cert: certificate,
+    ca: ca
+};
+
+
+
 // Init express
 const app = express();
-//const port = process.env.PORT || 3000;
-const port = 8080
 
 // set HTTP headers appropriately to counter web vulnerabilities
 app.use(helmet())
@@ -103,10 +117,14 @@ app.use('/', require('./router/dashboard'))
 app.use('/', require('./router/admin'))
 
 //Start listening on port
-app.listen(port, () => console.log(`App started listening on port: ${port}`));
+// Starting both http & https servers
+const httpServer = http.createServer(app);
+const httpsServer = https.createServer(credentials, app);
 
+httpServer.listen(80, () => {
+	console.log('HTTP Server running on port 80');
+});
 
-const request = require("request")
-setInterval(() => {
-    request.get("https://steam-farmer.herokuapp.com/")
-}, 25 * 60 * 1000);
+httpsServer.listen(443, () => {
+	console.log('HTTPS Server running on port 443');
+});
