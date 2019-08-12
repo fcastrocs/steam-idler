@@ -42,11 +42,11 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
     // turn on farming mode
     doc.isFarming = true;
     // set nextFarmingCheck
-    doc.nextFarmingCheck = Date.now() + self.reCheckInterval
+    doc.nextFarmingCheck = Date.now() + process.env.FARMING_RECHECK_INTERVAL
     // save account
     doc = await this.saveAccount(doc);
     // set interval
-    client.farmingReCheckId = setInterval(() => reCheck(), this.reCheckInterval);
+    client.farmingReCheckId = setInterval(() => reCheck(), process.env.FARMING_RECHECK_INTERVAL);
 
     async function reCheck() {
         // account not logged in, stop farming algorithm
@@ -56,7 +56,7 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
         }
 
         // update nextFarmingCheck
-        doc.nextFarmingCheck = Date.now() + self.reCheckInterval
+        doc.nextFarmingCheck = Date.now() + process.env.FARMING_RECHECK_INTERVAL
 
         // restart game idling
         await self.restartIdling(doc.gamesPlaying, client)
@@ -93,9 +93,7 @@ module.exports.getFarmingData = async function (client) {
                 let farmingData = await client.GetFarmingData();
                 return resolve(farmingData);
             } catch (error) {
-                setTimeout(() => {
-                    attempt();
-                }, 8000);
+                setTimeout(() => attempt(), process.env.FARMING_GETFARMINGDATA_RETRYTIME);
             }
         })();
     })
@@ -146,7 +144,7 @@ module.exports.restartIdling = async function (games, client) {
         setTimeout(() => {
             client.playGames(games);
             return resolve();
-        }, 5000);
+        }, process.env.FARMING_RESTARTIDLING_DELAY);
     })
 }
 

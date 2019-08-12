@@ -166,14 +166,14 @@ class Client extends EventEmitter {
                     agent: agent,
                     formData: data,
                     json: true,
-                    timeout: 3000
+                    timeout: process.env.STEAMCOMMUNITY_TIMEOUT
                 }
 
                 try {
                     let data = await Request(options);
                     if (!data.authenticateuser) {
                         console.log(`GenerateWebCookie bad cookie > user: ${self.account.user}`)
-                        setTimeout(() => attempt(retries), 2000);
+                        setTimeout(() => attempt(retries), process.env.STEAMCOMMUNITY_RETRY_DELAY);
                     } else {
                         let sessionId = Crypto.randomBytes(12).toString('hex')
                         let steamLogin = data.authenticateuser.token
@@ -182,7 +182,7 @@ class Client extends EventEmitter {
                         return resolve();
                     }
                 } catch (error) {
-                    setTimeout(() => attempt(retries), 2000);
+                    setTimeout(() => attempt(retries), process.env.STEAMCOMMUNITY_RETRY_DELAY);
                 }
 
             })();
@@ -224,7 +224,7 @@ class Client extends EventEmitter {
                     url: `https://steamcommunity.com/profiles/${self.steamid}/badges`,
                     method: 'GET',
                     agent: agent,
-                    timeout: 3000,
+                    timeout: process.env.STEAMCOMMUNITY_TIMEOUT,
                     headers: {
                         "User-Agent": "Valve/Steam HTTP Client 1.0",
                         "Cookie": self.webCookie
@@ -235,7 +235,7 @@ class Client extends EventEmitter {
                     let data = await Request(options)
                     return resolve(self.ParseFarmingData(data));
                 } catch (error) {
-                    setTimeout(() => attempt(retries), 2000);
+                    setTimeout(() => attempt(retries), process.env.STEAMCOMMUNITY_RETRY_DELAY);
                 }
             })();
         })
@@ -328,7 +328,7 @@ class Client extends EventEmitter {
                     url: `https://steamcommunity.com/profiles/${self.steamid}/inventory/json/753/6`,
                     method: 'GET',
                     agent: agent,
-                    timeout: 3000,
+                    timeout: process.env.STEAMCOMMUNITY_TIMEOUT,
                     headers: {
                         "User-Agent": "Valve/Steam HTTP Client 1.0",
                         "Cookie": self.webCookie
@@ -340,7 +340,7 @@ class Client extends EventEmitter {
                     inventory = JSON.parse(inventory);
                     if (!inventory.success) {
                         console.log(`GetIventory bad data > user: ${self.account.user}`)
-                        setTimeout(() => attempt(retries), 2000);
+                        setTimeout(() => attempt(retries), process.env.STEAMCOMMUNITY_RETRY_DELAY);
                     }
 
                     if (inventory.rgDescriptions.length == 0) {
@@ -349,7 +349,7 @@ class Client extends EventEmitter {
 
                     return resolve(inventory.rgDescriptions);
                 } catch (error) {
-                    setTimeout(() => attempt(retries), 2000);
+                    setTimeout(() => attempt(retries), process.env.STEAMCOMMUNITY_RETRY_DELAY);
                 }
             })();
         })
@@ -537,7 +537,7 @@ class Client extends EventEmitter {
 
         // connection options
         this.options = {
-            timeout: 12000, //timeout for lost connection, bad proxy
+            timeout: process.env.CONNECTION_TIMEOUT, //timeout for lost connection, bad proxy
             proxy: {
                 ipaddress: proxy.ip,
                 port: proxy.port,
@@ -576,7 +576,7 @@ class Client extends EventEmitter {
     RenewConnection() {
         this.Disconnect();
         let self = this;
-        setTimeout(() => self.connect(), 2000);
+        setTimeout(() => self.connect(), process.env.RECONNECT_DELAY);
     }
 
     Disconnect() {

@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const algorithm = 'aes-256-cbc';
-const key = Buffer.from("365f93977ea8a3fc2e86268f4f7596d0a96dc37f3f9f860b36059b114d70ece4", "hex")
+const key = Buffer.from(process.env.CRYPTO_KEY, "hex")
 const iv = crypto.randomBytes(16);
 
 module.exports.encrypt = text => {

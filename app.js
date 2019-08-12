@@ -1,3 +1,4 @@
+require("dotenv").config();
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
@@ -12,7 +13,6 @@ const GetAndSaveProxies = require('./util/proxy').GetAndSaveProxies;
 const GetAndSaveSteamCMs = require('./util/steamcm').GetAndSaveSteamCMs;
 const AccountHandler = require("./account-handler");
 
-
 // Handler must be kept in ram at all times
 let accountHandler = new AccountHandler();
 module.exports = accountHandler;
@@ -21,10 +21,8 @@ module.exports = accountHandler;
 (async function () {
     //Connect database
     try {
-        const DBURL = 'mongodb://machi:chivas10@ds033056.mlab.com:33056/heroku_z7f42pmp';
         mongoose.set('useCreateIndex', true);
-        await mongoose.connect(DBURL, { useNewUrlParser: true })
-        process.env.dbconnected = true;
+        await mongoose.connect(process.env.MOGODB_URI, { useNewUrlParser: true })
         console.log('Connected to MongoDB.');
     } catch (error) {
         console.log(error);
@@ -99,11 +97,10 @@ app.use(session({
         touchAfter: 24 * 3600, // time period in seconds 
         ttl: 14 * 24 * 60 * 60 // = 14 days. Default
     }),
-    secret: "#$#$^*&GB4534fsgsdfg4352FSDF&^",
+    secret: process.env.MONGOSTORE_SECRET,
     resave: false, //don't save session if unmodified
     saveUninitialized: false, // don't create session until something stored
-    name: 'idlerSession',
-    httpOnly: true
+    name: 'sessionID'
 }));
 
 
@@ -117,10 +114,10 @@ app.use('/', require('./router/admin'))
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
 
-httpServer.listen(8080, () => {
+httpServer.listen(process.env.HTTP_PORT, () => {
 	console.log('HTTP Server running on port 8080');
 });
 
-httpsServer.listen(8443, () => {
+httpsServer.listen(process.env.HTTPS_PORT, () => {
 	console.log('HTTPS Server running on port 8443');
 });

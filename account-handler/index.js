@@ -33,7 +33,6 @@ module.exports = class AccountHandler {
         }
 
         this.userAccounts = new Object();
-        this.reCheckInterval = 31 * 60 * 1000; // 31 mins
     }
 
     /**
