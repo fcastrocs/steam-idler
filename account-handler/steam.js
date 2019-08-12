@@ -26,7 +26,6 @@ module.exports.loginAccount = async function (userId, accountId) {
         }
 
         try {
-            console.log("LOGIN TO: " + doc.user)
             let options = self.setupLoginOptions(doc);
             let client = await self.steamConnect(options);
             self.saveToHandler(userId, accountId, client);

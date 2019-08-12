@@ -49,15 +49,11 @@ $(() => {
         })
     })
 
-
-
     // Show recover form
     $('#show-recover').click(() => {
         $('#login-form').hide(1000);
         $("#recover-form").removeAttr('hidden')
     });
-
-
 
     // Recover form
     $("#recover-form").submit(function (e) {
@@ -66,7 +62,7 @@ $(() => {
         $(this).find(".alert-danger").attr("hidden", true).html("");
         let self = this;
         let data = $(this).serialize();
-        $.post('/getrecoverylink', data, function (res) {
+        $.post('/recovery', data, function (res) {
             $(self).find(".alert-success").attr("hidden", false).html(res)
             $("#recover-form-box").hide(0)
         }).fail((xhr, status, err) => {
@@ -84,7 +80,7 @@ $(() => {
         let self = this;
         let data = $("#change-password").serialize();
 
-        $.post('/changepassword', data, function (res) {
+        $.post('/recovery/changepass', data, function (res) {
             window.location = res;
         }).fail((xhr, status, err) => {
             $(self).find(".alert-danger").attr("hidden", false).html(xhr.responseText);

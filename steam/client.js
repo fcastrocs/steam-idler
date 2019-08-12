@@ -554,8 +554,6 @@ class Client extends EventEmitter {
             }
         }
 
-        console.log(this.options)
-
         // Create the steam client, and connect to steam
         self.client = new Steam(self.options);
 

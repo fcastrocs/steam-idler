@@ -1,6 +1,5 @@
 const router = require('express').Router();
 const User = require('../models/user');
-const isLoggedIn = require('./util/isLoggedIn')
 const Mailer = require("./util/mailer");
 const Security = require("../util/security")
 const Token = require("../models/token")
@@ -8,137 +7,61 @@ const signup = require("./util/signup-schema")
 const Invite = require("../models/invite")
 
 
-
-router.get("/logout", async function (req, res) { 
-    if(!req.session.loggedIn){
-        return res.status(403).send("You are not logged in.")
+router.get('/login', function (req, res) {
+    if (req.session.loggedIn) {
+        res.redirect(`/dashboard/${req.session.username}`);
     }
 
-    req.session.destroy((err)=>{
-        if(err){
-            return res.status(403).send("Unexpected error occurred. Code: 6");
-        }
+    if (req.query.message) {
+        return res.render('login-register', { message: req.query.message })
+    }
 
-        res.render('login-register');
-    });
-
+    return res.render('login-register')
 })
 
-
-router.post("/getrecoverylink", async function (req, res) {
+router.post('/login', async function (req, res) {
     if (req.session.loggedIn) {
-        return res.status(403).send("You are already logged in.")
+        return res.status(400).send("You are already logged in.")
     }
 
-    if (!req.body.recoverEmail) {
-        return res.status(403).send("Bad getrecoverylink request")
+    if (!req.body.username || !req.body.password) {
+        return res.status(400).send("username/password needed")
     }
 
-    // find user with this email
-    let query = User.findOne({ email: req.body.recoverEmail });
-    let user = await query.exec();
-    // user not found
-    if (!user) {
-        return res.status(403).send("A user with this email was not found.")
+    //usernames should be lowercase
+    let username = req.body.username.trim().toLowerCase();
+
+    // find user
+    let query = User.findOne({ username: username })
+    let doc = await query.exec();
+    if (!doc) {
+        return res.status(400).send("Bad username/password.")
     }
 
-    //user found
-    user.passwordResetToken = Security.createToken();
-    user.passwordResetExpires = Date.now() + 30 * 60 * 1000
+    //compare passwords
+    let dbpassword = Security.decrypt(doc.password)
+    if (dbpassword !== req.body.password) {
+        return res.status(400).send("Bad username/password.")
+    }
 
-    user.save(async (err, doc) => {
-        if (err) {
-            return res.status(403).send("Unexpected error occurred. Code: 4")
-        }
-
-        //send recovery link
-        let url = `http://${req.headers.host}/recovery/${doc.username}/${doc.passwordResetToken}`
-
+    // make sure user is verified. create new token and send verification
+    if (!doc.isVerified) {
         try {
-            let result = await Mailer.sendRecovery(url, doc.email);
+            let result = await createToken_SendVerification(doc, req.headers.host);
             return res.send(result);
         } catch (error) {
-            return res.status(403).send(error);
+            return res.status(400).send(error);
         }
-    })
+    }
+
+    // Setup session
+    req.session.loggedIn = true;
+    req.session.username = doc.username;
+    req.session.userId = doc._id;
+    req.session.admin = doc.admin
+
+    return res.send("Logged in")
 })
-
-
-router.get("/recovery/:user/:token", async function (req, res) {
-    if (req.session.loggedIn) {
-        return res.status(403).send("You are already logged in.")
-    }
-    // send to change password form
-    res.render('login-register', { recoverUser: req.params.user, recoverToken: req.params.token })
-})
-
-
-router.post("/changepassword", function (req, res) {
-    if (req.session.loggedIn) {
-        return res.status(403).send("You are already logged in.")
-    }
-
-    if (!req.body.recoverUsername || !req.body.recoverPassword || !req.body.recoverPassword2
-        || !req.body.recoverToken) {
-        return res.status(403).send("Bad changepassword request.")
-    }
-
-    // compare passwords
-    if (req.body.recoverPassword !== req.body.recoverPassword2) {
-        return res.status(403).send("Passwords do not math.")
-    }
-
-
-    signup.validate({
-        password: req.body.recoverPassword
-    }, async err => {
-        // validation failed
-        if (err) {
-            let errMsg = "";
-            for (let i in err.details) {
-                errMsg += err.details[i].message
-            }
-            return res.status(400).send(errMsg)
-        }
-
-        //validation passed
-
-        // find user
-        let query = User.findOne({
-            username: req.body.recoverUsername,
-            passwordResetToken: req.body.recoverToken
-        })
-
-        let user = await query.exec();
-        if (!user) {
-            return res.status(403).send("Invalid token or bad username.")
-        }
-
-        //user found
-        //check token validity
-        let expiryDate = new Date(user.passwordResetExpires).getTime()
-        if(expiryDate < Date.now()){
-            return res.status(403).send("Expired Token.")
-        }
-
-        // valid token
-        // remove token
-        user.passwordResetToken = ""
-        // change password 
-        user.password = Security.encrypt(req.body.recoverPassword)
-
-        // save user
-        user.save((err, doc) =>{
-            if(err){
-                return res.status(403).send("Unexpected error occurred. Code: 5")
-            }
-
-            // Redirect to login page
-            res.send("/login/?message=You+password+has+been+changed%2F")
-        })
-    })
-})
-
 
 
 // Register request
@@ -159,7 +82,7 @@ router.post('/register', async function (req, res) {
         return res.status(403).send("Invalid invite code.")
     }
 
-    if(req.body.password2 !== req.body.password){
+    if (req.body.password2 !== req.body.password) {
         return res.status(403).send("Passwords do not math.")
     }
 
@@ -227,19 +150,7 @@ router.post('/register', async function (req, res) {
     })
 })
 
-
-router.get('/invite/:token', async function (req, res) {
-    if (req.session.loggedIn) {
-        return res.status(403).send("You are already logged in.")
-    }
-
-    //find invite
-    res.render('login-register', { invite: req.params.token })
-})
-
-
-// CONFIRMATION TOKEN
-router.get('/confirmation/:token', async function (req, res) {
+router.get('/register/confirm/:token', async function (req, res) {
     if (req.session.loggedIn) {
         return res.status(403).send("You are already logged in.")
     }
@@ -275,63 +186,148 @@ router.get('/confirmation/:token', async function (req, res) {
 })
 
 
-// Login Page
-router.get('/login', function (req, res) {
-    if(req.session.loggedIn){
-        res.redirect(`/dashboard/${req.session.username}`);
+router.get("/logout", async function (req, res) {
+    if (!req.session.loggedIn) {
+        return res.status(400).send("You are not logged in.")
     }
 
-    if(req.query.message){
-        return res.render('login-register', { message: req.query.message })
-    }
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).send("Unexpected error occurred. Code: 6");
+        }
 
-    return res.render('login-register')
+        res.render('login-register');
+    });
+
 })
 
+/***************************************************
+ *              ACCOUNT RECOVERY                   *
+ **************************************************/
 
-// Login Request
-router.post('/login', async function (req, res) {
+// Generate a recovery link
+router.post("/recovery", async function (req, res) {
+    if (req.session.loggedIn) {
+        return res.status(400).send("You are already logged in.")
+    }
+
+    if (!req.body.recoverEmail) {
+        return res.status(400).send("Need recovery email")
+    }
+
+    // find user with this email
+    let query = User.findOne({ email: req.body.recoverEmail });
+    let user = await query.exec();
+    // user not found
+    if (!user) {
+        return res.status(400).send("A user with this email was not found.")
+    }
+
+    //user found
+    user.passwordResetToken = Security.createToken();
+    user.passwordResetExpires = Date.now() + 30 * 60 * 1000
+
+    user.save(async (err, doc) => {
+        if (err) {
+            return res.status(500).send("Unexpected error occurred. Code: 4")
+        }
+
+        //send recovery link
+        let url = `http://${req.headers.host}/recovery/${doc.username}/${doc.passwordResetToken}`
+
+        try {
+            let result = await Mailer.sendRecovery(url, doc.email);
+            return res.send(result);
+        } catch (error) {
+            return res.status(500).send(error);
+        }
+    })
+})
+
+// Recover link redirect to change password
+router.get("/recovery/:user/:token", async function (req, res) {
     if (req.session.loggedIn) {
         return res.status(403).send("You are already logged in.")
     }
 
-    if (!req.body.username || !req.body.password) {
-        return res.status(403).send("Bad login request.")
+    // send to change password form
+    res.render('login-register', { recoverUser: req.params.user, recoverToken: req.params.token })
+})
+
+
+router.post("/recovery/changepass", function (req, res) {
+    if (req.session.loggedIn) {
+        return res.status(403).send("You are already logged in.")
     }
 
-    //usernames should be lowercase
-    let username = req.body.username.trim().toLowerCase();
-
-    // find user
-    let query = User.findOne({ username: username })
-    let doc = await query.exec();
-    if (!doc) {
-        return res.status(400).send("Bad user/password.")
+    if (!req.body.recoverUsername || !req.body.recoverPassword || !req.body.recoverPassword2
+        || !req.body.recoverToken) {
+        return res.status(403).send("Bad changepassword request.")
     }
 
-    //compare passwords
-    let dbpassword = Security.decrypt(doc.password)
-    if (dbpassword !== req.body.password) {
-        return res.status(400).send("Bad user/password.")
+    // compare passwords
+    if (req.body.recoverPassword !== req.body.recoverPassword2) {
+        return res.status(403).send("Passwords do not math.")
     }
 
-    // make sure user is verified. create new token and send verification
-    if (!doc.isVerified) {
-        try {
-            let result = await createToken_SendVerification(doc, req.headers.host);
-            return res.status(400).send(result);
-        } catch (error) {
-            return res.status(400).send(error);
+    signup.validate({
+        password: req.body.recoverPassword
+    }, async err => {
+        // validation failed
+        if (err) {
+            let errMsg = "";
+            for (let i in err.details) {
+                errMsg += err.details[i].message
+            }
+            return res.status(400).send(errMsg)
         }
+
+        //validation passed
+
+        // find user
+        let query = User.findOne({
+            username: req.body.recoverUsername,
+            passwordResetToken: req.body.recoverToken
+        })
+
+        let user = await query.exec();
+        if (!user) {
+            return res.status(403).send("Invalid token or bad username.")
+        }
+
+        //user found
+        //check token validity
+        let expiryDate = new Date(user.passwordResetExpires).getTime()
+        if (expiryDate < Date.now()) {
+            return res.status(403).send("Expired Token.")
+        }
+
+        // valid token
+        // remove token
+        user.passwordResetToken = ""
+        // change password 
+        user.password = Security.encrypt(req.body.recoverPassword)
+
+        // save user
+        user.save((err, doc) => {
+            if (err) {
+                return res.status(403).send("Unexpected error occurred. Code: 5")
+            }
+
+            // Redirect to login page
+            res.send("/login/?message=You+password+has+been+changed%2F")
+        })
+    })
+})
+
+// invite link redirect to registration form
+router.get('/invite/:token', async function (req, res) {
+    if (req.session.loggedIn) {
+        return res.status(403).send("You are already logged in.")
     }
 
-    // Setup session
-    req.session.loggedIn = true;
-    req.session.username = doc.username;
-    req.session.userId = doc._id;
-    req.session.admin = doc.admin
-
-    return res.send("Logged in")
+    //find invite
+    res.render('login-register', { invite: req.params.token })
 })
 
 async function createToken_SendVerification(doc, host) {
@@ -354,7 +350,7 @@ async function createToken_SendVerification(doc, host) {
             if (err) {
                 return reject("Unexpected error occurred. Code: 2")
             }
-            let url = `http://${host}/confirmation/${token.token}`
+            let url = `http://${host}/register/confirm/${token.token}`
             try {
                 await Mailer.sendVerification(url, doc.username, doc.email);
                 return resolve(`A confirmation email has been sent to ${doc.email}. Check junk folder.`)

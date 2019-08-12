@@ -1,10 +1,35 @@
+#content-body{
+    position: absolute;
+    top: 54px;
+    left: 178.5px;
+    width: calc(100% - 178.5px);
+    text-align:center !important;
+    height: calc(100% - 54px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#content-body-spinner{
+    height: 200px;
+    width: 200px;
+}
+
+#accounts-container{
+    width: 100%;
+    padding: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    align-items: flex-start;
+}
+
 .account{
+    margin: 0 15px 15px;
     display: inline-block;
     width: 230px;
     height: 370px;
     text-align: left;
-    vertical-align: top;
-    margin: 20px;
 }
 
 .account-Bad{
@@ -193,13 +218,10 @@ input[name="emailGuard"] {
 /* NO ACCOUNTS IN DASHBOARD */
 
 #big-add-acc-button{
-    margin: 50px 30px;
-    height: 150px;
-    line-height: 150px;
-}
-
-#no-accounts-text{
-    margin-top: 15px;
+    width: 100%;
+    line-height: 500px;
+    height: 500px;
+    font-size: 50px;
 }
 
 /* END NO ACCOUNTS IN DASHBOARD */
