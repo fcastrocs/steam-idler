@@ -22,7 +22,7 @@ $(() => {
         //form handler
         let data = $('#add-steamaccount-form').serialize();
 
-        $.post('/dashboard/addacc', data, (doc) => {
+        $.post('/steamaccount/add', data, (doc) => {
             // Add account to content-body
             $("#no-accounts").hide(0);
             let account = buildAccount(doc);
@@ -88,7 +88,7 @@ $(() => {
         self.find(".account-buttons").hide();
         // enable spinner
         self.find(".acc-spinner").prop("hidden", false);
-        $.post('/dashboard/loginaccount', { accountId: accountId }, doc => {
+        $.post('/steamaccount/login', { accountId: accountId }, doc => {
             updateAccountStatus(doc);
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
@@ -107,7 +107,7 @@ $(() => {
         // enable spinner
         self.find(".acc-spinner").prop("hidden", false);
 
-        $.post('/dashboard/logoutaccount', { accountId: accountId }, (doc) => {
+        $.post('/steamaccount/logout', { accountId: accountId }, (doc) => {
             updateAccountStatus(doc);
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
@@ -128,7 +128,7 @@ $(() => {
         }
 
         $.ajax({
-            url: '/dashboard/deleteacc',
+            url: '/steamaccount',
             type: 'delete',
             data: { accountId: accountId },
             success: data => {
@@ -159,7 +159,7 @@ $(() => {
         if (!nickname) {
             return
         }
-        $.post('/dashboard/changenick', { nickname: nickname, accountId: accountId }, function (nick) {
+        $.post('/steamaccount/changenick', { nickname: nickname, accountId: accountId }, function (nick) {
             $("#change-nick-modal").modal("toggle")
             $(`div.account[data-id=${accountId}]`).find(".nick").text(nick)
         }).fail((xhr, status, err) => {
@@ -191,7 +191,7 @@ $(() => {
         e.preventDefault();
         let accountId = $("#set-status-button").attr("data-id");
         let status = $('input[name="status"]:checked').val();
-        $.post('/dashboard/setstatus', { status: status, accountId: accountId }, function (doc) {
+        $.post('/steamaccount/setstatus', { status: status, accountId: accountId }, function (doc) {
             $("#set-status-modal").modal("toggle")
             setTimeout(() => updateAccountStatus(doc), 300);
         }).fail((xhr, status, err) => {
@@ -217,7 +217,7 @@ $(() => {
     $(document).on('click', ".stop-farming-btn", function (e) {
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id");
-        $.post('/dashboard/stopfarming', { accountId: accountId }, doc => {
+        $.post('/steamaccount/stopfarming', { accountId: accountId }, doc => {
             self.find(".farming-modal").modal("toggle");
             setTimeout(() => updateAccountStatus(doc), 300);
         }).fail((xhr, status, err) => {
@@ -232,7 +232,7 @@ $(() => {
         let accountId = self.attr("data-id");
         // clear error msg txt
         self.find(".farming-errMsg").text("").prop("hidden", true);
-        $.post('/dashboard/startfarming', { accountId: accountId }, doc => {
+        $.post('/steamaccount/startfarming', { accountId: accountId }, doc => {
             self.find(".farming-modal").modal("toggle");
             setTimeout(() => updateAccountStatus(doc), 300);
         }).fail((xhr, status, err) => {
@@ -265,7 +265,7 @@ $(() => {
             self.find(".idle-errMsg").text("Select a game to idle.").prop("hidden", false)
             return
         }
-        $.post('/dashboard/playgames', { accountId: accountId, games: games }, doc => {
+        $.post('/steamaccount/playgames', { accountId: accountId, games: games }, doc => {
             //close the modal
             self.find(".idle-modal").modal('toggle');
             setTimeout(() => updateAccountStatus(doc), 300);
@@ -285,7 +285,7 @@ $(() => {
         }
 
         let accountId = self.attr("data-id");
-        $.post('/dashboard/stopgames', { accountId: accountId }, (doc) => {
+        $.post('/steamaccount/stopgames', { accountId: accountId }, (doc) => {
             //close the modal
             self.find(".idle-modal").modal('toggle');
             setTimeout(() => updateAccountStatus(doc), 300);
@@ -397,7 +397,7 @@ $(() => {
         $("#activate-game-msg").text("").prop("hidden", true)
         $("#activate-game-errMsg").text("").prop("hidden", true)
 
-        $.post('/dashboard/activatefreegame', { accountId: accountId, appIds: appIds }, games => {
+        $.post('/steamaccount/activatefreegame', { accountId: accountId, appIds: appIds }, games => {
             $("#activate-game-errMsg").prop("hidden", true)
             $("#activate-game-msg").prop("hidden", false).text("Game(s) activated.")
             processGames(accountId, games);
@@ -453,7 +453,7 @@ $(() => {
         $("#redeem-key-msg").prop("hidden", true).text("")
         $("#redeem-key-errMsg").prop("hidden", true).text("")
 
-        $.post('/dashboard/redeemkey', { accountId: accountId, cdkey: cdkey }, games => {
+        $.post('/steamaccount/redeemkey', { accountId: accountId, cdkey: cdkey }, games => {
             $("#redeem-key-msg").prop("hidden", false).text("Successfully added games")
             processGames(accountId, games)
             $("#spinner-redeem-key").prop("hidden", true)

@@ -270,36 +270,10 @@ function getAllAccountIds() {
 function FetchAllAccounts() {
     return new Promise((resolve, reject) => {
         // Refresh account status every interval seconds
-        $.get("/steamaccount", accounts => {
+        $.get("/steamaccounts", accounts => {
             return resolve(accounts);
         }).fail((xhr, status, err) => {
             return reject(xhr.responseText)
         })
     })
-}
-
-// Fetch one account
-function FetchAccount(accountId) {
-    return new Promise((resolve, reject) => {
-        // Refresh account status every interval seconds
-        $.get("/steamaccount", {accountId: accountId}, account => {
-            return resolve(account);
-        }).fail((xhr, status, err) => {
-            return reject(xhr.responseText)
-        })
-    })
-}
-
-
-// Fetches account from db and updates status
-async function FetchAndUpdateAccStatus(accountId){
-    try {
-        let account = await FetchAccount(accountId);
-        if(!account){
-            alert("Could not update account's status.")
-        }
-        updateAccountStatus(account);
-    } catch (error) {
-        alert(error);
-    }
 }

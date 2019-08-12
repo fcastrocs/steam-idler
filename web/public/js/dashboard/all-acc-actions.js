@@ -20,7 +20,7 @@ $(() => {
         accountIds.forEach(accountId => {
             setTimeout(() => {
                 console.log("here")
-                $.post("/dashboard/loginaccount", { accountId: accountId }, (doc) => {
+                $.post("/steamaccount/login", { accountId: accountId }, (doc) => {
                     goodResponse++;
                     $("#sidebar-msg").prop("hidden", false).text(`${goodResponse} accounts logged in.`).show()
                     updateAccountStatus(doc);
@@ -53,7 +53,7 @@ $(() => {
         let goodResponse = 0;
         let badResponse = 0;
         accountIds.forEach(accountId => {
-            $.post("/dashboard/logoutaccount", { accountId: accountId }, (doc) => {
+            $.post("/steamaccount/logout", { accountId: accountId }, (doc) => {
                 goodResponse++;
                 $("#sidebar-msg").prop("hidden", false).text(`${goodResponse} accounts logged out.`).show()
                 updateAccountStatus(doc);
@@ -97,7 +97,7 @@ $(() => {
         let goodResponse = 0;
         let badResponse = 0;
         accountIds.forEach(accountId => {
-            $.post("/dashboard/setstatus", { accountId: accountId, status: status }, (doc) => {
+            $.post("/steamaccount/setstatus", { accountId: accountId, status: status }, (doc) => {
                 goodResponse++;
                 $("#sidebar-msg").prop("hidden", false).text(`${goodResponse} accounts set status.`).show()
                 updateAccountStatus(doc);
@@ -119,6 +119,10 @@ $(() => {
     *             STOP IDLING ALL ACCOUNTS              *
     * **************************************************/
     $("#sidebar-stopIdling").click(() => {
+        if(!confirm("Are you sure you want to stop all accounts from idling?")){
+            return
+        }
+
         let accountIds = getAllAccountIds();
 
         if (accountIds.length == 0) {
@@ -133,7 +137,7 @@ $(() => {
         let goodResponse = 0;
         let badResponse = 0;
         accountIds.forEach(accountId => {
-            $.post('/dashboard/stopgames', { accountId: accountId }, (doc) => {
+            $.post('/steamaccount/stopgames', { accountId: accountId }, (doc) => {
                 goodResponse++;
                 $("#sidebar-msg").attr("hidden", false).text(`${goodResponse} accounts stopped idling.`).show();
                 checkCompletedReq((goodResponse + badResponse), accountIds.length)
@@ -182,7 +186,7 @@ $(() => {
         let activated = 0;
         let fail = 0;
         accountIds.forEach((accountId, index) => {
-            $.post('/dashboard/activatefreegame', { accountId: accountId, appIds: appIds }, games => {
+            $.post('/steamaccount/activatefreegame', { accountId: accountId, appIds: appIds }, games => {
                 activated += 1
                 $("#activate-game-msg").prop("hidden", false).text(`Game(s) activated in ${activated} accounts.`)
                 processGames(accountId, games)

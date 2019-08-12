@@ -210,9 +210,16 @@ module.exports.getAccount = async function (userId, accountId, user) {
 
 /**
  * Returns all accounts
+ * userId (optinal) 
+ * Returns all accounts or all accounts for a user
  */
-module.exports.getAllAccounts = async function () {
-    let query = SteamAccount.find({})
+module.exports.getAllAccounts = async function (userId) {
+    let query = {}
+    if(userId){
+        query = SteamAccount.find({userId: userId}).select(["-pass", "-shared_secret", "-sentry"])
+    }else{
+        query = SteamAccount.find({})
+    }
     return await query.exec();
 }
 

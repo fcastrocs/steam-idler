@@ -1,4 +1,3 @@
-require("dotenv").config();
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
@@ -108,6 +107,7 @@ app.use(session({
 app.use('/', require('./router/login-register'));
 app.use('/', require('./router/dashboard'))
 app.use('/', require('./router/admin'))
+app.use('/', require('./router/steamaccount'))
 
 //Start listening on port
 // Starting both http & https servers

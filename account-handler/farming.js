@@ -42,11 +42,11 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
     // turn on farming mode
     doc.isFarming = true;
     // set nextFarmingCheck
-    doc.nextFarmingCheck = Date.now() + process.env.FARMING_RECHECK_INTERVAL
+    doc.nextFarmingCheck = Date.now() + self.FARMING_RECHECK_INTERVAL
     // save account
     doc = await this.saveAccount(doc);
     // set interval
-    client.farmingReCheckId = setInterval(() => reCheck(), process.env.FARMING_RECHECK_INTERVAL);
+    client.farmingReCheckId = setInterval(() => reCheck(), self.FARMING_RECHECK_INTERVAL);
 
     async function reCheck() {
         // account not logged in, stop farming algorithm
@@ -56,7 +56,7 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
         }
 
         // update nextFarmingCheck
-        doc.nextFarmingCheck = Date.now() + process.env.FARMING_RECHECK_INTERVAL
+        doc.nextFarmingCheck = Date.now() + self.FARMING_RECHECK_INTERVAL
 
         // restart game idling
         await self.restartIdling(doc.gamesPlaying, client)
@@ -87,13 +87,14 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
  * Returns a promise
  */
 module.exports.getFarmingData = async function (client) {
+    let self = this;
     return new Promise(async resolve => {
         (async function attempt() {
             try {
                 let farmingData = await client.GetFarmingData();
                 return resolve(farmingData);
             } catch (error) {
-                setTimeout(() => attempt(), process.env.FARMING_GETFARMINGDATA_RETRYTIME);
+                setTimeout(() => attempt(), self.FARMING_GETFARMINGDATA_RETRYTIME);
             }
         })();
     })
@@ -139,12 +140,13 @@ module.exports.stopFarming = async function (userId, accountId, client, doc) {
  * Returns a promise
  */
 module.exports.restartIdling = async function (games, client) {
+    let self = this;
     return new Promise(resolve => {
         client.playGames([]);
         setTimeout(() => {
             client.playGames(games);
             return resolve();
-        }, process.env.FARMING_RESTARTIDLING_DELAY);
+        }, self.FARMING_RESTARTIDLING_DELAY);
     })
 }
 

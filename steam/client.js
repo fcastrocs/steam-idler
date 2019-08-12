@@ -26,6 +26,11 @@ class Client extends EventEmitter {
             skipFarmingData: account.skipFarmingData
         }
 
+        this.STEAMCOMMUNITY_TIMEOUT = 3000
+        this.STEAMCOMMUNITY_RETRY_DELAY = 2000
+        this.CONNECTION_TIMEOUT = 13000
+        this.RECONNECT_DELAY = 2000
+
         this.connect();
     }
 
@@ -166,14 +171,14 @@ class Client extends EventEmitter {
                     agent: agent,
                     formData: data,
                     json: true,
-                    timeout: process.env.STEAMCOMMUNITY_TIMEOUT
+                    timeout: self.STEAMCOMMUNITY_TIMEOUT
                 }
 
                 try {
                     let data = await Request(options);
                     if (!data.authenticateuser) {
                         console.log(`GenerateWebCookie bad cookie > user: ${self.account.user}`)
-                        setTimeout(() => attempt(retries), process.env.STEAMCOMMUNITY_RETRY_DELAY);
+                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
                     } else {
                         let sessionId = Crypto.randomBytes(12).toString('hex')
                         let steamLogin = data.authenticateuser.token
@@ -182,7 +187,7 @@ class Client extends EventEmitter {
                         return resolve();
                     }
                 } catch (error) {
-                    setTimeout(() => attempt(retries), process.env.STEAMCOMMUNITY_RETRY_DELAY);
+                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
                 }
 
             })();
@@ -224,7 +229,7 @@ class Client extends EventEmitter {
                     url: `https://steamcommunity.com/profiles/${self.steamid}/badges`,
                     method: 'GET',
                     agent: agent,
-                    timeout: process.env.STEAMCOMMUNITY_TIMEOUT,
+                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
                     headers: {
                         "User-Agent": "Valve/Steam HTTP Client 1.0",
                         "Cookie": self.webCookie
@@ -235,7 +240,7 @@ class Client extends EventEmitter {
                     let data = await Request(options)
                     return resolve(self.ParseFarmingData(data));
                 } catch (error) {
-                    setTimeout(() => attempt(retries), process.env.STEAMCOMMUNITY_RETRY_DELAY);
+                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
                 }
             })();
         })
@@ -328,7 +333,7 @@ class Client extends EventEmitter {
                     url: `https://steamcommunity.com/profiles/${self.steamid}/inventory/json/753/6`,
                     method: 'GET',
                     agent: agent,
-                    timeout: process.env.STEAMCOMMUNITY_TIMEOUT,
+                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
                     headers: {
                         "User-Agent": "Valve/Steam HTTP Client 1.0",
                         "Cookie": self.webCookie
@@ -340,7 +345,7 @@ class Client extends EventEmitter {
                     inventory = JSON.parse(inventory);
                     if (!inventory.success) {
                         console.log(`GetIventory bad data > user: ${self.account.user}`)
-                        setTimeout(() => attempt(retries), process.env.STEAMCOMMUNITY_RETRY_DELAY);
+                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
                     }
 
                     if (inventory.rgDescriptions.length == 0) {
@@ -349,7 +354,7 @@ class Client extends EventEmitter {
 
                     return resolve(inventory.rgDescriptions);
                 } catch (error) {
-                    setTimeout(() => attempt(retries), process.env.STEAMCOMMUNITY_RETRY_DELAY);
+                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
                 }
             })();
         })
@@ -537,7 +542,7 @@ class Client extends EventEmitter {
 
         // connection options
         this.options = {
-            timeout: process.env.CONNECTION_TIMEOUT, //timeout for lost connection, bad proxy
+            timeout: this.CONNECTION_TIMEOUT, //timeout for lost connection, bad proxy
             proxy: {
                 ipaddress: proxy.ip,
                 port: proxy.port,
@@ -548,6 +553,8 @@ class Client extends EventEmitter {
                 port: steamcm.port
             }
         }
+
+        console.log(this.options)
 
         // Create the steam client, and connect to steam
         self.client = new Steam(self.options);
@@ -576,7 +583,7 @@ class Client extends EventEmitter {
     RenewConnection() {
         this.Disconnect();
         let self = this;
-        setTimeout(() => self.connect(), process.env.RECONNECT_DELAY);
+        setTimeout(() => self.connect(), self.RECONNECT_DELAY);
     }
 
     Disconnect() {

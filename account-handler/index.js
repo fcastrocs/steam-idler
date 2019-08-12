@@ -33,6 +33,10 @@ module.exports = class AccountHandler {
         }
 
         this.userAccounts = new Object();
+
+        this.FARMING_RECHECK_INTERVAL = 31 * 60 * 1000
+        this.FARMING_GETFARMINGDATA_RETRYTIME = 8000
+        this.FARMING_RESTARTIDLING_DELAY = 5000
     }
 
     /**
@@ -77,7 +81,7 @@ module.exports = class AccountHandler {
         // find account
         let doc = await this.getAccount(null, accountId, null)
         // account not found
-        if(!doc){
+        if (!doc) {
             // then remove this handler
             handler.remove();
             return;
