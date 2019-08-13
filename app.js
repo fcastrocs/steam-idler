@@ -93,13 +93,13 @@ app.set('view engine', '.hbs')
 app.use(session({
     store: new MongoStore({
         mongooseConnection: mongoose.connection,
-        ttl: 14 * 24 * 60 * 60 // = 14 days. Default
+        ttl: 15 * 24 * 60 * 60 // = 15 days. Default
     }),
     secret: process.env.MONGOSTORE_SECRET,
     resave: false, //don't save session if unmodified
     saveUninitialized: false, // don't create session until something stored
     name: 'sessionID',
-    cookie: { httpOnly: false }
+    cookie: { httpOnly: false, expires: 15 * 24 * 60 * 60 * 1000 }
 }));
 
 // Routes
@@ -111,12 +111,12 @@ app.use('/', require('./router/steamaccount'))
 //Start listening on port
 // Starting both http & https servers
 const httpServer = http.createServer(app);
-const httpsServer = https.createServer(credentials, app);
+// const httpsServer = https.createServer(credentials, app);
 
 httpServer.listen(process.env.HTTP_PORT, () => {
 	console.log('HTTP Server running on port 8080');
 });
 
-httpsServer.listen(process.env.HTTPS_PORT, () => {
-	console.log('HTTPS Server running on port 8443');
-});
+// httpsServer.listen(process.env.HTTPS_PORT, () => {
+// 	console.log('HTTPS Server running on port 8443');
+// });
