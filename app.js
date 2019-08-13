@@ -122,7 +122,7 @@ app.use('/', require('./router/steamaccount'))
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
 
-httpServer.listen(process.env.HTTP_PORT, () => {
+httpServer.listen(process.env.PORT, () => {
 	console.log('HTTP Server running on port 8080');
 });
 
