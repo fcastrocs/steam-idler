@@ -111,12 +111,12 @@ app.use('/', require('./router/steamaccount'))
 //Start listening on port
 // Starting both http & https servers
 const httpServer = http.createServer(app);
-// const httpsServer = https.createServer(credentials, app);
+const httpsServer = https.createServer(credentials, app);
 
 httpServer.listen(process.env.HTTP_PORT, () => {
 	console.log('HTTP Server running on port 8080');
 });
 
-// httpsServer.listen(process.env.HTTPS_PORT, () => {
-// 	console.log('HTTPS Server running on port 8443');
-// });
+httpsServer.listen(process.env.HTTPS_PORT, () => {
+	console.log('HTTPS Server running on port 8443');
+});
