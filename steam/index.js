@@ -125,7 +125,7 @@ class SteamClient extends EventEmitter {
 			// get url from hash
 			let hash = body.friends[0].avatar_hash.toString('hex')
 			let tag = hash.substring(0, 2);
-			let url = "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/avatars/"
+			let url = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars"
 			if (hash == "0000000000000000000000000000000000000000") { //return default avatar
 				url = `${url}/fe/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg`
 			} else {
