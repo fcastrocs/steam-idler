@@ -16,6 +16,7 @@ module.exports.GetAndSaveSteamCMs = async () => {
             let steamcmArr = JSON.parse(res).response.serverlist;
 
             SteamCM.deleteMany({}, () => {
+                let servers = []
                 //Save to database
                 for (let i = 0; i < steamcmArr.length; i++) {
                     let serverSplit = steamcmArr[i].split(":");
@@ -26,15 +27,19 @@ module.exports.GetAndSaveSteamCMs = async () => {
                         port: serverSplit[1]
                     });
 
-                    server.save(err => { if (err) throw err; });
-
-                    if (i == steamcmArr.length - 1) {
-                        return resolve('Steam CMs saved to database.')
-                    }
+                    servers.push(server)
                 }
+
+                SteamCM.insertMany(servers, (err, docs) =>{
+                    if(err){
+                        return reject("Could not save SteamCMS to DB.")
+                    }
+
+                    return resolve(`${docs.length} Steam CMs saved to database.`)
+                })
             });
         } catch (error) {
-            reject("Could not fetch Steam CMs")
+            reject("Could not fetch Steam CMs.")
         }
     })
 }

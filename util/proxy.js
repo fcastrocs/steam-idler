@@ -36,6 +36,7 @@ async function GetAndSaveProxies() {
             let proxiesArr = await GetProxies();
 
             Proxy.deleteMany({}, () => {
+                let proxies = []
                 //Save to database
                 for (let i = 0; i < proxiesArr.length; i++) {
                     let proxySplit = proxiesArr[i].split(":");
@@ -45,12 +46,15 @@ async function GetAndSaveProxies() {
                         ip: proxySplit[0],
                         port: proxySplit[1]
                     });
-
-                    proxy.save(err => { if (err) throw err; });
-                    if (i == proxiesArr.length - 1) {
-                        return resolve("Proxy list saved to database.")
-                    }
+                    proxies.push(proxy);
                 }
+
+                Proxy.insertMany(proxies, (err, docs) => {
+                    if (err) {
+                        return reject("Could not store proxies to db.")
+                    }
+                    return resolve(`${docs.length} Proxies saved to DB`)
+                })
             });
         } catch (error) {
             return reject(error)

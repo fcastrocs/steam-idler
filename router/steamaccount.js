@@ -14,7 +14,7 @@ Router.get('/steamaccounts', isLoggedIn, async (req, res) => {
 
 // Add a new steam account
 Router.post("/steamaccount/add", isLoggedIn, async (req, res) => {
-    if (req.body.user || req.body.pass) {
+    if (!req.body.user || !req.body.pass) {
         return res.status(400).send("user/pass needed")
     }
 

@@ -21,13 +21,18 @@ module.exports = accountHandler;
     //Connect database
     try {
         mongoose.set('useCreateIndex', true);
-        await mongoose.connect(process.env.MOGODB_URI, { useNewUrlParser: true })
+        await mongoose.connect(process.env.MOGODB_URI, { 
+            useNewUrlParser: true,
+            dbName: 'steamidler',
+            poolSize: 50,
+            autoIndex: false,
+
+        })
         console.log('Connected to MongoDB.');
     } catch (error) {
         console.log(error);
         return;
     }
-
 
     // Fetch Steam CM servers
     try {
