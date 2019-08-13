@@ -1,8 +1,7 @@
-process.env.MOGODB_URI = "mongo ds033056.mlab.com:33056/heroku_z7f42pmp -u machi -p UD!UZbwS5hk8K27",
+process.env.MOGODB_URI = "mongodb://machi:zbQzd2G7udJ!f8w@ds033056.mlab.com:33056/heroku_z7f42pmp"
 process.env.MONGOSTORE_SECRET = "hi",
-process.env.HTTP_PORT = 8080,
-process.env.HTTPS_PORT = 8443,
 process.env.CRYPTO_KEY = "365f93977ea8a3fc2e86268f4f7596d0a96dc37f3f9f860b36059b114d70ece4"
+
 
 const http = require('http');
 const express = require('express');
@@ -94,8 +93,6 @@ app.use(session({
     saveUninitialized: false, // don't create session until something stored
     name: 'sessionID'
 }));
-
-
 
 // Routes
 app.use('/', require('./router/login-register'));
