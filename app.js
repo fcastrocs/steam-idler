@@ -93,13 +93,13 @@ app.set('view engine', '.hbs')
 app.use(session({
     store: new MongoStore({
         mongooseConnection: mongoose.connection,
-        touchAfter: 24 * 3600, // time period in seconds 
         ttl: 14 * 24 * 60 * 60 // = 14 days. Default
     }),
     secret: process.env.MONGOSTORE_SECRET,
     resave: false, //don't save session if unmodified
     saveUninitialized: false, // don't create session until something stored
-    name: 'sessionID'
+    name: 'sessionID',
+    httpOnly: false
 }));
 
 // Routes

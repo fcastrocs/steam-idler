@@ -20,7 +20,6 @@ router.get('/login', function (req, res) {
 })
 
 router.post('/login', async function (req, res) {
-    console.log("here 1")
     if (req.session.loggedIn) {
         return res.status(400).send("You are already logged in.")
     }
@@ -35,7 +34,6 @@ router.post('/login', async function (req, res) {
     // find user
     let query = User.findOne({ username: username })
     let doc = await query.exec();
-    console.log("here 2")
     if (!doc) {
         return res.status(400).send("Bad username/password.")
     }
