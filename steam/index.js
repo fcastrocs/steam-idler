@@ -56,7 +56,9 @@ class SteamClient extends EventEmitter {
 
 			// Account logged in successfully
 			if (eresult == Steam.EResult.OK) {
-				var hbDelay = logonResp.out_of_game_heartbeat_seconds;
+				var hbDelay = logonResp.out_of_game_heartbeat_seconds * 1000;
+
+				this._connection.socket.setTimeout(hbDelay + 5000);
 
 				// Establish a heartbeat so we don't get disconnected
 				// before we get vac, limited, email verification info
@@ -66,7 +68,7 @@ class SteamClient extends EventEmitter {
 						"proto": {}
 					}, new self.Schema.CMsgClientHeartBeat().toBuffer());
 
-				}, hbDelay * 1000);
+				}, hbDelay);
 			}
 			else { // Destroy the connection
 				this._connection.DestroyConnection();

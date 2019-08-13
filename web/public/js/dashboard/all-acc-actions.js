@@ -31,7 +31,7 @@ $(() => {
                     checkCompletedReq((goodResponse + badResponse), accountIds.length)
                 })
             }, interval);
-            interval += 200;
+            interval += 300;
         })
 
     })

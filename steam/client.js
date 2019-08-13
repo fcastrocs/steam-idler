@@ -26,10 +26,10 @@ class Client extends EventEmitter {
             skipFarmingData: account.skipFarmingData
         }
 
-        this.STEAMCOMMUNITY_TIMEOUT = 3000
-        this.STEAMCOMMUNITY_RETRY_DELAY = 2000
-        this.CONNECTION_TIMEOUT = 13000
-        this.RECONNECT_DELAY = 2000
+        this.STEAMCOMMUNITY_TIMEOUT = 2000
+        this.STEAMCOMMUNITY_RETRY_DELAY = 1000
+        this.CONNECTION_TIMEOUT = 5000
+        this.RECONNECT_DELAY = 1000
 
         this.connect();
     }
