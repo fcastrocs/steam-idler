@@ -79,7 +79,7 @@ module.exports = class AccountHandler {
         let accountId = handler.accountId;
 
         // find account
-        let doc = await this.getAccount(null, accountId, null)
+        let doc = await this.getAccount({accountId: accountId})
         // account not found
         if (!doc) {
             // then remove this handler

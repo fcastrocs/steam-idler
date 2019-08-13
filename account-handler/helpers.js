@@ -13,7 +13,7 @@ module.exports.farmingIdlingRestart = async function (client, doc) {
     // Restart farming 
     if (doc.isFarming) {
         doc = await this.startFarming(null, null, client, doc);
-        // Restart idling
+    // Restart idling
     } else {
         if (doc.gamesPlaying.length > 0) {
             doc.status = client.playGames(doc.gamesPlaying)
@@ -183,26 +183,28 @@ module.exports.findClient = function (userId, accountId) {
 /**
  * Get account from database
  */
-module.exports.getAccount = async function (userId, accountId, user) {
+module.exports.getAccount = async function (options) {
     let query = null;
 
-    // find by userId and accountId
-    if (userId && accountId) {
-        query = SteamAccount.findOne({ _id: accountId, userId: userId })
+    // Find by userId
+    if(options.userId && !options.accountId && !options.user){
+        query = SteamAccount.findOne({userId: options.userId})
+    
+    // Find by accountId
+    }else if(!options.userId && options.accountId && !options.user){
+        query = SteamAccount.findById(options.accountId)
     }
-    // find by userId and user
-    else if (userId && user) {
-        query = SteamAccount.findOne({ userId: userId, user: user })
+
+    // Find by user
+    else if(!options.userId && !options.accountId && options.user){
+        query = SteamAccount.findOne({user: options.user})
     }
-    // find by user
-    else if (!userId && !accountId && user) {
-        query = SteamAccount.findOne({ user: user })
-    }
-    // find by id
-    else if (!userId && accountId && !user) {
-        query = SteamAccount.findById(accountId)
-    } else {
-        return null;
+
+    // Find by userId and accountId
+    else if(options.userId && options.accountId){
+        query = SteamAccount.findOne({userId: options.userId, _id: options.accountId})
+    }else{
+        throw "Bad options in getAccount()";
     }
 
     return await query.exec();
@@ -257,6 +259,7 @@ module.exports.filterSensitiveAcc = function(account){
         forcedStatus: account.forcedStatus,
         steamid: account.steamid,
         gamesPlaying: account.gamesPlaying,
+        farmingGames: account.farmingGames,
         persona_name: account.persona_name,
         avatar: account.avatar,
         farmingData: account.farmingData,

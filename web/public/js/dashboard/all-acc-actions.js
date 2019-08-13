@@ -19,7 +19,6 @@ $(() => {
         let interval = 0;
         accountIds.forEach(accountId => {
             setTimeout(() => {
-                console.log("here")
                 $.post("/steamaccount/login", { accountId: accountId }, (doc) => {
                     goodResponse++;
                     $("#sidebar-msg").prop("hidden", false).text(`${goodResponse} accounts logged in.`).show()

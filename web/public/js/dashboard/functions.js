@@ -1,102 +1,117 @@
+
 // builds account div
 function buildAccount(account) {
-    // build idle games modal data
-    let games = account.games
-    let data_games = "";
-    let gamesDiv = ""
-    for (let j in games) {
-        let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
-        // find if game should be selected/unselected
-        let index = account.gamesPlaying.findIndex(x => x.game_id === games[j].appId)
-        let selected_unselected = ""
-        if (index > -1) { //not found
-            data_games += `${games[j].appId} `
-            selected_unselected = "selected"
-        } else {
-            selected_unselected = "unselected"
-        }
-        gamesDiv += `<img class="game-img ${selected_unselected}" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
-    }
-    data_games = data_games.trim()
-
-    // Set correct buttons
     let buttons = ""
+    let data_games = ""; // for start idle button
+    let gamesDiv = "" // game images
+    let cardsLeft = 0
+    let farmingInfo = "" // farming modal info
+    let farmingStatus = "off"
+    let inventory = "";
+    let farmingCountDownId = ""
+
+    // SET CORRECT BUTTON AND STATUS
     if (account.status === "Online" || account.status === "In-game") {
         buttons = `
-            <button type="button" class="btn btn-primary btn-sm acc-logout-btn">Logout</button>
-            <button type="button" class="btn btn-primary btn-sm acc-set-status-btn">Status</button>
-            <button type="button" class="btn btn-primary btn-sm acc-idle-game-btn">Idle</button>
-            <button type="button" class="btn btn-primary btn-sm redeem-key">Redeem Key</button>
-            <button type="button" class="btn btn-primary btn-sm acc-farming-btn">Farming</button>
-            <button type="button" class="btn btn-primary btn-sm acc-get-game-btn">Get Games</button>
-            <button type="button" class="btn btn-primary btn-sm acc-inventory-btn">Inventory</button>
-            <button type="button" class="btn btn-primary btn-sm btn-danger acc-delete-acc-btn">Delete</button>`
+              <button type="button" class="btn btn-primary btn-sm acc-logout-btn">Logout</button>
+              <button type="button" class="btn btn-primary btn-sm acc-set-status-btn">Status</button>
+              <button type="button" class="btn btn-primary btn-sm acc-idle-game-btn">Idle</button>
+              <button type="button" class="btn btn-primary btn-sm redeem-key">Redeem Key</button>
+              <button type="button" class="btn btn-primary btn-sm acc-farming-btn">Farming</button>
+              <button type="button" class="btn btn-primary btn-sm acc-get-game-btn">Get Games</button>
+              <button type="button" class="btn btn-primary btn-sm acc-inventory-btn">Inventory</button>
+              <button type="button" class="btn btn-primary btn-sm btn-danger acc-delete-acc-btn">Delete</button>`
     } else if (account.status === "Offline") {
         account.forcedStatus = "Offline"
         buttons = `
-            <button type="button" class="btn btn-primary btn-sm acc-login-btn">Login</button>
-            <button type="button" class="btn btn-primary btn-sm btn-danger acc-delete-acc-btnc">Delete</button>`
+              <button type="button" class="btn btn-primary btn-sm acc-login-btn">Login</button>
+              <button type="button" class="btn btn-primary btn-sm btn-danger acc-delete-acc-btnc">Delete</button>`
     } else if (account.status === "Reconnecting") {
         account.forcedStatus = "Reconnecting"
-        buttons = `
-            <button type="button" class="btn btn-primary btn-sm btn-danger acc-delete-acc-btn">Delete</button>`
     }
     else { // bad account
         account.forcedStatus = "Bad"
         buttons = `<button type="button" class="btn btn-primary btn-sm acc-delete-acc-btn">Delete Acc</button>`
     }
 
-    // farming modal
-    let cardsLeft = 0
-    let farmingInfo = "<div>No games to farm</div>";
-    account.farmingData.forEach((game) => {
-        cardsLeft += game.cardsRemaining;
-        farmingInfo += `<div class="game-farming-info">
-                            <div class="game-title" data-id="${game.appId}">${game.title}</div>
-                            <div class="play-time">Play time: ${game.playTime}</div>
-                            <div class="cards-remaining">Cards Remaining: ${game.cardsRemaining}</div>
-                        </div>`
-    })
-
-    // set farming next check coutdown
-    let farmingStatus = ""
-    if (account.isFarming && account.status !== "Offline") {
-        let id = setInterval(() => {
-            let diff = account.nextFarmingCheck - Date.now();
-            if (diff < 1) {
-                $(`div[data-id="${account._id}"]`).find(".farming-mode").text("Farming: updating")
-                clearInterval(id)
-                return;
+    // only execute when account is online
+    if (account.status === "Online" || account.status === "In-game") {
+        // BUILD IDLE MODAL
+        for (let j in account.games) {
+            let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${account.games[j].appId}/${account.games[j].logo}.jpg`
+            // find if game should be selected/unselected
+            let index = -1;
+            if (account.isFarming) {
+                index = account.farmingGames.findIndex(x => x.game_id === account.games[j].appId)
+            } else {
+                index = account.gamesPlaying.findIndex(x => x.game_id === account.games[j].appId)
             }
-            var date = new Date(diff);
-            var minutes = "0" + date.getMinutes();
-            var seconds = "0" + date.getSeconds();
-            var nextCheck = minutes.substr(-2) + ':' + seconds.substr(-2);
 
-            farmingStatus = `Farming: ${nextCheck}`
-            $(`div[data-id="${account._id}"]`).find(".farming-mode").text(farmingStatus)
-        }, 1000)
-    } else {
-        farmingStatus = "off"
-    }
-
-    // inventory
-    let inventory = "";
-    if (!account.inventory) {
-        inventory = "You do not have an inventory";
-    }
-    else {
-        for (let i in account.inventory) {
-            if (!account.inventory.hasOwnProperty(i)) {
-                continue;
+            let selected_unselected = ""
+            if (index > -1) { //not found
+                data_games += `${account.games[j].appId} `
+                selected_unselected = "selected"
+            } else {
+                selected_unselected = "unselected"
             }
-            let url = `https://steamcommunity-a.akamaihd.net/economy/image/${account.inventory[i].icon_url}/96fx96f`
-            inventory += `<img src="${url}" data-toggle="tooltip" data-placement="top" title="${account.inventory[i].market_name}">`
+            gamesDiv += `<img class="game-img ${selected_unselected}" data-gameId="${account.games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${account.games[j].name}">`
+        }
+        data_games = data_games.trim()
+
+
+        // BUILD FARMING MODAL
+
+        // No games to farm
+        if (account.farmingData.length == 0) {
+            farmingInfo = "<div>No games to farm</div>";
+            // there are games to farm
+        } else {
+            account.farmingData.forEach((game) => {
+                cardsLeft += game.cardsRemaining;
+                farmingInfo += `<div class="game-farming-info">
+                                <div class="game-title" data-id="${game.appId}">${game.title}</div>
+                                <div class="play-time">Play time: ${game.playTime}</div>
+                                <div class="cards-remaining">Cards Remaining: ${game.cardsRemaining}</div>
+                            </div>`
+            })
+        }
+
+        // START THE FARMING COUNTDOWN IF FARMING
+        if (account.isFarming && account.status !== "Offline") {
+            farmingCountDownId = setInterval(() => {
+                let diff = account.nextFarmingCheck - Date.now();
+                if (diff < 1) {
+                    $(`div[data-id="${account._id}"]`).find(".farming-mode").text("Farming: updating")
+                    clearInterval(id)
+                    return;
+                }
+                var date = new Date(diff);
+                var minutes = "0" + date.getMinutes();
+                var seconds = "0" + date.getSeconds();
+                var nextCheck = minutes.substr(-2) + ':' + seconds.substr(-2);
+
+                farmingStatus = `Farming: ${nextCheck}`
+                $(`div[data-id="${account._id}"]`).find(".farming-mode").text(farmingStatus)
+            }, 1000)
+        }
+
+        // BUILD INVENTORY MODAL
+        if (!account.inventory) {
+            inventory = "You do not have an inventory";
+        }
+        else {
+            for (let i in account.inventory) {
+                if (!account.inventory.hasOwnProperty(i)) {
+                    continue;
+                }
+                let url = `https://steamcommunity-a.akamaihd.net/economy/image/${account.inventory[i].icon_url}/96fx96f`
+                inventory += `<img src="${url}" data-toggle="tooltip" data-placement="top" title="${account.inventory[i].market_name}">`
+            }
         }
     }
 
     let acc = `
-        <div class="account account-${account.forcedStatus}" data-id="${account._id}" data-realstatus="${account.status}" data-farmcheck="${account.nextFarmingCheck}">
+        <div class="account account-${account.forcedStatus}" data-id="${account._id}" data-realstatus="${account.status}" data-farmcheck="${account.nextFarmingCheck}" data-isFarming="${account.isFarming}" data-farmingCountDownId="${farmingCountDownId}">
 
             <div class="nick">${account.persona_name}</div>
 
@@ -189,6 +204,7 @@ function buildAccount(account) {
 
 
 // Replaces status of existing account in dashboard
+// if force == true, then force update
 function updateAccountStatus(account) {
     // find account div
     let self = $(`.account[data-id="${account._id}"]`)
@@ -196,8 +212,15 @@ function updateAccountStatus(account) {
     let checkTimeChanged = false;
     let realStatusChanged = false;
     let forcedStatusChanged = false;
+    let isFarmingChanged = false
 
-    // account is farming
+    // check if isFarming changed.
+    let oldFarmingStatus = Boolean(self.attr("data-isFarming"));
+    if (oldFarmingStatus !== account.isFarming) {
+        isFarmingChanged = true;
+    }
+
+    // Check if farming check time changed
     if (account.isFarming) {
         let nextCheck = parseInt(self.attr("data-farmcheck"));
         // farming check time hasnt changed
@@ -218,7 +241,7 @@ function updateAccountStatus(account) {
     }
 
     // nothing changed
-    if (!checkTimeChanged && !realStatusChanged && !forcedStatusChanged) {
+    if (!checkTimeChanged && !realStatusChanged && !forcedStatusChanged && !isFarmingChanged) {
         return
     }
 

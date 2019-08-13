@@ -20,7 +20,7 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
         }
 
         // get account doc
-        doc = await this.getAccount(userId, accountId);
+        doc = await this.getAccount({ userId: userId, accountId: accountId });
         if (!doc) {
             return Promise.reject("Account not found.");
         }
@@ -35,10 +35,11 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
         return Promise.reject("No games to farm.");
     }
 
-    // Get games with cards lefts
-    doc.gamesPlaying = this.getAllGameAppIds(doc.farmingData);
+    // Get 32 games with cards lefts
+    doc.farmingGames = this.get32GameAppIds(doc.farmingData);
+
     // Play games
-    doc.status = client.playGames(doc.gamesPlaying)
+    doc.status = client.playGames(doc.farmingGames)
     // turn on farming mode
     doc.isFarming = true;
     // set nextFarmingCheck
@@ -47,6 +48,8 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
     doc = await this.saveAccount(doc);
     // set interval
     client.farmingReCheckId = setInterval(() => reCheck(), self.FARMING_RECHECK_INTERVAL);
+    // store accountId
+    client.accountId = doc._id;
 
     async function reCheck() {
         // account not logged in, stop farming algorithm
@@ -55,11 +58,18 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
             return;
         }
 
+        // Get account from Db
+        doc = await self.getAccount({ accountId: client.accountId })
+        if (!doc) {
+            clearInterval(client.farmingReCheckId);
+            throw `Did not find accountId ${client.accountId} in reCheck()`
+        }
+
         // update nextFarmingCheck
         doc.nextFarmingCheck = Date.now() + self.FARMING_RECHECK_INTERVAL
 
         // restart game idling
-        await self.restartIdling(doc.gamesPlaying, client)
+        await self.restartIdling(doc.farmingGames, client)
 
         // Get farming data
         doc.farmingData = await self.getFarmingData(client)
@@ -71,9 +81,9 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
             return;
         }
 
-        // Get games to idle
-        doc.gamesPlaying = self.getAllGameAppIds(doc.farmingData);
-        client.playGames(doc.gamesPlaying);
+        // Get 32 games to farm
+        doc.farmingGames = self.get32GameAppIds(doc.farmingData);
+        client.playGames(doc.farmingGames);
         self.saveAccount(doc);
     }
 
@@ -115,7 +125,7 @@ module.exports.stopFarming = async function (userId, accountId, client, doc) {
         }
 
         // get account doc
-        doc = await this.getAccount(userId, accountId);
+        doc = await this.getAccount({ userId: userId, accountId: accountId })
         if (!doc) {
             return Promise.reject("Account not found.");
         }
@@ -126,14 +136,15 @@ module.exports.stopFarming = async function (userId, accountId, client, doc) {
     }
 
     clearInterval(client.farmingReCheckId);
-    doc.status = client.playGames([])
-    doc.gamesPlaying = [];
+    // Idle gamesPlaying
+    doc.status = client.playGames(doc.gamesPlaying)
+    doc.nextFarmingCheck = 0;
+    doc.farmingGames = [];
     doc.isFarming = false;
     doc = await this.saveAccount(doc);
     doc = this.filterSensitiveAcc(doc);
     return Promise.resolve(doc)
 }
-
 
 /**
  * Restarts idling games with a 5 second delay
@@ -151,12 +162,16 @@ module.exports.restartIdling = async function (games, client) {
 }
 
 /**
- * Returns all game appIds from farmingData 
+ * Returns 32 appIds from farmingData
+ * 32 is the allowed playing games by steam
  */
-module.exports.getAllGameAppIds = function (farmingData) {
+module.exports.get32GameAppIds = function (farmingData) {
     let appId = [];
-    for (let i in farmingData) {
+    for (let i = 0; i < farmingData.length; i++) {
         appId.push({ game_id: farmingData[i].appId })
+        if(i == 31){
+            break;
+        }
     }
     return appId;
 }

@@ -219,6 +219,8 @@ $(() => {
         let accountId = self.attr("data-id");
         $.post('/steamaccount/stopfarming', { accountId: accountId }, doc => {
             self.find(".farming-modal").modal("toggle");
+            let intervalId = self.attr("data-farmingCountDownId")
+            clearInterval(intervalId)
             setTimeout(() => updateAccountStatus(doc), 300);
         }).fail((xhr, status, err) => {
             self.find(".farming-errMsg").text(xhr.responseText).prop("hidden", false);
