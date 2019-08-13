@@ -56,6 +56,17 @@ module.exports = accountHandler;
 
 })();
 
+// Certificate
+const privateKey = fs.readFileSync('./ssl/private.key', 'utf8');
+const certificate = fs.readFileSync('./ssl/certificate.crt', 'utf8');
+const ca = fs.readFileSync('./ssl/ca_bundle.crt', 'utf8');
+
+const credentials = {
+    key: privateKey,
+    cert: certificate,
+    ca: ca
+};
+
 // Init express
 const app = express();
 
