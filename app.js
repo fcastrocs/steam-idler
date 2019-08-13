@@ -4,10 +4,7 @@ process.env.HTTP_PORT = 8080,
 process.env.HTTPS_PORT = 8443,
 process.env.CRYPTO_KEY = "365f93977ea8a3fc2e86268f4f7596d0a96dc37f3f9f860b36059b114d70ece4"
 
-
-const fs = require('fs');
 const http = require('http');
-const https = require('https');
 const express = require('express');
 const exphbs = require('express-handlebars');
 const bodyParser = require("body-parser");
@@ -63,17 +60,6 @@ module.exports = accountHandler;
 
 })();
 
-// Certificate
-const privateKey = fs.readFileSync('./ssl/private.key', 'utf8');
-const certificate = fs.readFileSync('./ssl/certificate.crt', 'utf8');
-const ca = fs.readFileSync('./ssl/ca_bundle.crt', 'utf8');
-
-const credentials = {
-    key: privateKey,
-    cert: certificate,
-    ca: ca
-};
-
 // Init express
 const app = express();
 
@@ -120,12 +106,7 @@ app.use('/', require('./router/steamaccount'))
 //Start listening on port
 // Starting both http & https servers
 const httpServer = http.createServer(app);
-const httpsServer = https.createServer(credentials, app);
 
 httpServer.listen(process.env.PORT, () => {
 	console.log('HTTP Server running on port 8080');
-});
-
-httpsServer.listen(443, () => {
-	console.log('HTTPS Server running on port 8443');
 });
