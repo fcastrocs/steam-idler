@@ -1,9 +1,6 @@
-process.env.MOGODB_URI = "mongodb://machi:zbQzd2G7udJ!f8w@ds033056.mlab.com:33056/heroku_z7f42pmp"
-process.env.MONGOSTORE_SECRET = "hi",
-process.env.CRYPTO_KEY = "365f93977ea8a3fc2e86268f4f7596d0a96dc37f3f9f860b36059b114d70ece4"
-
-
+const fs = require('fs');
 const http = require('http');
+const https = require('https');
 const express = require('express');
 const exphbs = require('express-handlebars');
 const bodyParser = require("body-parser");
@@ -51,13 +48,24 @@ module.exports = accountHandler;
     }
 
     //Initialize steam accounts
-    try {
-        await accountHandler.init();
-    } catch (error) {
-        console.log(error)
-    }
+    // try {
+    //     await accountHandler.init();
+    // } catch (error) {
+    //     console.log(error)
+    // }
 
 })();
+
+// Certificate
+const privateKey = fs.readFileSync('./ssl/private.key', 'utf8');
+const certificate = fs.readFileSync('./ssl/certificate.crt', 'utf8');
+const ca = fs.readFileSync('./ssl/ca_bundle.crt', 'utf8');
+
+const credentials = {
+    key: privateKey,
+    cert: certificate,
+    ca: ca
+};
 
 // Init express
 const app = express();
@@ -103,7 +111,12 @@ app.use('/', require('./router/steamaccount'))
 //Start listening on port
 // Starting both http & https servers
 const httpServer = http.createServer(app);
+const httpsServer = https.createServer(credentials, app);
 
-httpServer.listen(process.env.PORT, () => {
+httpServer.listen(process.env.HTTP_PORT, () => {
 	console.log('HTTP Server running on port 8080');
+});
+
+httpsServer.listen(process.env.HTTPS_PORT, () => {
+	console.log('HTTPS Server running on port 8443');
 });
