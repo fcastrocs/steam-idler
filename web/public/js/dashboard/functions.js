@@ -15,7 +15,7 @@ function buildAccount(account) {
         buttons = `
               <button type="button" class="btn btn-primary btn-sm acc-logout-btn">Logout</button>
               <button type="button" class="btn btn-primary btn-sm acc-set-status-btn">Status</button>
-              <button type="button" class="btn btn-primary btn-sm acc-idle-game-btn">Idle</button>
+              <button type="button" class="btn btn-primary btn-sm acc-idle-game-btn">Idle Games</button>
               <button type="button" class="btn btn-primary btn-sm redeem-key">Redeem Key</button>
               <button type="button" class="btn btn-primary btn-sm acc-farming-btn">Farming</button>
               <button type="button" class="btn btn-primary btn-sm acc-get-game-btn">Get Games</button>
@@ -126,17 +126,14 @@ function buildAccount(account) {
                 <div class="farming-mode">Farming: ${farmingStatus}</div>
             </div>
 
-            <div class="account-buttons">
-                ${buttons}
-            </div>
-
-            <div class="d-flex justify-content-center">
+            <div class="buttons-box">
                 <div class="spinner-border text-primary acc-spinner" role="status" hidden></div>
+                <div id="acc-buttons">${buttons}</div>
             </div>
 
             <div class="modal fade idle-modal" tabindex="-1" role="dialog" aria-hidden="true">
-                <div class="modal-dialog games-dialog" role="document">
-                    <div class="modal-content games-content">
+                <div class="modal-dialog games-dialog">
+                    <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title">Pick Games To Idle</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -145,7 +142,9 @@ function buildAccount(account) {
                         </div>
                         <div class="modal-body game-body">
                             <div class="alert alert-danger idle-errMsg" role="alert" hidden></div>
-                            ${gamesDiv}
+                            <div class="games-box">
+                                ${gamesDiv}
+                            </div>
                             <div class="modal-buttons">
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                 <button type="button" class="btn btn-danger stop-idle-btn">Stop Idle</button>
@@ -216,6 +215,11 @@ function updateAccountStatus(account) {
 
     // check if isFarming changed.
     let oldFarmingStatus = Boolean(self.attr("data-isFarming"));
+    if(oldFarmingStatus === "true"){
+        oldFarmingStatus = true;
+    }else{
+        oldFarmingStatus = false;
+    }
     if (oldFarmingStatus !== account.isFarming) {
         isFarmingChanged = true;
     }

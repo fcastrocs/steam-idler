@@ -1,12 +1,81 @@
 body{
-    background: linear-gradient(to bottom, rgb(3, 23, 39) 0%, rgb(0, 54, 85) 100%);
-    margin: 0;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
     font-family: "Motiva Sans", Sans-serif;
-    font-weight: normal;
     color:#EFEFEF;
     font-size: 14px;
+    height: 100%;
+}
+
+#body{
+    position: absolute;
+    z-index: 2;
+    top: 50px;
+    height: calc(100% - 80px);
+    width: 100%;
+}
+
+#overlay{
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    min-height: 100vh;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.274);
+}
+
+#background-image{
+    background-image: url("../images/background.png");
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    background-attachment: fixed;
+    position: fixed;
+    top: 0;
+    z-index: 0;
+    min-height: 100vh;
+    width: 100%;
+}
+
+#header{
+    position: fixed;
+    z-index: 3;
+    top: 0;
+}
+
+#header, #footer{
+    height: 50px;
+    width: 100%;
+    background-color: rgba(19, 65, 102, 0.8);
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    padding: 0 10px;
+}
+
+.header-btn{
+    background: linear-gradient(0deg, rgb(0, 30, 53) 0%,rgb(21, 90, 146) 100%);
+    color: rgb(163, 192, 255);
+    margin: 0 2.5px;
+    border: solid 1px rgb(0, 153, 255);
+}
+
+.header-btn:hover{
+    background: linear-gradient(0deg, rgb(21, 90, 146) 0%,rgb(0, 30, 53) 100%);
+    color: white;
+}
+
+#logo{
+    margin-right: 5px;
+}
+
+#footer{
+    position: fixed;
+    z-index: 3;
+    bottom: 0;
+    height: 30px;
+}
+
+#copyright{
+    margin-left: auto;
 }
 
 a{
@@ -14,46 +83,56 @@ a{
     color: rgb(163, 192, 255); 
 }
 
-
-/*  MODAL CSS */
-
-.modal{
-    background-color: rgba(12, 65, 109, 0.089);
+a:hover{
+    text-decoration: none;
+    color: white;
 }
 
-.modal-header{
-    padding: 5px;
+h1, h2, h3, h4, h5{
+    margin: 0
+}
+
+form{
+    margin: 0;
+}
+
+
+/* MODALS */
+
+.modal{
+    background-color: rgba(0, 0, 0, 0.8);
+    top: 35px;
+}
+
+.modal-backdrop{
+    z-index: -1;
 }
 
 .modal-content{
-    margin-top: 29px !important; 
-    background: rgba(14, 30, 51, 1);
-    border: solid 4px rgb(74, 106, 167);
-    border-radius: 10px;
-    padding: 10px !important;
-}
-
-.modal-buttons{
-    margin-top: 10px;
-    float:right;
-}
-
-.modal-submit{
-    width: 115px;
-}
-
-input{
-    background: rgba(74, 106, 167, .8) !important;
-    color: white !important;
-    letter-spacing: 2px;
+    background-color: rgba(62, 122, 172, 0.562);
+    border-radius: 5px;
+    border: solid 1px rgb(0, 153, 255);
+    margin-bottom: 200px !important;
 }
 
 .input-group-text{
-    width: auto !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 125px;
 }
 
-/*  END MODAL CSS */
+.modal-buttons{
+    float: right;
+    margin-top: 10px;
+}
 
-.spinner-border{
-    margin: 10px 0px;
+.modal-submit{
+    width: 130px;
+}
+
+@media only screen and (max-width: 800px) {
+    .modal-content{
+        width: 100%;
+    }
 }

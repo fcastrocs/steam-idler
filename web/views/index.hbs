@@ -1,0 +1,212 @@
+<link rel="stylesheet" type="text/css" href="../static/css/index.css">
+<script src="{{path}}/static/js/index.js"></script>
+
+
+<div id="body">
+    <div id="info">
+        <h1>Steam on the web</h1>
+        <div id="features">
+            <div class="feature-col">
+                <div class="feature-item">
+                    Idle any game in your library
+                </div>
+                <div class="feature-item">
+                    Farm all your steam cards
+                </div>
+                <div class="feature-item">
+                    Activate any free game
+                </div>
+                <div class="feature-item">
+                    Change steam account nick
+                </div>
+            </div>
+
+            <div class="feature-col">
+                <div class="feature-item">
+                    Idle up to 32 games simultaneously
+                </div>
+                <div class="feature-item">
+                    Redeem a CDKEY
+                </div>
+                <div class="feature-item">
+                    100% VAC safe
+                </div>
+                <div class="feature-item">
+                    Change status (Invisible, Online, Away, Busy)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN -->
+    <form id="login-form">
+        <p>Login</p>
+        <div class="text-success">{{{message}}}</div>
+        <div class="alert alert-danger" hidden></div>
+        <div class="form-group" id="form-account">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Username</span>
+                </div>
+                <input type="text" name="username" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="form-group" id="form-account">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Password</span>
+                </div>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+        </div>
+        <div class="float-right">
+            <button type="button" class="btn btn-secondary" id="recover-btn">Recover</button>
+            <button type="submit" class="btn btn-primary" id="signin-button">Sign in</button>
+        </div>
+    </form>
+
+
+    <!-- REGISTER -->
+    <form id="register-form">
+        <p>Register</p>
+        <div class="alert alert-success" hidden></div>
+        <div class="alert alert-danger" hidden></div>
+        <div id="register-inputs-box">
+            <div class="form-group" id="form-account">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Username</span>
+                    </div>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group" id="form-account">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Password</span>
+                    </div>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group" id="form-account">
+                Retype your password
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Password</span>
+                    </div>
+                    <input type="password" name="password2" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group" id="form-account">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Email</span>
+                    </div>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group" id="form-account">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Invite Code</span>
+                    </div>
+                    <input type="text" name="invitecode" class="form-control" value="{{{invite}}}" required>
+                </div>
+            </div>
+
+            <div class="form-group" id="form-account">
+                <div class="input-group">
+                    <div class="text-warning">
+                        For security reasons, you will not be able to change this URL.
+                        <a href="https://steamcommunity.com/id/me/tradeoffers/privacy" target="_blank"
+                            class="text-success">
+                            Get it here</a>
+                    </div>
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Trade URL</span>
+                    </div>
+                    <input type="text" name="tradeurl" class="form-control" required>
+                </div>
+            </div>
+            <div class="float-right">
+                <button type="submit" class="btn btn-primary" id="register-button">Register</button>
+            </div>
+        </div>
+    </form>
+
+
+
+    <!-- RECOVER ACCOUNT -->
+    <form id="recover-form">
+        <p>Recover account</p>
+        <div class="alert alert-success" hidden></div>
+        <div class="alert alert-danger" hidden></div>
+        <div id="recover-form-box">
+            <div class="form-group" id="form-account">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Email</span>
+                    </div>
+                    <input type="email" name="recoverEmail" class="form-control" required>
+                </div>
+            </div>
+            <div class="float-right">
+                <button type="submit" class="btn btn-primary float-right" id="recover-button">Recover</button>
+            </div>
+        </div>
+    </form>
+
+
+
+    <!-- CHANGE PASSWORD -->
+    <form id="changepass-form">
+        <p>Recover account</p>
+        <div class="alert alert-danger" hidden></div>
+        <div class="form-group" id="form-account">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Username</span>
+                </div>
+                <input type="text" name="recoverUsername" class="form-control" value="{{{recoverUser}}}" required>
+            </div>
+        </div>
+
+        <div class="form-group" id="form-account">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Password</span>
+                </div>
+                <input type="password" name="recoverPassword" class="form-control" required>
+            </div>
+        </div>
+
+
+        <div class="form-group" id="form-account">
+            <div>Retype password</div>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Password</span>
+                </div>
+                <input type="password" name="recoverPassword2" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="form-group" id="form-account">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Token</span>
+                </div>
+                <input type="text" name="recoverToken" class="form-control" value="{{{recoverToken}}}" required>
+            </div>
+        </div>
+
+        <div class="float-right">
+            <button type="submit" class="btn btn-primary" id="changepass-button">Change password</button>
+        </div>
+    </form>
+</div>

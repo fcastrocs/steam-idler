@@ -1,48 +1,32 @@
 
 
-#motto{
-    margin: 0 auto;
-    text-align: center
-}
-
-#login-form, #register-form, #change-password, #recover-form{
-    width: 400px;
-    padding: 20px;
-    background: linear-gradient(0deg,  rgb(1, 45, 82), rgb(2, 75, 134) 100%);
-    margin:40px auto;
-    overflow: auto;
-    box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.8);
-}
-
-.input-group-text{
-    width: 115px !important;
-}
-
 #signin-button, #register-button, #recover-button, #changepass-button{
     width: 150px;
 }
 
-#features{
-    width: 800px;
-    display: flex;
-    flex-direction: row;
-    margin: 0 auto;
-    justify-content: space-evenly;
-}
 
-.feature-col{
-    width: 350px;
-}
 
-.feature-item{
-    text-align: center;
-    margin: 15px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 22px;
-    height: 80px;
-    background: linear-gradient(75deg,  rgb(67, 53, 110), rgb(30, 1, 110) 100%);
-    border: solid 1px blue;
-    box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.8);
+
+@media (max-width: 500px) {
+    #signin-button, #register-button, #recover-button, #changepass-button{ 
+        width: 100%;
+    }
+
+    #features{
+        width: 100%;
+    }
+
+    .feature-col{
+        width: 50%;
+    }
+
+    .feature-item{
+        height: 100px;
+        padding: 3px;
+        font-size: 17px;
+    }
+
+    #signin-button, #register-button, #recover-button, #changepass-button{
+        width: 160px;
+    }
 }

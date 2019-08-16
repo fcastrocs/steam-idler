@@ -4,6 +4,7 @@ const Steam = require('./index')
 const EventEmitter = require('events').EventEmitter;
 const GetProxy = require('../util/proxy').GetProxy;
 const GetSteamCM = require('../util/steamcm').GetSteamCM
+const RemoveProxy = require("../util/proxy").RemoveProxy 
 const Crypto = require('crypto');
 const SteamTotp = require('steam-totp');
 const Request = require("request-promise-native")
@@ -28,10 +29,13 @@ class Client extends EventEmitter {
 
         this.STEAMCOMMUNITY_TIMEOUT = 2000
         this.STEAMCOMMUNITY_RETRY_DELAY = 1000
-        this.CONNECTION_TIMEOUT = 5000
-        this.RECONNECT_DELAY = 1000
+        this.CONNECTION_TIMEOUT = 5 // in seconds
+        this.CONNECT_DELAY = 150 // maximum delay in seconds
 
-        this.connect();
+
+        let self = this;
+        let timeout = Math.floor(Math.random() * this.CONNECT_DELAY)
+        setTimeout(() => self.connect(), timeout * 1000);
     }
 
     /************************************************************************
@@ -371,6 +375,9 @@ class Client extends EventEmitter {
             account_name: this.account.user,
             password: this.account.pass,
             supports_rate_limit_response: true,
+            client_os_type: 16,
+            ping_ms_from_cell_search: 4 + Math.floor(Math.random() * 60)
+
         }
 
         // Login with sentry file
@@ -538,14 +545,14 @@ class Client extends EventEmitter {
 
         // Get a SteamCM
         let steamcm = await GetSteamCM();
-        let proxy = await GetProxy();
+        this.proxy = await GetProxy();
 
         // connection options
         this.options = {
-            timeout: this.CONNECTION_TIMEOUT, //timeout for lost connection, bad proxy
+            timeout: this.CONNECTION_TIMEOUT * 1000, //timeout for lost connection, bad proxy
             proxy: {
-                ipaddress: proxy.ip,
-                port: proxy.port,
+                ipaddress: this.proxy.ip,
+                port: this.proxy.port,
                 type: 4
             },
             destination: {
@@ -555,11 +562,10 @@ class Client extends EventEmitter {
         }
 
         // Create the steam client, and connect to steam
-        self.client = new Steam(self.options);
+        this.client = new Steam(self.options);
 
         // SUCCESSFUL CONNECTION
         self.client.once('connected', () => {
-            self.proxy = proxy;
             self.login();
         })
 
@@ -580,8 +586,12 @@ class Client extends EventEmitter {
     // Reconnect due to bad proxy.
     RenewConnection() {
         this.Disconnect();
+        // Remove the proxy
+        RemoveProxy(this.proxy);
+        // Reconnect
         let self = this;
-        setTimeout(() => self.connect(), self.RECONNECT_DELAY);
+        let timeout = Math.floor(Math.random() * this.CONNECT_DELAY)
+        setTimeout(() => self.connect(), timeout * 1000);
     }
 
     Disconnect() {

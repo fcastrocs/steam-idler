@@ -10,32 +10,43 @@ const SteamAccount = require('../models/steam-accounts')
  * Restarts idling/farming process
  * Returns a promise with account
  */
-module.exports.loginAccount = async function (userId, accountId) {
+module.exports.loginAccount = async function (userId, accountId, options) {
     let self = this;
     return new Promise(async function (resolve, reject) {
 
-        let doc = await self.getAccount({userId: userId, accountId: accountId})
-        // account not found
-        if (!doc) {
-            return reject("Account not found.")
+        let doc = null
+        if (options && options.account) {
+            doc = options.account
         }
 
-        let client = self.isAccountOnline(userId, accountId);
-        if (client) {
-            return reject("Account is already online.");
+        if (!options || !options.dontGetAccount) {
+            doc = await self.getAccount({ userId: userId, accountId: accountId })
+            // account not found
+            if (!doc) {
+                return reject("Account not found.")
+            }
+        }
+        if (!options || !options.skipOnlineCheck) {
+            let client = self.isAccountOnline(userId, accountId);
+            if (client) {
+                return reject("Account is already online.");
+            }
         }
 
         try {
-            let options = self.setupLoginOptions(doc);
-            let client = await self.steamConnect(options);
-            self.saveToHandler(userId, accountId, client);
+            let account = self.setupLoginOptions(doc);
+            let client = await self.steamConnect(account);
+
+            if (!options || !options.skipHandlerSave) {
+                self.saveToHandler(userId, accountId, client);
+            }
 
             //update account properties after login
-            doc.games = self.addGames(options.games, doc.games);
-            doc.persona_name = options.persona_name;
-            doc.avatar = options.avatar;
-            doc.status = options.status;
-            doc.inventory = options.inventory;
+            doc.games = self.addGames(account.games, doc.games);
+            doc.persona_name = account.persona_name;
+            doc.avatar = account.avatar;
+            doc.status = account.status;
+            doc.inventory = account.inventory;
 
             // Restart farming or idling
             doc = await self.farmingIdlingRestart(client, doc)
@@ -58,7 +69,7 @@ module.exports.logoutAccount = async function (userId, accountId) {
     let self = this;
     return new Promise(async function (resolve, reject) {
         //Find account in DB
-        let doc = await self.getAccount({userId: userId, accountId: accountId})
+        let doc = await self.getAccount({ userId: userId, accountId: accountId })
         // account not found
         if (!doc) {
             return reject("Account not found.")
@@ -100,7 +111,7 @@ module.exports.changeNick = async function (userId, accountId, name) {
         return Promise.reject("Account is not online.");
     }
 
-    let account = await this.getAccount({userId: userId, accountId: accountId})
+    let account = await this.getAccount({ userId: userId, accountId: accountId })
     if (!account) {
         return Promise.reject("Account not found.")
     }
@@ -126,7 +137,7 @@ module.exports.playGames = async function (userId, accountId, games) {
         }
 
         //save playing games to account and force correct status
-        let account = await self.getAccount({userId: userId, accountId: accountId})
+        let account = await self.getAccount({ userId: userId, accountId: accountId })
         if (!account) {
             return Promise.reject("Account not found.")
         }
@@ -212,7 +223,7 @@ module.exports.steamConnect = async function (account) {
 
         // connection has been lost after being logged in
         client.on("connection-lost", async () => {
-            let doc = await self.getAccount({user: account.user});
+            let doc = await self.getAccount({ user: account.user });
             if (!doc) {
                 return;
             }
@@ -226,7 +237,7 @@ module.exports.steamConnect = async function (account) {
         // connection has been regained after being logged in
         client.on("connection-gained", async () => {
             //find acc by user
-            let doc = await self.getAccount({user: account.user});
+            let doc = await self.getAccount({ user: account.user });
             if (!doc) {
                 return;
             }
@@ -245,7 +256,7 @@ module.exports.steamConnect = async function (account) {
  */
 module.exports.deleteAccount = async function (userId, accountId) {
     //Find account in DB
-    let doc = await this.getAccount({userId: userId, accountId: accountId})
+    let doc = await this.getAccount({ userId: userId, accountId: accountId })
     // account not found
     if (!doc) {
         return Promise.reject("Account not found.")
@@ -273,7 +284,7 @@ module.exports.addAccount = async function (userId, account) {
     let self = this;
     return new Promise(async function (resolve, reject) {
         // Find account in DB
-        let doc = await self.getAccount({user: account.user});
+        let doc = await self.getAccount({ user: account.user });
         if (doc) {
             return reject("Account already in DB.");
         }
@@ -331,7 +342,7 @@ module.exports.activateFreeGame = async function (userId, accountId, appIds) {
     }
 
     // find account in db
-    let acc = await this.getAccount({userId: userId, accountId: accountId});
+    let acc = await this.getAccount({ userId: userId, accountId: accountId });
     if (!acc) {
         return Promise.reject("Account not found.")
     }
@@ -360,7 +371,7 @@ module.exports.redeemKey = async function (userId, accountId, cdkey) {
     }
 
     //find account in db
-    let acc = await this.getAccount({userId: userId, accountId: accountId});
+    let acc = await this.getAccount({ userId: userId, accountId: accountId });
     if (!acc) {
         return Promise.reject("Account not found.")
     }
@@ -388,7 +399,7 @@ module.exports.setStatus = async function (userId, accountId, status) {
     }
 
     // Find account in db-
-    let doc = await this.getAccount({userId: userId, accountId: accountId});
+    let doc = await this.getAccount({ userId: userId, accountId: accountId });
     if (!doc) {
         return Promise.reject("Account not found.")
     }

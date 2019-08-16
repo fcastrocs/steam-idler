@@ -5,7 +5,6 @@ const SocksClient = require('socks').SocksClient;
 const SteamCrypto = require('@doctormckay/steam-crypto');
 
 class Connection extends EventEmitter {
-
   constructor(options) {
     super();
     this.MAGIC = 'VT01';
@@ -22,29 +21,24 @@ class Connection extends EventEmitter {
         self.socket.setTimeout(options.timeout);
         // This will take care of any other errors
         self.socket.once('timeout', err => {
-          self.DestroyConnection();
           self.emit("error", "socket timeout")
         });
 
-        // Connection ended before login
-        self.socket.once("end", err => {
-          self.DestroyConnection();
-          self.emit("error", "socket ended");
+        // // Any errors with the connection
+        self.socket.on("error", err => {
+          console.log('CONNECTION ERROR: ' + err)
         })
 
-        // Any errors with the connection
-        self.socket.once("error", err => {
-          self.DestroyConnection();
-          self.emit("error", "socket error");
-        })
-
-        // socket had a transmission error
-        self.socket.once("close", err => {
-          if (err) {
-            self.DestroyConnection();
-            self.emit("error", "socket closed with error");
-          }
+        //socket had a transmission error
+        self.socket.on("close", () => {
+          self.emit("error", "socket closed");
         });
+
+        // Connection ended before login
+        // self.socket.on("end", ()=> {
+        //   //self.DestroyConnection();
+        //   //self.emit("error", "socket ended");
+        // })
 
         self.socket.on('readable', err => {
           self.ReadPacket();
@@ -57,55 +51,31 @@ class Connection extends EventEmitter {
       });
   }
 
-  // Destroy the connection and remove listeners
-  DestroyConnection() {
-    if (!this.socket) {
-      return;
-    }
-    this.socket.removeAllListeners();
-    this.socket.destroy();
-  }
-
   // Sends data to steam
   Send(data) {
-    if (!this.socket) {
-      return;
-    }
-
-    // encrypt
     if (this.sessionKey) {
-      if (this.useHmac) {
-        data = SteamCrypto.symmetricEncryptWithHmacIv(data, this.sessionKey);
-      } else {
-        data = SteamCrypto.symmetricEncrypt(data, this.sessionKey);
-      }
+      data = SteamCrypto.symmetricEncryptWithHmacIv(data, this.sessionKey);
     }
 
-    var buffer = new Buffer.alloc(4 + 4 + data.length);
-    buffer.writeUInt32LE(data.length, 0);
-    buffer.write(this.MAGIC, 4);
-    data.copy(buffer, 8);
-
-    this.socket.write(buffer);
+    let buf = Buffer.alloc(4 + 4 + data.length);
+    buf.writeUInt32LE(data.length, 0);
+    buf.write(this.MAGIC, 4);
+    data.copy(buf, 8);
+    this.socket.write(buf);
   };
 
   // Read packet from steam
   ReadPacket() {
-    if (!this.socket) {
-      return;
-    }
-
     if (!this._packetLen) {
+      // We are not in the middle of a message, so the next thing on the wire should be a header
       var header = this.socket.read(8);
       if (!header) {
-        return;
+        return; // maybe we should tear down the connection here
       }
 
       this._packetLen = header.readUInt32LE(0);
       if (header.slice(4).toString('ascii') != this.MAGIC) {
-        console.log("Connection Error: Bad magic")
-        this.emit('error', new Error('Bad magic'));
-        this.end();
+        this.emit('error', 'CONNECTION OUT OF SYNC');
         return;
       }
     }
@@ -118,14 +88,14 @@ class Connection extends EventEmitter {
     }
 
     delete this._packetLen;
+    this._packetLen = null;
 
     // decrypt
     if (this.sessionKey) {
       try {
         packet = SteamCrypto.symmetricDecrypt(packet, this.sessionKey, this.useHmac);
       } catch (ex) {
-        console.log("ENCRYPTION ERROR")
-        this.emit('encryptionError', ex);
+        this.emit('error', "ENCRYPTION ERROR");
         return;
       }
     }
@@ -134,6 +104,12 @@ class Connection extends EventEmitter {
     // keep reading until there's nothing left
     this.ReadPacket();
   };
+
+  // Destroy the connection and remove listeners
+  DestroyConnection() {
+    this.socket.removeAllListeners();
+    this.socket.destroy();
+  }
 
 }
 

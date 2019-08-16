@@ -11,7 +11,7 @@ $(() => {
             count = index;
             $(this).show();
         })
-        $("#current-filter-txt").text(`Showing All > ${count + 1} accounts`)
+        $("#current-filter-txt").text(`All > ${count + 1} accs`)
     })
 
     // SHOW ONLINE
@@ -30,7 +30,7 @@ $(() => {
                     $(this).show();
                 }
             })
-            $("#current-filter-txt").text(`Showing Online > ${count} accounts`)
+            $("#current-filter-txt").text(`Online > ${count} accs`)
         }
     })
 
@@ -51,7 +51,7 @@ $(() => {
                     $(this).show();
                 }
             })
-            $("#current-filter-txt").text(`Showing Offline > ${count} accounts`)
+            $("#current-filter-txt").text(`Offline > ${count} accs`)
         }
     })
 
@@ -71,7 +71,7 @@ $(() => {
                     $(this).show();
                 }
             })
-            $("#current-filter-txt").text(`Showing Reconnecting > ${count} accounts`)
+            $("#current-filter-txt").text(`Reconnecting > ${count} accs`)
         }
     })
 
@@ -91,7 +91,7 @@ $(() => {
                     $(this).show();
                 }
             })
-            $("#current-filter-txt").text(`Showing Bad > ${count} accounts`)
+            $("#current-filter-txt").text(`Bad > ${count} accs`)
         }
     })
 
@@ -111,7 +111,7 @@ $(() => {
                     $(this).hide();
                 }
             })
-            $("#current-filter-txt").text(`Showing In-Game > ${count} accounts`)
+            $("#current-filter-txt").text(`In-Game > ${count} accs`)
         }
     })
 
@@ -136,7 +136,7 @@ $(() => {
                     }
                 }
             })
-            $("#current-filter-txt").text(`Showing Not In-Game > ${count} accounts`)
+            $("#current-filter-txt").text(`Not In-Game > ${count} accs`)
         }
     })
 
@@ -156,7 +156,7 @@ $(() => {
                     $(this).hide(0)
                 }
             })
-            $("#current-filter-txt").text(`Showing Farming > ${count} accounts`)
+            $("#current-filter-txt").text(`Farming > ${count} accs`)
         }
     })
 
@@ -176,7 +176,7 @@ $(() => {
                     $(this).hide(0)
                 }
             })
-            $("#current-filter-txt").text(`Showing Farmable > ${count} accounts`)
+            $("#current-filter-txt").text(`Farmable > ${count} accs`)
         }
     })
 

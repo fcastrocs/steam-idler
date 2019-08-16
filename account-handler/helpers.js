@@ -13,7 +13,7 @@ module.exports.farmingIdlingRestart = async function (client, doc) {
     // Restart farming 
     if (doc.isFarming) {
         doc = await this.startFarming(null, null, client, doc);
-    // Restart idling
+        // Restart idling
     } else {
         if (doc.gamesPlaying.length > 0) {
             doc.status = client.playGames(doc.gamesPlaying)
@@ -120,7 +120,7 @@ module.exports.saveToHandler = async function (userId, accountId, client) {
     let handler = await query.exec();
 
     // handler already in DB
-    if(handler){
+    if (handler) {
         return;
     }
 
@@ -147,7 +147,7 @@ module.exports.removeFromHandler = async function (userId, accountId) {
     // remove from db handler
     let handler = await SteamAccHandler.findOne({ userId: userId, accountId, accountId })
     // no handler found
-    if(!handler){
+    if (!handler) {
         return
     }
 
@@ -187,23 +187,23 @@ module.exports.getAccount = async function (options) {
     let query = null;
 
     // Find by userId
-    if(options.userId && !options.accountId && !options.user){
-        query = SteamAccount.findOne({userId: options.userId})
-    
-    // Find by accountId
-    }else if(!options.userId && options.accountId && !options.user){
+    if (options.userId && !options.accountId && !options.user) {
+        query = SteamAccount.findOne({ userId: options.userId })
+
+        // Find by accountId
+    } else if (!options.userId && options.accountId && !options.user) {
         query = SteamAccount.findById(options.accountId)
     }
 
     // Find by user
-    else if(!options.userId && !options.accountId && options.user){
-        query = SteamAccount.findOne({user: options.user})
+    else if (!options.userId && !options.accountId && options.user) {
+        query = SteamAccount.findOne({ user: options.user })
     }
 
     // Find by userId and accountId
-    else if(options.userId && options.accountId){
-        query = SteamAccount.findOne({userId: options.userId, _id: options.accountId})
-    }else{
+    else if (options.userId && options.accountId) {
+        query = SteamAccount.findOne({ userId: options.userId, _id: options.accountId })
+    } else {
         throw "Bad options in getAccount()";
     }
 
@@ -215,11 +215,16 @@ module.exports.getAccount = async function (options) {
  * userId (optinal) 
  * Returns all accounts or all accounts for a user
  */
-module.exports.getAllAccounts = async function (userId) {
+module.exports.getAllAccounts = async function (userId, options) {
     let query = {}
-    if(userId){
-        query = SteamAccount.find({userId: userId}).select(["-pass", "-shared_secret", "-sentry"])
-    }else{
+    if (userId) {
+        // Don't filter account fields
+        if (options && options.dontFilter) {
+            query = SteamAccount.find({ userId: userId })
+        } else {
+            query = SteamAccount.find({ userId: userId }).select(["-pass", "-shared_secret", "-sentry"])
+        }
+    } else {
         query = SteamAccount.find({})
     }
     return await query.exec();
@@ -251,7 +256,7 @@ module.exports.saveAccount = function (account) {
 }
 
 // Remove sensitive data from acc
-module.exports.filterSensitiveAcc = function(account){
+module.exports.filterSensitiveAcc = function (account) {
     return saveSada = {
         _id: account._id,
         games: account.games,

@@ -3,7 +3,8 @@ const Proxy = require('../models/proxy');
 
 // Returns proxy list from proxyscrape.com
 async function GetProxies() {
-    let url = `https://api.proxyscrape.com/?request=getproxies&proxytype=socks4&timeout=1000&country=all`
+    //let url = `https://api.proxyscrape.com/?request=getproxies&proxytype=socks4&timeout=200&country=all`
+    let url = "https://api.proxyscrape.com/?request=getproxies&proxytype=socks4&timeout=500&country=UA"
     let proxyList = null;
     try {
         let res = await request.get(url);
@@ -35,27 +36,28 @@ async function GetAndSaveProxies() {
         try {
             let proxiesArr = await GetProxies();
 
-            Proxy.deleteMany({}, () => {
-                let proxies = []
-                //Save to database
-                for (let i = 0; i < proxiesArr.length; i++) {
-                    let proxySplit = proxiesArr[i].split(":");
-                    proxySplit[1] = parseInt(proxySplit[1]);//cast port to int
+            let proxies = []
+            //Save to database
+            for (let i = 0; i < proxiesArr.length; i++) {
+                let proxySplit = proxiesArr[i].split(":");
+                proxySplit[1] = parseInt(proxySplit[1]);//cast port to int
 
-                    let proxy = new Proxy({
-                        ip: proxySplit[0],
-                        port: proxySplit[1]
-                    });
-                    proxies.push(proxy);
+                let proxy = new Proxy({
+                    ip: proxySplit[0],
+                    port: proxySplit[1]
+                });
+                proxies.push(proxy);
+            }
+            
+            await Proxy.deleteMany({}).exec();
+
+            Proxy.insertMany(proxies, (err, docs) => {
+                if (err) {
+                    return reject("Could not store proxies to db.")
                 }
+                return resolve(`${docs.length} Proxies saved to DB`)
+            })
 
-                Proxy.insertMany(proxies, (err, docs) => {
-                    if (err) {
-                        return reject("Could not store proxies to db.")
-                    }
-                    return resolve(`${docs.length} Proxies saved to DB`)
-                })
-            });
         } catch (error) {
             return reject(error)
         }
@@ -77,7 +79,19 @@ let GetProxy = async () => {
     })
 }
 
+let RemoveProxy = async (proxy) => {
+    return new Promise((resolve, reject) => {
+        proxy.remove((err) => {
+            if (err) {
+                console.log(err)
+            }
+            return resolve();
+        })
+    })
+}
+
 
 
 module.exports.GetAndSaveProxies = GetAndSaveProxies;
 module.exports.GetProxy = GetProxy;
+module.exports.RemoveProxy = RemoveProxy

@@ -2,14 +2,16 @@ $(async () => {
     let accountsHtml = ""
     let accounts = await FetchAllAccounts();
     if (accounts.length == 0) {
+        $("#body").css("display", "unset")
         accountsHtml = `
-            <p>No steam accounts associated with your account.</p>
-            <div class="btn btn-primary btn-lg btn-block" id="big-add-acc-button" data-toggle="modal" data-target="#add-acc-modal" type="button">Add Account</div>`
+            <h2>No steam accounts associated with your account.</h2>
+            <button type="button" id="big-add-btn" class="btn header-btn" data-toggle="modal" data-target="#add-acc-modal">Add Account</button>`
     } else {
         for (let i in accounts) {
             accountsHtml += buildAccount(accounts[i])
         }
     }
-    $("#content-body").css("align-items", "flex-start")
-    $("#content-body").html(`<div id="accounts-container">` + accountsHtml + `</div>`)
+
+    $("#body-spinner").hide()
+    $("#accounts-box").html(accountsHtml)
 })

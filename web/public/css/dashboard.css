@@ -1,55 +1,51 @@
-#content-body{
-    position: absolute;
-    top: 54px;
-    left: 178.5px;
-    width: calc(100% - 178.5px);
-    text-align:center !important;
-    height: calc(100% - 54px);
+#body{
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
 }
 
-#content-body-spinner{
+#accounts-box{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    padding-bottom: 400px;
+}
+
+#body-spinner{
     height: 200px;
     width: 200px;
 }
 
-#accounts-container{
-    width: 100%;
-    padding: 15px;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-evenly;
-    align-items: flex-start;
-}
-
 .account{
-    margin: 0 15px 15px;
     display: inline-block;
     width: 230px;
     height: 370px;
-    text-align: left;
+    margin: 10px;
+    border-radius: 5px;
+    position: relative;
 }
 
 .account-Bad{
-    background: linear-gradient(0deg,  rgb(24, 0, 0) 0%, rgb(134, 0, 0) 100%);
-    border: solid 2px rgb(134, 0, 0)
+    background: linear-gradient(0deg, rgba(148, 0, 0, 0.6) 0%, rgba(54, 0, 0, 0.6) 100%);
+    border: solid 3px rgb(134, 0, 0)
 }
 
 .account-Offline{
-    background: linear-gradient(0deg, rgba(145, 145, 145, 0.8) 0%, rgb(53, 53, 53) 100%);
-    border: solid 2px rgb(192,192,192)
+    background: linear-gradient(0deg, rgba(179, 179, 179, 0.5) 0%, rgba(75, 75, 75, 0.5) 100%);
+    border: solid 3px rgb(192,192,192)
 }
 
 .account-Online, .account-Away, .account-Busy, .account-Invisible{
-    background: linear-gradient(0deg, rgba(0, 204, 255, 0.65) 0%, rgb(13, 38, 177) 100%);
-    border: solid 2px rgb(26, 89, 131)
+    background: linear-gradient(0deg, rgba(0, 116, 194, 0.6) 0%, rgba(0, 62, 104, 0.6) 100%);
+    border: solid 3px rgb(0, 132, 255)
 }
 
 .account-Reconnecting{
-    background: linear-gradient(0deg, rgba(145, 145, 145, 0.8) 0%, rgb(53, 53, 53) 100%);
-    border: solid 2px rgb(134, 0, 0)
+    background: linear-gradient(0deg, rgba(179, 179, 179, 0.5) 0%, rgba(75, 75, 75, 0.5) 100%);
+    border: solid 3px rgb(134, 0, 0)
 }
 
 .status-Away{
@@ -74,9 +70,9 @@
 
 .nick{
     color: rgb(163, 192, 255); 
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.3);
     text-align: center;
-    vertical-align: top
+    font-size: 14px;
 }
 
 .nick:hover{
@@ -85,12 +81,10 @@
 }
 
 .avatar{
-    height: 150px;
-    width: 150px;
+    height: 155px;
+    width: 155px;
     display: block;
-    margin:auto;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin: 2.5px auto;
 }
 
 .avatar-Online{
@@ -113,93 +107,99 @@
     font-weight: bolder;
 }
 
-
 .info{
-    font-size: 12px;
     line-height: 20px;
-    margin-left: 10px;
     margin-bottom: 5px;
+    text-align: center;
 }
 
-.account-buttons{
-    background: rgba(0, 0, 0, 0.7);
-    text-align: center;
+.buttons-box{
+    background: rgba(0, 0, 0, 0.3);
     height: 100px;
-    vertical-align: bottom;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
     padding: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#acc-buttons{
+    display: flex;
+    flex-flow: row;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    align-items: center;
 }
 
 .btn-sm{
+    font-size: 14px;
+    margin: 2px;
+    width: 100px;
     height: 20px;
     line-height: 0px;
-    margin: 2 10px;
-    padding: 1px;
-    width: 80px;
-    font-size: 12px;
 }
-
-
 
 /* SET STATUS MODAL */
-
-#set-status-dialog, #set-status-content{
+#set-status-content{
     width: 250px;
-    margin: 20px auto;
-    padding: 5px;
+    margin: 0 auto;
 }
 
+#set-status-form{
+    font-size: 25px;
+    line-height: 25px;
+}
+
+#set-status-form .form-check{
+    margin: 10px;
+}
 /* END SET STATUS MODAL */
 
 
-
 /* REDEEM CD-KEY MODAL */
-
 #cd-key{
     text-transform: uppercase;
 }
-
 /* END REDEEM CD-KEY MODAL */
 
 
 
 /* ADD ACCOUT MODAL */
-
 input[name="emailGuard"] { 
     text-align: center;
     text-transform: uppercase;
 }
 
-
 #email-guard{
     width: 215px;
     text-align: center;
 }
-
 /* END ADD ACCOUT MODAL */
 
 
 
-/* IDLE MODAL */
-
+/* GAME IDLE MODAL */
 .game-img{
     margin: 5px;
 }
 
-.games-idle{
-    margin-top: 10px;
+.games-dialog{
+    min-width: 50%;
 }
 
-.games-dialog, .games-content{
-    width: 80%;
-    max-width: 80%;
-    margin: 0 auto;
-    text-align: center;
-    padding: 0px;
+.games-box{
+    display: flex;
+    justify-content: space-evenly;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
 }
 
 .unselected{
     border: none;
-    opacity: 0.25;
+    filter: grayscale(100%);
 }
 
 .selected{
@@ -207,26 +207,20 @@ input[name="emailGuard"] {
     border-radius: 4px;
     padding: 5px;
 }
-
 /* END IDLE MODAL */
 
 
 
 
-
-
 /* NO ACCOUNTS IN DASHBOARD */
-
-#big-add-acc-button{
+#big-add-btn{
+    display: block;
     width: 100%;
-    line-height: 500px;
+    margin: 20px;
     height: 500px;
     font-size: 50px;
 }
-
 /* END NO ACCOUNTS IN DASHBOARD */
-
-
 
 
 
@@ -245,136 +239,110 @@ input[name="emailGuard"] {
 }
 
 
-
-/* HEADER */
-#header{
-    z-index: 1;
-    height: 54px;
-    width: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    background: linear-gradient(0deg, rgb(0, 89, 141) 0%, rgb(0, 51, 80) 100%);
+#user-box{
+    margin-left: auto;
 }
 
-
-#user-info{
-    height: 100%;
-    float: left;
-    margin: 5px 0 0 5px;
-}
-
-#greet{
-
+#header-username{
+    text-transform: uppercase;
+    margin-right: 10px;
 }
 
 #settings-icon{
-    height: 25px;
-    margin-left: 5px;
+    display: inline;
     transition: transform .8s ease-in-out;
+    margin-right: 10px;
 } 
 
 #settings-icon:hover{
     transform: rotate(360deg);
 }
 
-#user-logout{
-    width: 50px;
-}
-
-#user-logout:hover{
-    color: white;
-    text-decoration: none;
-}
-
-#filter-dropdown-box{
-    margin-top: 8px;
-    margin-left: 32px;
-    float: left;
-}
-
-#filters-dropdown-btn{
-    font-size: 15px;
-    border: solid 2px rgb(3, 20, 51);
-    background: linear-gradient(0deg, rgb(0, 30, 53) 0%,rgb(0, 50, 90) 100%);
-    border-radius: 0 !important;
-    color: rgb(163, 192, 255); 
-}
-
 .dropdown-menu{
     background: linear-gradient(0deg, rgb(0, 51, 80) 0%, rgb(0, 89, 141) 100%);
-    padding: none;
-}
-
-.filter-btn{
-    padding: none;
-    font-size: 14px;
-    font-family: "Motiva Sans", Sans-serif;
-    font-weight: normal;
-    color: rgb(163, 192, 255);
     padding: 5px;
-    padding-left: 15px;
+    color: white;
+    border: solid 1px rgb(0, 153, 255);
+    margin-top: 7px;
 }
 
-.filter-btn:hover{
-    text-decoration: none !important;
-    color: white;
+#dropdown-notice{
+    text-align: center;
+    background-color: rgb(1, 62, 97);
+    margin: -5px;
+    border-bottom: solid 1px rgb(0, 153, 255);
+    margin-bottom: 5px;
 }
 
 #current-filter-txt{
-    margin-top: 15px;
     margin-left: 10px;
-    float: left;
 }
 
+@media only screen and (max-width: 800px) {
+    #logo{
+        display: none;
+    }
 
+    #header, #footer{
+        padding: 1px;
+        font-size: 10px;
+    }
 
+    .header-btn{
+        font-size: 10px;
+        margin-right: 0px;
+        padding:  2;
+        height: 100%;
+    }
+    
+    #header-username{
+        margin-right: 0px;
+    }
+    
+    #settings-icon{
+        margin-right: 0px
+    }
 
+    .account{
+        width: 300px;
+        height: 400px;
+    }
 
+    .buttons-box{
+        height: 130px;
+    }
 
+    .btn-sm{
+        font-size: 18px;
+        width: 135px;
+        height: 28px;
+    }
 
-/* SIDEBAR */
-#sidebar{
-    z-index: 1;
-    width: 180px;
-    height: 100%;
-    position: fixed;
-    left: 0;
-    top: 54px;
-    background: linear-gradient(0deg, rgb(0, 51, 80) 0%, rgb(0, 89, 141) 100%);
-}
+    #current-filter-txt{
+        margin-left: 2px;
+    }
 
-.sidebar-button{
-    display: block;
-    width: 100%;
-    color: rgb(163, 192, 255); 
-    font-size: 13px;
-}
+    .modal{
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+    }
 
-.sidebar-button:hover, #sidebar-addacc{
-    border: solid 2px rgb(3, 20, 51);
-    background: linear-gradient(0deg, rgb(0, 30, 53) 0%,rgb(0, 50, 90) 100%);
-    border-radius: 0 !important;
-    color: white;
-}
+    .modal-content{
+        margin-top: 30px;
+    }
 
-#sidebar-addacc{
-    font-size: 15px;
-    margin: 25px 0px;
-    border: solid 2px rgb(3, 20, 51);
-    background: linear-gradient(0deg, rgb(0, 30, 53) 0%,rgb(0, 50, 90) 100%);
-    border-radius: 0 !important;
-    color: rgb(163, 192, 255); 
-}
+    .game-img{
+        width: 100px;
+    }
 
-#sidebar-addacc:hover{
-    border: solid 2px rgb(3, 20, 51);
-    background: linear-gradient(0deg, rgb(0, 50, 88) 0%,rgb(0, 32, 58) 100%);
-    color: white;
-}
+    .selected{
+        padding: 2.5px;
+    }
 
-.separator-text{
-    text-align: center;
-    font-size: 16px;
-    border-bottom: 2px solid rgb(255, 255, 255);
+    #set-status-content{
+        width: 100%;
+        margin-top: 30px;
+    }
+
 }

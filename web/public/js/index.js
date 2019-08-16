@@ -2,15 +2,36 @@ $(() => {
 
     // show register form if request comes from invite link
     if ($(`input[name="invitecode"]`).val()) {
-        $('#login-form').hide(0);
-        $("#register-form").removeAttr('hidden')
+        $('#info').hide();
+        $("#register-form").show();
     }
 
     //show change password form if request comes from recovery link
     if ($(`input[name="recoverUsername"]`).val()) {
-        $('#login-form').hide(0);
-        $("#change-password").removeAttr('hidden')
+        $('#info').hide();
+        $("#changepass-form").show();
     }
+
+    // Show register form
+    $('#login-btn').click(() => {
+        $('#info').hide()
+        $("form").css("display", "none")
+        $("#login-form").fadeIn(500)
+    });
+
+    // Show register form
+    $('#register-btn').click(() => {
+        $('#info').hide()
+        $("form").css("display", "none")
+        $("#register-form").fadeIn(500)
+    });
+
+    // Show recover form
+    $('#recover-btn').click(() => {
+        $('#info').hide()
+        $("form").css("display", "none")
+        $("#recover-form").fadeIn(500)
+    });
 
     // Login form
     $('#login-form').submit(function (e) {
@@ -25,12 +46,6 @@ $(() => {
             $(self).find(".alert-danger").text(xhr.responseText).attr("hidden", false)
         })
     })
-
-    // Show register form
-    $('#show-register').click(() => {
-        $('#login-form').hide(1000);
-        $("#register-form").removeAttr('hidden')
-    });
 
     // Register form
     $('#register-form').submit(function (e) {
@@ -49,12 +64,6 @@ $(() => {
         })
     })
 
-    // Show recover form
-    $('#show-recover').click(() => {
-        $('#login-form').hide(1000);
-        $("#recover-form").removeAttr('hidden')
-    });
-
     // Recover form
     $("#recover-form").submit(function (e) {
         e.preventDefault();
@@ -70,15 +79,14 @@ $(() => {
         })
     })
 
-
     // change password
-    $('#change-password').submit(function (e) {
+    $('#changepass-form').submit(function (e) {
         e.preventDefault();
 
         $(this).find(".alert-danger").attr("hidden", true).html("");
 
         let self = this;
-        let data = $("#change-password").serialize();
+        let data = $("#changepass-form").serialize();
 
         $.post('/recovery/changepass', data, function (res) {
             window.location = res;

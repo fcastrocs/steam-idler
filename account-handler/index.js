@@ -65,50 +65,16 @@ module.exports = class AccountHandler {
 
         // Bring online accounts
         for (let i in handlers) {
-            this.bringOnline(handlers[i]);
+            try {
+                await this.loginAccount(handlers[i].userId, handlers[i].accountId, {
+                    skipOnlineCheck: true, // at this point no account is online
+                    skipHandlerSave: true // don't need to save to handler
+                });
+            } catch (error) {
+                continue;
+            }
         }
 
         return Promise.resolve();
-    }
-
-    /**
-     * Brings online user accounts
-     * Sets account to idle/farm
-     */
-    async bringOnline(handler) {
-        let accountId = handler.accountId;
-
-        // find account
-        let doc = await this.getAccount({accountId: accountId})
-        // account not found
-        if (!doc) {
-            // then remove this handler
-            handler.remove();
-            return;
-        }
-
-        try {
-            // set up login options
-            let options = this.setupLoginOptions(doc);
-            let client = await this.steamConnect(options);
-
-            // save account to handler
-            this.saveToHandler(doc.userId, doc._id.toString(), client)
-
-            // update account properties after login
-            doc.games = this.addGames(options.games, doc.games);
-            doc.persona_name = options.persona_name;
-            doc.avatar = options.avatar;
-            doc.status = options.status;
-            doc.inventory = options.inventory
-
-            // Restart farming or idling, this will also save the account
-            this.farmingIdlingRestart(client, doc)
-        } catch (error) {
-            //could not login to account, update it's status
-            doc.status = error;
-            this.saveAccount(doc)
-        }
-
     }
 }

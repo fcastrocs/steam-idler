@@ -21,12 +21,11 @@ module.exports = accountHandler;
     //Connect database
     try {
         mongoose.set('useCreateIndex', true);
-        await mongoose.connect(process.env.MOGODB_URI, { 
+        await mongoose.connect(process.env.MOGODB_URI, {
             useNewUrlParser: true,
             dbName: 'steamidler',
             poolSize: 50,
-            autoIndex: false,
-
+            autoIndex: true
         })
         console.log('Connected to MongoDB.');
     } catch (error) {
@@ -34,23 +33,26 @@ module.exports = accountHandler;
         return;
     }
 
-    // Fetch Steam CM servers
-    try {
-        let res = await GetAndSaveSteamCMs();
-        console.log(res)
-    } catch (error) {
-        console.log(error)
-        return;
-    }
-
     // Fetch proxies
-    try {
-        let res = await GetAndSaveProxies();
-        console.log(res)
-    } catch (error) {
-        console.log(error)
-        return;
-    }
+    (async function fetchProxies(){
+        try {
+            let res = await GetAndSaveProxies();
+            console.log(res)
+        } catch (error) {
+            console.log(error)
+        }
+
+        setTimeout(fetchProxies, 40 * 60 * 1000);
+    })();
+
+    // Fetch Steam CM servers
+    // try {
+    //     let res = await GetAndSaveSteamCMs();
+    //     console.log(res)
+    // } catch (error) {
+    //     console.log(error)
+    //     return;
+    // }
 
     //Initialize steam accounts
     try {
@@ -86,13 +88,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 // use Handlebars view engine
-app.set('views', "./web/views");
 app.engine('.hbs', exphbs({
-    defaultLayout: 'main',
     extname: '.hbs',
-    layoutsDir: 'web/views/layouts'
+    layoutsDir: 'web/views/layouts',
+    defaultLayout: 'main',
+    partialsDir: "web/views/partials"
 }));
 app.set('view engine', '.hbs')
+app.set('views', "./web/views");
 
 // Set up sessions
 app.use(session({
@@ -107,11 +110,30 @@ app.use(session({
     cookie: { httpOnly: false, expires: 15 * 24 * 60 * 60 * 1000 }
 }));
 
+
+// Index Route
+app.get("/", (req, res) => {
+    if (req.session.loggedIn) {
+        return res.redirect(`/dashboard/${req.session.username}`);;
+    }
+    res.render('index', {
+        header: function () {
+            return "index-header"
+        }
+    });
+})
+
 // Routes
 app.use('/', require('./router/login-register'));
 app.use('/', require('./router/dashboard'))
 app.use('/', require('./router/admin'))
 app.use('/', require('./router/steamaccount'))
+
+// Redirect to index page undefined routes
+app.get('*', function (req, res) {
+    res.redirect("/");
+});
+
 
 //Start listening on port
 // Starting both http & https servers
@@ -119,9 +141,9 @@ const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
 
 httpServer.listen(process.env.HTTP_PORT, () => {
-	console.log('HTTP Server running on port 8080');
+    console.log('HTTP Server running on port 8080');
 });
 
 httpsServer.listen(process.env.HTTPS_PORT, () => {
-	console.log('HTTPS Server running on port 8443');
+    console.log('HTTPS Server running on port 8443');
 });

@@ -3,7 +3,27 @@ $(() => {
     /**************************************************** 
      *               LOGIN ALL ACCS                     *
      * **************************************************/
-    $("#sidebar-login").click(() => {
+    $("#all-login").click(() => {
+        alert("This action may take a long time, please let it finish. Do not refresh the page.");
+
+
+
+
+        $.post("/steamaccounts/login", (doc) => {
+            alert(doc)
+        }).fail((xhr, status, err) => {
+            alert(xhr.responseText);
+        })
+
+
+
+
+
+        return;
+
+
+
+
         let accountIds = getAllAccountIds();
 
         if (accountIds.length == 0) {
@@ -118,7 +138,7 @@ $(() => {
     *             STOP IDLING ALL ACCOUNTS              *
     * **************************************************/
     $("#sidebar-stopIdling").click(() => {
-        if(!confirm("Are you sure you want to stop all accounts from idling?")){
+        if (!confirm("Are you sure you want to stop all accounts from idling?")) {
             return
         }
 

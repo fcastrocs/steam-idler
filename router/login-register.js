@@ -190,15 +190,12 @@ router.get("/logout", async function (req, res) {
     if (!req.session.loggedIn) {
         return res.status(400).send("You are not logged in.")
     }
-
     req.session.destroy((err) => {
         if (err) {
             return res.status(500).send("Unexpected error occurred. Code: 6");
         }
-
-        res.render('login-register');
+        res.redirect("/")
     });
-
 })
 
 /***************************************************
@@ -360,7 +357,6 @@ async function createToken_SendVerification(doc, host) {
         });
     })
 }
-
 
 
 module.exports = router;

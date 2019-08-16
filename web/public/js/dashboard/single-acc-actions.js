@@ -26,7 +26,7 @@ $(() => {
             // Add account to content-body
             $("#no-accounts").hide(0);
             let account = buildAccount(doc);
-            $("#content-body").append(account)
+            $("#accounts-box").append(account)
 
             // success message
             $('#add-acc-msg').show(0).text("Success, account added.")
@@ -81,11 +81,11 @@ $(() => {
     /**************************************************** 
     *               STEAM - LOGIN                       *
     * **************************************************/
-    $("#content-body").on('click', ".acc-login-btn", function () {
+    $(document).on('click', ".acc-login-btn", function () {
         let self = $(this).closest("div.account")
         let accountId = self.attr("data-id");
-        // disable all buttons
-        self.find(".account-buttons").hide();
+        // hide all buttons
+        self.find("#acc-buttons").hide();
         // enable spinner
         self.find(".acc-spinner").prop("hidden", false);
         $.post('/steamaccount/login', { accountId: accountId }, doc => {
@@ -99,11 +99,11 @@ $(() => {
     /**************************************************** 
     *               STEAM - LOGOUT                      *
     * **************************************************/
-    $("#content-body").on('click', ".acc-logout-btn", function () {
+    $(document).on('click', ".acc-logout-btn", function () {
         let self = $(this).closest("div.account")
         let accountId = self.attr("data-id");
-        // disable all buttons
-        self.find(".account-buttons").hide();
+        // hide all buttons
+        self.find("#acc-buttons").hide();
         // enable spinner
         self.find(".acc-spinner").prop("hidden", false);
 
@@ -118,7 +118,7 @@ $(() => {
     /*************************************************** 
     *               STEAM - DELETE ACC                 *
     ***************************************************/
-    $("#content-body").on('click', ".acc-delete-acc-btn", function () {
+    $(document).on('click', ".acc-delete-acc-btn", function () {
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id");
 
@@ -144,7 +144,7 @@ $(() => {
     *               STEAM - CHANGE NICK                 *
     * **************************************************/
     // open modal
-    $("#content-body").on('click', ".nick", function () {
+    $(document).on('click', ".nick", function () {
         let accountId = $(this).closest("div.account").attr("data-id");
         $("#change-nick-button").attr("data-id", accountId);
         $("#change-nick-modal").modal("toggle")
@@ -361,7 +361,7 @@ $(() => {
     *           STEAM - ACTIVATE FREE GAME              *
     * **************************************************/
     // Open activate game modal
-    $("#content-body").on('click', ".acc-get-game-btn", function () {
+    $(document).on('click', ".acc-get-game-btn", function () {
         let accountId = $(this).closest("div.account").attr("data-id")
         $("#activate-free-game").attr("data-id", accountId)
         $("#activate-free-game-modal").modal("toggle")
@@ -417,7 +417,7 @@ $(() => {
     *           STEAM - REDEEM KEY                      *
     * **************************************************/
     // Open redeem key modal
-    $("#content-body").on('click', ".redeem-key", function () {
+    $(document).on('click', ".redeem-key", function () {
         let accountId = $(this).closest("div.account").attr("data-id")
         $("#redeem-key").attr("data-id", accountId)
         $("#redeem-key-modal").modal("toggle")
