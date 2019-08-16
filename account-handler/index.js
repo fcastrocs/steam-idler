@@ -1,4 +1,5 @@
 "use strict";
+const allSettled = require('promise.allsettled');
 
 module.exports = class AccountHandler {
     constructor() {
@@ -44,37 +45,36 @@ module.exports = class AccountHandler {
      * First, sets all accounts Offline status, then initializes
      */
     async init() {
-        //first change status of all accounts to offline
-        let accounts = await this.getAllAccounts();
-        if (accounts.length == 0) {
-            return Promise.reject("No accounts to initialize.");
-        }
+        return new Promise(async (resolve, reject) => {
+            //first change status of all accounts to offline
+            let accounts = await this.getAllAccounts();
+            if (accounts.length == 0) {
+                return reject("No accounts to initialize.");
+            }
 
-        // set all accounts to offline status
-        for (let i in accounts) {
-            accounts[i].status = "Offline"
-            this.saveAccount(accounts[i])
-        }
+            // set all accounts to offline status
+            for (let i in accounts) {
+                accounts[i].status = "Offline"
+                this.saveAccount(accounts[i])
+            }
 
-        let handlers = await this.getAllUserHandlers();
-        if (handlers.length == 0) {
-            return Promise.reject("No accounts to initialize.");
-        }
+            let handlers = await this.getAllUserHandlers();
+            if (handlers.length == 0) {
+                return reject("No accounts to initialize.");
+            }
 
-        console.log("Initializing accounts.")
+            console.log(`Initializing ${handlers.length} accounts.`)
 
-        // Bring online accounts
-        for (let i in handlers) {
-            try {
-                await this.loginAccount(handlers[i].userId, handlers[i].accountId, {
+            // Bring online accounts
+            let promises = [];
+            for (let i in handlers) {
+                promises.push(this.loginAccount(handlers[i].userId, handlers[i].accountId, {
                     skipOnlineCheck: true, // at this point no account is online
                     skipHandlerSave: true // don't need to save to handler
-                });
-            } catch (error) {
-                continue;
+                }))
             }
-        }
 
-        return Promise.resolve();
+            allSettled(promises).then(() => resolve());
+        })
     }
 }

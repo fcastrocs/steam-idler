@@ -107,8 +107,11 @@ class Connection extends EventEmitter {
 
   // Destroy the connection and remove listeners
   DestroyConnection() {
-    this.socket.removeAllListeners();
-    this.socket.destroy();
+    this.removeAllListeners();
+    if (this.socket) {
+      this.socket.removeAllListeners();
+      this.socket.destroy();
+    }
   }
 
 }

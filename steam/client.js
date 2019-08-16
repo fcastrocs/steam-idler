@@ -597,7 +597,6 @@ class Client extends EventEmitter {
     Disconnect() {
         this.loggedIn = false;
         this.webCookie = false;
-        this.client.removeAllListeners();
         this.client.Disconnect();
     }
 }
