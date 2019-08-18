@@ -20,13 +20,63 @@
 }
 
 .account{
-    display: inline-block;
-    width: 230px;
-    height: 370px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    width: 270px;
+    height: auto;
     margin: 10px;
     border-radius: 5px;
-    position: relative;
+    font-size: 12px;
 }
+
+.nick{
+    width: 100%;
+    color: rgb(163, 192, 255); 
+    background: rgba(0, 0, 0, 0.3);
+    text-align: center;
+    font-size: 14px;
+}
+
+.avatar{
+    height: 155px;
+    width: 155px;
+    margin-top: 5px;
+}
+
+.status{
+    font-weight: bolder;
+    margin-top: 5px;
+    padding: 5px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 2.5px;
+}
+
+.info{
+    text-align: center;
+    width: 100%;
+    margin: 5px 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.info-value{
+    color: rgb(204, 204, 204);
+}
+
+.buttons-box{
+    margin-top: auto;
+    background: rgba(0, 0, 0, 0.3);
+    height: 100px;
+    width: 100%;
+    bottom: 0;
+    padding: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 
 .account-Bad{
     background: linear-gradient(0deg, rgba(148, 0, 0, 0.6) 0%, rgba(54, 0, 0, 0.6) 100%);
@@ -68,23 +118,9 @@
     color: #ff0000;
 }
 
-.nick{
-    color: rgb(163, 192, 255); 
-    background: rgba(0, 0, 0, 0.3);
-    text-align: center;
-    font-size: 14px;
-}
-
 .nick:hover{
     cursor: pointer;
     color: white;
-}
-
-.avatar{
-    height: 155px;
-    width: 155px;
-    display: block;
-    margin: 2.5px auto;
 }
 
 .avatar-Online{
@@ -101,28 +137,6 @@
 
 .avatar-bad{
     border: solid 3px rgb(255, 0, 0)
-}
-
-.status{
-    font-weight: bolder;
-}
-
-.info{
-    line-height: 20px;
-    margin-bottom: 5px;
-    text-align: center;
-}
-
-.buttons-box{
-    background: rgba(0, 0, 0, 0.3);
-    height: 100px;
-    width: 100%;
-    position: absolute;
-    bottom: 0;
-    padding: 2px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 #acc-buttons{
@@ -305,7 +319,6 @@ input[name="emailGuard"] {
 
     .account{
         width: 300px;
-        height: 400px;
     }
 
     .buttons-box{

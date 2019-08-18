@@ -12,6 +12,8 @@ const helmet = require('helmet')
 const GetAndSaveProxies = require('./util/proxy').GetAndSaveProxies;
 const GetAndSaveSteamCMs = require('./util/steamcm').GetAndSaveSteamCMs;
 const AccountHandler = require("./account-handler");
+const SteamAccount = require('./models/steam-accounts')
+const ApiLimiter = require('./models/api-limiter')
 
 // Handler must be kept in RAM at all times
 let accountHandler = new AccountHandler();
@@ -19,6 +21,8 @@ module.exports = accountHandler;
 
 //Initialization process.
 (async () => {
+    console.log("++ INITIALIZING APP ++")
+
     // Connect to database
     try {
         let res = await DBconnect();
@@ -28,21 +32,33 @@ module.exports = accountHandler;
         process.exit();
     }
 
+    try {
+        let res = await cleanup();
+        console.log(res)
+    } catch (error) {
+        console.log(error);
+        process.exit();
+    }
+
     // Fetch proxies now, then every 40 minutes
-    (async function tryfetchProxies() {
-        setTimeout(tryfetchProxies, 40 * 60 * 1000);
+    try {
+        let res = await fetchProxies();
+        console.log(res);
+    } catch (error) {
+        console.log(error);
+    }
+    setInterval(async () => {
         try {
             let res = await fetchProxies();
             console.log(res);
         } catch (error) {
             console.log(error);
         }
-    })();
+    }, 40 * 60 * 1000);
 
     // Initialize accounts in handlers
     try {
-        let res = await accountHandler.init();
-        console.log(res);
+        await accountHandler.init();
     } catch (error) {
         console.log(error);
     }
@@ -54,7 +70,7 @@ module.exports = accountHandler;
     // } catch (error) {
     //     console.log(error)
     //     return;
-    //}
+    // }
 
     // Initialize web
     initWeb();
@@ -65,14 +81,34 @@ async function DBconnect() {
         mongoose.set('useCreateIndex', true);
         await mongoose.connect(process.env.MOGODB_URI, {
             useNewUrlParser: true,
-            dbName: 'steamidler',
+            dbName: process.env.DATABASE,
             poolSize: 50,
             autoIndex: true
         })
-        return Promise.resolve('Connected to MongoDB.');
+        return Promise.resolve(' - connected to mongodb');
     } catch (error) {
-        return Promise.resolve(reject);
+        return Promise.reject(' - could not connect to mongodb');
     }
+}
+
+async function cleanup() {
+    return new Promise(async (resolve, reject) => {
+        try {
+            // clean up accounts
+            let change = {
+                status: "Offline",
+                lastHourReconnects: 0
+            }
+            await SteamAccount.updateMany({}, change).exec();
+
+            //clean up api limiter
+            await ApiLimiter.deleteMany({}).exec();
+            return resolve(" - db cleaned up");
+        } catch (error) {
+            console.log(error)
+            return reject(" - could not clean up db")
+        }
+    })
 }
 
 async function fetchProxies() {
@@ -147,6 +183,7 @@ function initWeb() {
     app.use('/', require('./router/dashboard'))
     app.use('/', require('./router/admin'))
     app.use('/', require('./router/steamaccount'))
+    app.use('/', require('./router/steamaccounts'))
 
     // Redirect to index page undefined routes
     app.get('*', function (req, res) {
@@ -160,10 +197,10 @@ function initWeb() {
     const httpsServer = https.createServer(credentials, app);
 
     httpServer.listen(process.env.HTTP_PORT, () => {
-        console.log('HTTP Server running on port 8080');
+        console.log(' - HTTP Server running on port 8080');
     });
 
     httpsServer.listen(process.env.HTTPS_PORT, () => {
-        console.log('HTTPS Server running on port 8443');
+        console.log(' - HTTPS Server running on port 8443');
     });
 }

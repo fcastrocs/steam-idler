@@ -3,93 +3,36 @@ $(() => {
     /**************************************************** 
      *               LOGIN ALL ACCS                     *
      * **************************************************/
-    $("#all-login").click(() => {
-        alert("This action may take a long time, please let it finish. Do not refresh the page.");
-
-
-
+    $("#all-login-btn").click(() => {
+        alert("This may take a while, depending on how many accounts you have. The page will be reloaded when request finishes.");
 
         $.post("/steamaccounts/login", (doc) => {
-            alert(doc)
+            location.reload();
         }).fail((xhr, status, err) => {
             alert(xhr.responseText);
         })
-
-
-
-
-
-        return;
-
-
-
-
-        let accountIds = getAllAccountIds();
-
-        if (accountIds.length == 0) {
-            alert("You do not have any accounts.")
-            return;
-        }
-
-        $("#sidebar-menu").prop("hidden", true)
-        $("#sidebar-spinner").prop("hidden", false)
-
-        let goodResponse = 0;
-        let badResponse = 0;
-        let interval = 0;
-        accountIds.forEach(accountId => {
-            setTimeout(() => {
-                $.post("/steamaccount/login", { accountId: accountId }, (doc) => {
-                    goodResponse++;
-                    $("#sidebar-msg").prop("hidden", false).text(`${goodResponse} accounts logged in.`).show()
-                    updateAccountStatus(doc);
-                    checkCompletedReq((goodResponse + badResponse), accountIds.length)
-                }).fail((xhr, status, err) => {
-                    badResponse++;
-                    $("#sidebar-errMsg").attr("hidden", false).text(`${badResponse} accounts failed.`).show()
-                    checkCompletedReq((goodResponse + badResponse), accountIds.length)
-                })
-            }, interval);
-            interval += 300;
-        })
-
     })
 
     /**************************************************** 
      *               LOGOUT ALL ACCS                    *
      * **************************************************/
-    $("#sidebar-logout").click(() => {
-        let accountIds = getAllAccountIds();
-
-        if (accountIds.length == 0) {
-            alert("You do not have any accounts.")
+    $("#all-logout-btn").click(() => {
+        if (!confirm("Are you sure you want to logout all your accounts?")) {
             return;
         }
 
-        $("#sidebar-menu").prop("hidden", true)
-        $("#sidebar-spinner").prop("hidden", false)
-
-        let goodResponse = 0;
-        let badResponse = 0;
-        accountIds.forEach(accountId => {
-            $.post("/steamaccount/logout", { accountId: accountId }, (doc) => {
-                goodResponse++;
-                $("#sidebar-msg").prop("hidden", false).text(`${goodResponse} accounts logged out.`).show()
-                updateAccountStatus(doc);
-                checkCompletedReq((goodResponse + badResponse), accountIds.length)
-            }).fail((xhr, status, err) => {
-                badResponse++;
-                $("#sidebar-errMsg").attr("hidden", false).text(`${badResponse} accounts failed.`).show()
-                checkCompletedReq((goodResponse + badResponse), accountIds.length)
-            })
-
+        $.post("/steamaccounts/logout", res => {
+            location.reload();
+        }).fail(xhr => {
+            alert(xhr.responseText);
         })
+
     })
 
     /**************************************************** 
     *               CHANGE ALL STATUS                  *
     * **************************************************/
-    $("#sidebar-status").click(() => {
+    $("#all-status-btn").click(() => {
         // Change form id so it doesn't go to actions.js
         $("#set-status-form").removeAttr('id').attr("id", "all-set-status-form");
         $("#set-status-modal").modal("toggle");
@@ -102,30 +45,12 @@ $(() => {
         $("#all-set-status-form").removeAttr('id').attr("id", "set-status-form");
         $("#set-status-modal").modal("toggle");
 
-        let accountIds = getAllAccountIds();
-        if (accountIds.length == 0) {
-            alert("You do not have any accounts.")
-            return;
-        }
-
         let status = $('input[name="status"]:checked').val();
 
-        $("#sidebar-menu").prop("hidden", true)
-        $("#sidebar-spinner").prop("hidden", false)
-
-        let goodResponse = 0;
-        let badResponse = 0;
-        accountIds.forEach(accountId => {
-            $.post("/steamaccount/setstatus", { accountId: accountId, status: status }, (doc) => {
-                goodResponse++;
-                $("#sidebar-msg").prop("hidden", false).text(`${goodResponse} accounts set status.`).show()
-                updateAccountStatus(doc);
-                checkCompletedReq((goodResponse + badResponse), accountIds.length)
-            }).fail((xhr, status, err) => {
-                badResponse++;
-                $("#sidebar-errMsg").attr("hidden", false).text(`${badResponse} accounts failed.`).show()
-                checkCompletedReq((goodResponse + badResponse), accountIds.length)
-            })
+        $.post("/steamaccounts/setstatus", { status: status }, () => {
+            location.reload();
+        }).fail(xhr => {
+            alert(xhr.responseText);
         })
     })
 
@@ -232,12 +157,4 @@ $(() => {
     })
 
 
-    function checkCompletedReq(received, sent) {
-        if (received == sent) {
-            $("#sidebar-menu").prop("hidden", false)
-            $("#sidebar-spinner").prop("hidden", true)
-            $("#sidebar-msg").delay(5000).fadeOut();
-            $("#sidebar-errMsg").delay(5000).fadeOut();
-        }
-    }
 })

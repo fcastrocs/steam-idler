@@ -18,7 +18,9 @@ let steamAcc = new Schema({
     farmingData: [{ type: Object, default: []}],
     isFarming: {type: Boolean, default: false},
     nextFarmingCheck: {type: Number, default: 0},
-    inventory: {type: Object, default: null}
+    inventory: {type: Object, default: null},
+    lastConnect: {type: Number, default: 0},
+    lastHourReconnects: {type: Number, default: 0}
 });
 
 module.exports = mongoose.model('SteamAccount', steamAcc);

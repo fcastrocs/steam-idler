@@ -12,17 +12,15 @@ const SteamAccHandler = require('../models/steam-account-handler')
 module.exports.farmingIdlingRestart = async function (client, doc) {
     // Restart farming 
     if (doc.isFarming) {
-        doc = await this.startFarming(null, null, client, doc);
-        // Restart idling
+        await this.startFarming(null, null, client, doc);
     } else {
         if (doc.gamesPlaying.length > 0) {
             doc.status = client.playGames(doc.gamesPlaying)
         } else {
             doc.status = "Online"
         }
-        doc = await this.saveAccount(doc);
     }
-    return Promise.resolve(doc);
+    return Promise.resolve();
 }
 
 /**
@@ -81,20 +79,16 @@ module.exports.setupLoginOptions = function (acc) {
     let options = {
         user: acc.user,
         pass: Security.decrypt(acc.pass),
-        sentry: Security.decrypt_buffer(acc.sentry),
         gamesPlaying: acc.gamesPlaying,
         forcedStatus: acc.forcedStatus
     }
 
-    if (acc.shared_secret) {
-        options.shared_secret = Security.decrypt(acc.shared_secret)
+    if(acc.sentry){
+        options.sentry = Security.decrypt_buffer(acc.sentry)
     }
 
-    //set correct status
-    if (acc.gamesPlaying.length == 0) {
-        options.status = "Online"
-    } else {
-        options.status = "In-game"
+    if (acc.shared_secret) {
+        options.shared_secret = Security.decrypt(acc.shared_secret)
     }
 
     //don't get farming data
@@ -257,19 +251,16 @@ module.exports.saveAccount = function (account) {
 
 // Remove sensitive data from acc
 module.exports.filterSensitiveAcc = function (account) {
-    return saveSada = {
-        _id: account._id,
-        games: account.games,
-        status: account.status,
-        forcedStatus: account.forcedStatus,
-        steamid: account.steamid,
-        gamesPlaying: account.gamesPlaying,
-        farmingGames: account.farmingGames,
-        persona_name: account.persona_name,
-        avatar: account.avatar,
-        farmingData: account.farmingData,
-        isFarming: account.isFarming,
-        nextFarmingCheck: account.nextFarmingCheck,
-        inventory: account.inventory
+    let fileredAcc = {}
+
+    for (let key in account) {
+        fileredAcc[key] = account[key];
     }
+
+    delete fileredAcc.user
+    delete fileredAcc.pass
+    delete fileredAcc.shared_secret
+    delete fileredAcc.sentry
+
+    return fileredAcc;
 }

@@ -4,7 +4,7 @@ const Steam = require('./index')
 const EventEmitter = require('events').EventEmitter;
 const GetProxy = require('../util/proxy').GetProxy;
 const GetSteamCM = require('../util/steamcm').GetSteamCM
-const RemoveProxy = require("../util/proxy").RemoveProxy 
+const RemoveProxy = require("../util/proxy").RemoveProxy
 const Crypto = require('crypto');
 const SteamTotp = require('steam-totp');
 const Request = require("request-promise-native")
@@ -13,29 +13,26 @@ const SteamCrypto = require("@doctormckay/steam-crypto")
 const cheerio = require('cheerio')
 
 class Client extends EventEmitter {
-    constructor(account) {
+    constructor(loginOptions) {
         super();
 
-        this.account = {
-            user: account.user,
-            pass: account.pass,
-            emailGuard: account.emailGuard,
-            sentry: account.sentry,
-            shared_secret: account.shared_secret,
-            status: account.status,
-            forcedStatus: account.forcedStatus,
-            skipFarmingData: account.skipFarmingData
-        }
+        // copy login options obj
+        this.account = JSON.parse(JSON.stringify(loginOptions))
 
         this.STEAMCOMMUNITY_TIMEOUT = 2000
         this.STEAMCOMMUNITY_RETRY_DELAY = 1000
         this.CONNECTION_TIMEOUT = 5 // in seconds
-        this.CONNECT_DELAY = 150 // maximum delay in seconds
+        this.CONNECT_DELAY = 60  // maximum delay in seconds
+        this.RECONNECT_DELAY = 5
 
+        // set proper login delay
+        if(this.account.noLoginDelay){
+            var timeout = 1 // 3 seconds
+        }else{
+            var timeout = 3 + Math.floor(Math.random() * this.CONNECT_DELAY)
+        }
 
-        let self = this;
-        let timeout = Math.floor(Math.random() * this.CONNECT_DELAY)
-        setTimeout(() => self.connect(), timeout * 1000);
+        setTimeout(() => this.connect(), timeout * 1000);
     }
 
     /************************************************************************
@@ -68,17 +65,17 @@ class Client extends EventEmitter {
             return;
         }
 
-        let self = this;
         return new Promise((resolve, reject) => {
             // register the event first
-            self.client.once('activated-apps', games => {
+            this.client.once('activated-apps', games => {
                 if (!games) {
                     reject("Could not activate this game.")
                 } else {
                     resolve(games)
                 }
             })
-            self.client.activateFreeGame(appIds)
+
+            this.client.activateFreeGame(appIds)
         })
     }
 
@@ -92,17 +89,17 @@ class Client extends EventEmitter {
         if (!this.loggedIn) {
             return;
         }
-        let self = this;
+        
         return new Promise((resolve, reject) => {
             // register the event first
-            self.client.once('redeem-key', games => {
+            this.client.once('redeem-key', games => {
                 if (Array.isArray(games)) {
                     resolve(games)
                 } else {
                     reject(games)
                 }
             })
-            self.client.redeemKey(cdkey)
+            this.client.redeemKey(cdkey)
         })
     }
 
@@ -161,7 +158,7 @@ class Client extends EventEmitter {
                 let encryptedNonce = SteamCrypto.symmetricEncryptWithHmacIv(nonce, sessionKey.plain);
 
                 let data = {
-                    steamid: self.steamid,
+                    steamid: self.account.steamid,
                     sessionkey: sessionKey.encrypted,
                     encrypted_loginkey: encryptedNonce
                 };
@@ -230,7 +227,7 @@ class Client extends EventEmitter {
                 let agent = new SocksProxyAgent(proxy);
 
                 let options = {
-                    url: `https://steamcommunity.com/profiles/${self.steamid}/badges`,
+                    url: `https://steamcommunity.com/profiles/${self.account.steamid}/badges`,
                     method: 'GET',
                     agent: agent,
                     timeout: self.STEAMCOMMUNITY_TIMEOUT,
@@ -334,7 +331,7 @@ class Client extends EventEmitter {
                 let agent = new SocksProxyAgent(proxy);
 
                 let options = {
-                    url: `https://steamcommunity.com/profiles/${self.steamid}/inventory/json/753/6`,
+                    url: `https://steamcommunity.com/profiles/${self.account.steamid}/inventory/json/753/6`,
                     method: 'GET',
                     agent: agent,
                     timeout: self.STEAMCOMMUNITY_TIMEOUT,
@@ -404,11 +401,7 @@ class Client extends EventEmitter {
             if (code == 1) {
                 self.loggedIn = true;
 
-                self.steamid = res.client_supplied_steamid
-
-                let loginResp = {
-                    steamid: self.steamid
-                };
+                self.account.steamid = res.client_supplied_steamid;
 
                 // generate web cookie
                 try {
@@ -422,7 +415,7 @@ class Client extends EventEmitter {
                 // skip farming data if specified
                 if (!self.account.skipFarmingData) {
                     try {
-                        loginResp.farmingData = await self.GetFarmingData();
+                        var farmingData = await self.GetFarmingData();
                         // do not fetch data again.
                         self.account.skipFarmingData = true;
                     } catch (error) {
@@ -434,7 +427,7 @@ class Client extends EventEmitter {
 
                 // Get inventory 
                 try {
-                    loginResp.inventory = await self.GetIventory();
+                    var inventory = await self.GetIventory();
                 } catch (error) {
                     self.RenewConnection()
                     return
@@ -453,7 +446,15 @@ class Client extends EventEmitter {
                 self.setPersona(self.account.forcedStatus)
 
                 console.log(`Steam Login > user: ${self.account.user}`)
-                self.emit("login-res", loginResp)
+                self.emit("login-res", {
+                    steamid: self.account.steamid,
+                    farmingData: farmingData || [],
+                    inventory: inventory || []
+                })
+
+                // After login, account should have a reconnect delay
+                self.account.noLoginDelay = false;
+
                 return;
             }
 
@@ -549,7 +550,7 @@ class Client extends EventEmitter {
 
         // connection options
         this.options = {
-            timeout: this.CONNECTION_TIMEOUT * 1000, //timeout for lost connection, bad proxy
+            timeout: this.CONNECTION_TIMEOUT * 1000, //timeout for bad proxy
             proxy: {
                 ipaddress: this.proxy.ip,
                 port: this.proxy.port,
@@ -590,7 +591,12 @@ class Client extends EventEmitter {
         RemoveProxy(this.proxy);
         // Reconnect
         let self = this;
-        let timeout = Math.floor(Math.random() * this.CONNECT_DELAY)
+
+        if(this.account.noLoginDelay){
+            var timeout = 1 // only do 1 second
+        }else{
+            var timeout = 3 + Math.floor(Math.random() * this.RECONNECT_DELAY)
+        }
         setTimeout(() => self.connect(), timeout * 1000);
     }
 

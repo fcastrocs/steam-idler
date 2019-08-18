@@ -53,9 +53,9 @@ async function GetAndSaveProxies() {
 
             Proxy.insertMany(proxies, (err, docs) => {
                 if (err) {
-                    return reject("Could not store proxies to db.")
+                    return reject(" - could not store proxies to db")
                 }
-                return resolve(`${docs.length} Proxies saved to DB`)
+                return resolve(` - ${docs.length} proxies fetched`)
             })
 
         } catch (error) {

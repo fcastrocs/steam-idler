@@ -77,20 +77,15 @@ function buildAccount(account) {
         }
 
         // START THE FARMING COUNTDOWN IF FARMING
-        if (account.isFarming && account.status !== "Offline") {
+        if (account.isFarming) {
             farmingCountDownId = setInterval(() => {
                 let diff = account.nextFarmingCheck - Date.now();
                 if (diff < 1) {
-                    $(`div[data-id="${account._id}"]`).find(".farming-mode").text("Farming: updating")
+                    $(`div[data-id="${account._id}"]`).find(".farming-mode").text("updating")
                     clearInterval(id)
                     return;
                 }
-                var date = new Date(diff);
-                var minutes = "0" + date.getMinutes();
-                var seconds = "0" + date.getSeconds();
-                var nextCheck = minutes.substr(-2) + ':' + seconds.substr(-2);
-
-                farmingStatus = `Farming: ${nextCheck}`
+                farmingStatus = `Farming: ${time(account.nextFarmingCheck)}`
                 $(`div[data-id="${account._id}"]`).find(".farming-mode").text(farmingStatus)
             }, 1000)
         }
@@ -108,6 +103,25 @@ function buildAccount(account) {
                 inventory += `<img src="${url}" data-toggle="tooltip" data-placement="top" title="${account.inventory[i].market_name}">`
             }
         }
+
+        var info = `<div class="info">
+                        <div class="farming-info">
+                            <div><span>Farming: </span><span class="farming-mode info-value">${farmingStatus}</span></div>
+                            <div><span>Games left to farm: </span><span class="games-left info-value">${account.farmingData.length}</span></div>
+                            <div><span>Cards left: </span><span class="cards-left info-value">${cardsLeft}</span></div>
+                        </div>
+                        <div class="connection-info">
+                            <div><span>Last reconnect: </span><span class="last-connect info-value">∞</span></div>
+                            <div><span>Reconnects last hr: </span><span class="last-hr-reconnects info-value">${account.lastHourReconnects}</span></div>
+                        </div>
+                    </div>`;
+
+
+
+        setInterval(() => {
+            $(`div[data-id="${account._id}"]`).find(".last-connect").text(time(account.lastConnect))
+        }, 1000);
+
     }
 
     let acc = `
@@ -118,13 +132,10 @@ function buildAccount(account) {
             <a href="https://steamcommunity.com/profiles/${account.steamid}">
                 <img class="avatar avatar-${account.status}" src="${account.avatar}">
             </a>
+           
+            <div class="status status-${account.forcedStatus}">${account.forcedStatus}</div>
             
-            <div class="info">
-                <div class="status status-${account.forcedStatus}">${account.forcedStatus}</div>
-                <div class="cards-left">Cards left: ${cardsLeft}</div>
-                <div class="games-left">Games left to farm: ${account.farmingData.length}</div>
-                <div class="farming-mode">Farming: ${farmingStatus}</div>
-            </div>
+            ${info || ""}
 
             <div class="buttons-box">
                 <div class="spinner-border text-primary acc-spinner" role="status" hidden></div>
@@ -200,6 +211,23 @@ function buildAccount(account) {
     return acc;
 }
 
+// Returns format 00:00:00
+function time(time) {
+    // convert to seconds
+    let delta = Math.abs((Date.now() - time) / 1000)
+    let days = Math.floor(delta / 86400)
+    delta -= days * 86400
+    let hours = Math.floor(delta / 3600)
+    delta -= hours * 3600
+    let minutes = Math.floor(delta / 60)
+    delta -= minutes * 60;
+    let seconds = Math.floor(delta);
+    hours = "0" + hours
+    minutes = "0" + minutes
+    seconds = "0" + seconds
+    return hours.substr(-2) + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+}
+
 
 
 // Replaces status of existing account in dashboard
@@ -215,9 +243,9 @@ function updateAccountStatus(account) {
 
     // check if isFarming changed.
     let oldFarmingStatus = Boolean(self.attr("data-isFarming"));
-    if(oldFarmingStatus === "true"){
+    if (oldFarmingStatus === "true") {
         oldFarmingStatus = true;
-    }else{
+    } else {
         oldFarmingStatus = false;
     }
     if (oldFarmingStatus !== account.isFarming) {
