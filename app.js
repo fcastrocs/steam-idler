@@ -136,7 +136,7 @@ function initWeb() {
     app.use(helmet())
 
     // public folder
-    app.use('/static', express.static('web/public'))
+    app.use('/static', express.static(`${__dirname}/web/public`))
 
     // Use body-parser
     app.use(bodyParser.urlencoded({ extended: false }));
@@ -145,12 +145,12 @@ function initWeb() {
     // use Handlebars view engine
     app.engine('.hbs', exphbs({
         extname: '.hbs',
-        layoutsDir: 'web/views/layouts',
+        layoutsDir: `${__dirname}/web/views/layouts`,
         defaultLayout: 'main',
-        partialsDir: "web/views/partials"
+        partialsDir: `${__dirname}/web/views/partials`
     }));
     app.set('view engine', '.hbs')
-    app.set('views', "./web/views");
+    app.set('views', `${__dirname}/web/views`);
 
     // Set up sessions
     app.use(session({
