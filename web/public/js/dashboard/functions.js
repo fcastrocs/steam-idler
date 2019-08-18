@@ -85,7 +85,7 @@ function buildAccount(account) {
                     clearInterval(id)
                     return;
                 }
-                farmingStatus = `Farming: ${time(account.nextFarmingCheck)}`
+                farmingStatus = `${time(account.nextFarmingCheck)}`
                 $(`div[data-id="${account._id}"]`).find(".farming-mode").text(farmingStatus)
             }, 1000)
         }

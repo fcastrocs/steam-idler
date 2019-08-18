@@ -149,11 +149,11 @@ $(() => {
             let count = 0
             $(".account").each(function (index) {
                 let status = $(this).find(".farming-mode").text();
-                if (status !== "Farming: off") {
+                if (status === "off" || !status) {
+                    $(this).hide()
+                } else {
                     count++;
                     $(this).show();
-                } else {
-                    $(this).hide(0)
                 }
             })
             $("#current-filter-txt").text(`Farming > ${count} accs`)
@@ -168,12 +168,12 @@ $(() => {
         function filter() {
             let count = 0
             $(".account").each(function (index) {
-                let carsleft = $(this).find(".info > .cards-left").text();
-                if (carsleft !== "Cards left: 0") {
+                let cardsleft = $(this).find(".cards-left").text();
+                if (cardsleft === "0" || !cardsleft) {
+                    $(this).hide()
+                } else {
                     count++;
                     $(this).show();
-                } else {
-                    $(this).hide(0)
                 }
             })
             $("#current-filter-txt").text(`Farmable > ${count} accs`)

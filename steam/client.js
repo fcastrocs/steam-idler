@@ -17,7 +17,8 @@ class Client extends EventEmitter {
         super();
 
         // copy login options obj
-        this.account = JSON.parse(JSON.stringify(loginOptions))
+        this.account = {}
+        Object.assign(this.account, loginOptions);
 
         this.STEAMCOMMUNITY_TIMEOUT = 2000
         this.STEAMCOMMUNITY_RETRY_DELAY = 1000
