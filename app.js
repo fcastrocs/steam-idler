@@ -57,11 +57,11 @@ module.exports = accountHandler;
     }, 40 * 60 * 1000);
 
     // Initialize accounts in handlers
-    try {
-        await accountHandler.init();
-    } catch (error) {
-        console.log(error);
-    }
+    // try {
+    //     await accountHandler.init();
+    // } catch (error) {
+    //     console.log(error);
+    // }
 
     // Fetch Steam CM servers
     // try {
@@ -122,9 +122,9 @@ async function fetchProxies() {
 
 function initWeb() {
     // Certificate
-    const privateKey = fs.readFileSync('./ssl/private.key', 'utf8');
-    const certificate = fs.readFileSync('./ssl/certificate.crt', 'utf8');
-    const ca = fs.readFileSync('./ssl/ca_bundle.crt', 'utf8');
+    const privateKey = fs.readFileSync(`${__dirname}/ssl/private.key`, 'utf8');
+    const certificate = fs.readFileSync(`${__dirname}/ssl/certificate.crt`, 'utf8');
+    const ca = fs.readFileSync(`${__dirname}/ssl/ca_bundle.crt`, 'utf8');
 
     const credentials = {
         key: privateKey,
