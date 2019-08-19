@@ -57,11 +57,11 @@ module.exports = accountHandler;
     }, 40 * 60 * 1000);
 
     // Initialize accounts in handlers
-    // try {
-    //     await accountHandler.init();
-    // } catch (error) {
-    //     console.log(error);
-    // }
+    try {
+        await accountHandler.init();
+    } catch (error) {
+        console.log(error);
+    }
 
     // Fetch Steam CM servers
     // try {

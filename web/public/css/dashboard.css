@@ -30,6 +30,7 @@
     font-size: 12px;
 }
 
+
 .nick{
     width: 100%;
     color: rgb(163, 192, 255); 
@@ -315,10 +316,6 @@ input[name="emailGuard"] {
     
     #settings-icon{
         margin-right: 0px
-    }
-
-    .account{
-        width: 300px;
     }
 
     .buttons-box{

@@ -220,7 +220,6 @@ class Client extends EventEmitter {
 
                 // too many tries, get a new proxy
                 if (retries == 3) {
-                    console.log(`GetCardsData too many tries > user: ${self.account.user}`)
                     return reject();
                 }
 
@@ -324,7 +323,6 @@ class Client extends EventEmitter {
 
                 // too many tries, get a new proxy
                 if (retries == 3) {
-                    console.log(`GetIventory too many tries > user: ${self.account.user}`)
                     return reject();
                 }
 
@@ -346,7 +344,6 @@ class Client extends EventEmitter {
                     let inventory = await Request(options)
                     inventory = JSON.parse(inventory);
                     if (!inventory.success) {
-                        console.log(`GetIventory bad data > user: ${self.account.user}`)
                         setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
                     }
 
@@ -409,7 +406,7 @@ class Client extends EventEmitter {
                     await self.GenerateWebCookie(res.webapi_authenticate_user_nonce);
                 } catch (error) {
                     // could not generate web cookie, account will relogin.
-                    self.RenewConnection()
+                    self.RenewConnection("cookie")
                     return;
                 }
 
@@ -421,7 +418,7 @@ class Client extends EventEmitter {
                         self.account.skipFarmingData = true;
                     } catch (error) {
                         // could not get farming data, account will relogin.
-                        self.RenewConnection()
+                        self.RenewConnection("farming data")
                         return;
                     }
                 }
@@ -430,7 +427,7 @@ class Client extends EventEmitter {
                 try {
                     var inventory = await self.GetIventory();
                 } catch (error) {
-                    self.RenewConnection()
+                    self.RenewConnection("inventory")
                     return
                 }
 
@@ -475,7 +472,7 @@ class Client extends EventEmitter {
 
             // RATE LIMIT
             else if (code == 84) {
-                self.RenewConnection()
+                self.RenewConnection("rate limit")
                 return;
             }
 
@@ -490,7 +487,7 @@ class Client extends EventEmitter {
             // Some other error code
             else {
                 console.log(`Login failed code: ${code} > user: ${self.account.user}`)
-                self.RenewConnection()
+                self.RenewConnection(`code ${code}`)
                 return;
             }
 
@@ -578,27 +575,24 @@ class Client extends EventEmitter {
                 self.reconnecting = true;
                 self.emit("connection-lost");
             }
-
-            console.log(`Reconnecting: ${err} > user: ${self.account.user}`)
-            self.RenewConnection();
+            self.RenewConnection(err);
         })
 
     }
 
     // Reconnect due to bad proxy.
-    RenewConnection() {
+    RenewConnection(err) {
         this.Disconnect();
         // Remove the proxy
         RemoveProxy(this.proxy);
-        // Reconnect
-        let self = this;
 
         if(this.account.noLoginDelay){
             var timeout = 1 // only do 1 second
         }else{
             var timeout = 3 + Math.floor(Math.random() * this.RECONNECT_DELAY)
         }
-        setTimeout(() => self.connect(), timeout * 1000);
+        console.log(`Reconnecting in ${timeout} sec: ${err} > user: ${this.account.user} | proxy IP: ${this.proxy.ip}`)
+        setTimeout(() => this.connect(), timeout * 1000);
     }
 
     Disconnect() {
