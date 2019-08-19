@@ -151,7 +151,6 @@ class Client extends EventEmitter {
                 retries++;
                 // too many tries, get a new proxy
                 if (retries == 3) {
-                    console.log(`GenerateWebCookie too many tries > user: ${self.account.user}`)
                     return reject();
                 }
 
@@ -179,7 +178,6 @@ class Client extends EventEmitter {
                 try {
                     let data = await Request(options);
                     if (!data.authenticateuser) {
-                        console.log(`GenerateWebCookie bad cookie > user: ${self.account.user}`)
                         setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
                     } else {
                         let sessionId = Crypto.randomBytes(12).toString('hex')
