@@ -4,11 +4,14 @@ $(() => {
      *               LOGIN ALL ACCS                     *
      * **************************************************/
     $("#all-login-btn").click(() => {
-        alert("This may take a while, depending on how many accounts you have. The page will be reloaded when request finishes.");
-
-        $.post("/steamaccounts/login", (doc) => {
+        alert("This may take a while, depending on how many accounts you have. You will be notified once finished.");
+        showSpinner();
+        $.post("/steamaccounts/login", (res) => {
+            hideSpinner();
+            alert(res);
             location.reload();
         }).fail((xhr, status, err) => {
+            hideSpinner();
             alert(xhr.responseText);
         })
     })
@@ -17,13 +20,15 @@ $(() => {
      *               LOGOUT ALL ACCS                    *
      * **************************************************/
     $("#all-logout-btn").click(() => {
-        if (!confirm("Are you sure you want to logout all your accounts?")) {
+        if (!confirm("Do you want to logout all your accounts?")) {
             return;
         }
-
+        showSpinner();
         $.post("/steamaccounts/logout", res => {
+            hideSpinner();
             location.reload();
         }).fail(xhr => {
+            hideSpinner();
             alert(xhr.responseText);
         })
 
@@ -62,36 +67,17 @@ $(() => {
     /**************************************************** 
     *             STOP IDLING ALL ACCOUNTS              *
     * **************************************************/
-    $("#sidebar-stopIdling").click(() => {
-        if (!confirm("Are you sure you want to stop all accounts from idling?")) {
+    $("#all-stopidle-btn").click(() => {
+        if (!confirm("Do you want to stop idling in all your accounts?")) {
             return
         }
 
-        let accountIds = getAllAccountIds();
-
-        if (accountIds.length == 0) {
-            alert("You do not have any accounts.")
-            return;
-        }
-
-        //hide sidebar and show spinner
-        $("#sidebar-menu").prop("hidden", true)
-        $("#sidebar-spinner").prop("hidden", false)
-
-        let goodResponse = 0;
-        let badResponse = 0;
-        accountIds.forEach(accountId => {
-            $.post('/steamaccount/stopgames', { accountId: accountId }, (doc) => {
-                goodResponse++;
-                $("#sidebar-msg").attr("hidden", false).text(`${goodResponse} accounts stopped idling.`).show();
-                checkCompletedReq((goodResponse + badResponse), accountIds.length)
-                updateAccountStatus(doc);
-            }).fail((xhr, status, err) => {
-                badResponse++;
-                $("#sidebar-errMsg").attr("hidden", false).text(`${badResponse} accounts failed.`).show()
-                checkCompletedReq((goodResponse + badResponse), accountIds.length)
-            })
+        $.post('/steamaccounts/stopgames', () => {
+            location.reload();
+        }).fail((xhr, status, err) => {
+            alert(xhr.responseText);
         })
+
 
     })
 
@@ -99,20 +85,15 @@ $(() => {
     /**************************************************** 
     *               GET GAME IN ALL ACCS                *
     * **************************************************/
-    $("#sidebar-getGame").click(() => {
+    $("#all-getgame-btn").click(() => {
         // change form id so it doesn't go to actions.js
         $("#activate-game-form").removeAttr("id").attr("id", "all-activate-game-form");
         $("#activate-free-game-modal").modal("toggle");
     })
 
     // form submit
-    $("body").on('submit', "#all-activate-game-form", function (e) {
+    $(document).on('submit', "#all-activate-game-form", function (e) {
         e.preventDefault();
-
-        let accountIds = getAllAccountIds();
-        if (accountIds.length == 0) {
-            return
-        }
 
         let appIds = $("input[name=appId]").val();
         if (!appIds) {
@@ -127,26 +108,16 @@ $(() => {
         $("#activate-game-msg").text("").prop("hidden", true)
         $("#activate-game-errMsg").text("").prop("hidden", true)
 
-        let activated = 0;
-        let fail = 0;
-        accountIds.forEach((accountId, index) => {
-            $.post('/steamaccount/activatefreegame', { accountId: accountId, appIds: appIds }, games => {
-                activated += 1
-                $("#activate-game-msg").prop("hidden", false).text(`Game(s) activated in ${activated} accounts.`)
-                processGames(accountId, games)
-                // hide the spinner on last response
-                if (index == accountIds.length - 1) {
-                    $("#spinner-activate-game").prop("hidden", true)
-                }
-            }).fail((xhr, status, err) => {
-                fail += 1
-                $("#activate-game-errMsg").prop("hidden", false).text(`${xhr.responseText} ${fail} accounts.`)
-                if (index == accountIds.length - 1) {
-                    $("#spinner-activate-game").prop("hidden", true)
-                    // show forma again
-                    $("#all-activate-game-form").prop("hidden", false)
-                }
-            })
+        $.post('/steamaccounts/activatefreegame', { appIds: appIds }, res => {
+            $("#activate-game-msg").prop("hidden", false).text(res.msg + "\nReloading in 3 secs.")
+            $("#spinner-activate-game").prop("hidden", true)
+            processGames(null, res.games)
+            setTimeout(() => location.reload(), 3000);
+        }).fail((xhr, status, err) => {
+            $("#activate-game-errMsg").prop("hidden", false).text(xhr.responseText)
+            $("#spinner-activate-game").prop("hidden", true)
+            // show forma again
+            $("#all-activate-game-form").prop("hidden", false)
         })
     })
 
@@ -155,6 +126,17 @@ $(() => {
         $("#all-activate-game-form").removeAttr('id').attr("id", "activate-game-form");
         $("#activate-game-form").prop("hidden", false)
     })
+
+
+    function showSpinner() {
+        $("#all-acc-actions-dropdown-box").hide()
+        $("#all-acc-actions-spinner").prop("hidden", false)
+    }
+
+    function hideSpinner() {
+        $("#all-acc-actions-dropdown-box").show();
+        $("#all-acc-actions-spinner").prop("hidden", true)
+    }
 
 
 })

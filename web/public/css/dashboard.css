@@ -30,7 +30,6 @@
     font-size: 12px;
 }
 
-
 .nick{
     width: 100%;
     color: rgb(163, 192, 255); 
@@ -84,9 +83,19 @@
     border: solid 3px rgb(134, 0, 0)
 }
 
+.account-bad:hover{
+    border: solid 3px rgb(177, 0, 0);
+    box-shadow: 0px 0px 8px 2px rgba(177, 0, 0, 0.75);
+}
+
 .account-Offline{
     background: linear-gradient(0deg, rgba(179, 179, 179, 0.5) 0%, rgba(75, 75, 75, 0.5) 100%);
     border: solid 3px rgb(192,192,192)
+}
+
+.account-Offline:hover{
+    border: solid 3px rgb(216, 216, 216);
+    box-shadow: 0px 0px 8px 2px rgba(216, 216, 216, 0.75);
 }
 
 .account-Online, .account-Away, .account-Busy, .account-Invisible{
@@ -94,10 +103,21 @@
     border: solid 3px rgb(0, 132, 255)
 }
 
+.account-online:hover, .account-Away:hover, .account-Busy:hover, .account-Invisible:hover{
+    border: solid 3px rgb(85, 173, 255);
+    box-shadow: 0px 0px 8px 2px rgba(85, 173, 255, 0.75);
+}
+
 .account-Reconnecting{
     background: linear-gradient(0deg, rgba(179, 179, 179, 0.5) 0%, rgba(75, 75, 75, 0.5) 100%);
     border: solid 3px rgb(134, 0, 0)
 }
+
+.account-Reconnecting:hover{
+    border: solid 3px rgb(177, 0, 0);
+    box-shadow: 0px 0px 8px 2px rgba(177, 0, 0, 0.75);
+}
+
 
 .status-Away{
     color: rgb(255, 255, 0);
@@ -155,6 +175,7 @@
     height: 20px;
     line-height: 0px;
 }
+
 
 /* SET STATUS MODAL */
 #set-status-content{
@@ -293,6 +314,10 @@ input[name="emailGuard"] {
     margin-left: 10px;
 }
 
+#all-acc-actions-spinner{
+    margin: 0 2.5px;
+}
+
 @media only screen and (max-width: 800px) {
     #logo{
         display: none;
@@ -316,16 +341,6 @@ input[name="emailGuard"] {
     
     #settings-icon{
         margin-right: 0px
-    }
-
-    .buttons-box{
-        height: 130px;
-    }
-
-    .btn-sm{
-        font-size: 18px;
-        width: 135px;
-        height: 28px;
     }
 
     #current-filter-txt{

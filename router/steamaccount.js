@@ -3,16 +3,6 @@ const isLoggedIn = require('./util/isLoggedIn')
 const apiLimiter = require('./util/api-limiter');
 const AccountHandler = require("../app")
 
-// Returns all accounts for this user
-Router.get('/steamaccounts', isLoggedIn, async (req, res) => {
-    try {
-        let result = await AccountHandler.getAllAccounts(req.session.userId)
-        return res.send(result);
-    } catch (error) {
-        console.log(error)
-        return res.status(500).send(error)
-    }
-})
 
 // Add a new steam account
 Router.post("/steamaccount/add", isLoggedIn, async (req, res) => {
@@ -87,6 +77,7 @@ Router.post('/steamaccount/playgames', isLoggedIn, async function (req, res) {
         let result = await AccountHandler.playGames(req.session.userId, req.body.accountId, games)
         return res.send(result);
     } catch (error) {
+        console.log(error)
         return res.status(400).send(error)
     }
 })
@@ -128,9 +119,8 @@ Router.post('/steamaccount/activatefreegame', isLoggedIn, async function (req, r
 
     // validation
     let appIds = req.body.appIds.split(",").map(Number).filter(item => !isNaN(item))
-
     if (appIds.length < 1) {
-        return res.status(400).send("appIds must be a valid number string.")
+        return res.status(400).send("Invalid input, enter valid appIds")
     }
 
     try {

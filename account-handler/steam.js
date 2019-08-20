@@ -209,30 +209,29 @@ module.exports.changeNick = async function (userId, accountId, name) {
  * Saves account changes to database
  * Returns a promise with account
  */
-module.exports.playGames = async function (userId, accountId, games) {
-    let self = this;
-    return new Promise(async function (resolve, reject) {
+module.exports.playGames = async function (userId, accountId, games, options) {
+    let client = this.isAccountOnline(userId, accountId);
+    if (!client) {
+        return Promise.reject("Account is not online.");
+    }
 
-        let client = self.isAccountOnline(userId, accountId);
-        if (!client) {
-            return reject("Account is not online.");
-        }
-
-        //save playing games to account and force correct status
-        let account = await self.getAccount({ userId: userId, accountId: accountId })
+    // Account passed
+    if (options && options.account) {
+        var account = options.account
+    } else { // fetch account
+        var account = await this.getAccount({ userId: userId, accountId: accountId })
         if (!account) {
             return Promise.reject("Account not found.")
         }
+    }
 
-        // Play games
-        let status = client.playGames(games);
+    // Play games
+    let status = client.playGames(games);
 
-        account.gamesPlaying = games;
-        account.status = status;
-        account = await self.saveAccount(account);
-        account = self.filterSensitiveAcc(account);
-        resolve(account);
-    })
+    account.gamesPlaying = games;
+    account.status = status;
+    await this.saveAccount(account);
+    return Promise.resolve(this.filterSensitiveAcc(account));
 }
 
 /**
@@ -254,7 +253,7 @@ module.exports.steamConnect = async function (loginOptions) {
             loginOptions.steamid = res.steamid;
             loginOptions.farmingData = res.farmingData;
             loginOptions.inventory = res.inventory;
-            
+
             event_count++;
             if (event_count === 4) {
                 return resolve(client);
@@ -382,23 +381,27 @@ module.exports.deleteAccount = async function (userId, accountId) {
  * Activate free game to account
  * Returns a promise with account
  */
-module.exports.activateFreeGame = async function (userId, accountId, appIds) {
+module.exports.activateFreeGame = async function (userId, accountId, appIds, options) {
     // check account is logged in
     let client = this.isAccountOnline(userId, accountId);
     if (!client) {
         return Promise.reject("Account is not online.")
     }
 
-    // find account in db
-    let acc = await this.getAccount({ userId: userId, accountId: accountId });
-    if (!acc) {
-        return Promise.reject("Account not found.")
+    // don't fetch account if passed
+    if (options && options.account) {
+        var account = options.account
+    } else {
+        var account = await this.getAccount({ userId: userId, accountId: accountId });
+        if (!account) {
+            return Promise.reject("Account not found.")
+        }
     }
 
     try {
         let games = await client.activateFreeGame(appIds)
-        acc.games = this.addGames(games, acc.games);
-        await this.saveAccount(acc)
+        account.games = this.addGames(games, account.games);
+        await this.saveAccount(account)
         return Promise.resolve(games)
     } catch (error) {
         console.log(error)

@@ -8,6 +8,7 @@ module.exports.checker = async (req, res, next) => {
     try {
         let result = await ApiLimiter.findOne({ userId: req.session.userId })
         if (result) {
+            res.dontRemoveApiLimit = true;
             return res.status(400).send("You have an ongoing request, wait until it finishes.")
         }
 

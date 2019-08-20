@@ -8,7 +8,6 @@ function buildAccount(account) {
     let farmingInfo = "" // farming modal info
     let farmingStatus = "off"
     let inventory = "";
-    let farmingCountDownId = ""
 
     // SET CORRECT BUTTON AND STATUS
     if (account.status === "Online" || account.status === "In-game") {
@@ -25,7 +24,7 @@ function buildAccount(account) {
         account.forcedStatus = "Offline"
         buttons = `
               <button type="button" class="btn btn-primary btn-sm acc-login-btn">Login</button>
-              <button type="button" class="btn btn-primary btn-sm btn-danger acc-delete-acc-btnc">Delete</button>`
+              <button type="button" class="btn btn-primary btn-sm btn-danger acc-delete-acc-btn">Delete</button>`
     } else if (account.status === "Reconnecting") {
         account.forcedStatus = "Reconnecting"
     }
@@ -78,7 +77,7 @@ function buildAccount(account) {
 
         // START THE FARMING COUNTDOWN IF FARMING
         if (account.isFarming) {
-            farmingCountDownId = setInterval(() => {
+            farmingTaskIds[account._id] = setInterval(() => {
                 let diff = account.nextFarmingCheck - Date.now();
                 if (diff < 1) {
                     $(`div[data-id="${account._id}"]`).find(".farming-mode").text("updating")
@@ -116,20 +115,17 @@ function buildAccount(account) {
                         </div>
                     </div>`;
 
-
-
-        setInterval(() => {
+        lastReconnectTaskIds[account._id] = setInterval(() => {
             $(`div[data-id="${account._id}"]`).find(".last-connect").text(time(account.lastConnect))
         }, 1000);
-
     }
 
     let acc = `
-        <div class="account account-${account.forcedStatus}" data-id="${account._id}" data-realstatus="${account.status}" data-farmcheck="${account.nextFarmingCheck}" data-isFarming="${account.isFarming}" data-farmingCountDownId="${farmingCountDownId}">
+        <div class="account account-${account.forcedStatus}" data-id="${account._id}" data-realstatus="${account.status}" data-farmcheck="${account.nextFarmingCheck}" data-isFarming="${account.isFarming}">
 
             <div class="nick">${account.persona_name}</div>
 
-            <a href="https://steamcommunity.com/profiles/${account.steamid}">
+            <a href="https://steamcommunity.com/profiles/${account.steamid}" target="_blank">
                 <img class="avatar avatar-${account.status}" src="${account.avatar}">
             </a>
            
@@ -296,12 +292,14 @@ function processGames(accountId, games) {
     $(".activated-games").attr("hidden", false).show(0);
 
     //show activated games in idle modal
-    gamesDiv = ""
-    for (let j in games) {
-        let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
-        gamesDiv += `<img class="game-img unselected" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
+    if (accountId) {
+        gamesDiv = ""
+        for (let j in games) {
+            let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
+            gamesDiv += `<img class="game-img unselected" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
+        }
+        $(`div.account[data-id="${accountId}"]`).find(".game-body").first().append(gamesDiv)
     }
-    $(`div.account[data-id="${accountId}"]`).find(".game-body").first().append(gamesDiv)
 }
 
 // Remove selected games in idle modal

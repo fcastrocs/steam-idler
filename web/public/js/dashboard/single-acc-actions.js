@@ -108,6 +108,9 @@ $(() => {
         self.find(".acc-spinner").prop("hidden", false);
 
         $.post('/steamaccount/logout', { accountId: accountId }, (doc) => {
+            //clear intervals
+            clearInterval(farmingTaskIds[accountId])
+            clearInterval(lastReconnectTaskIds[accountId])
             updateAccountStatus(doc);
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
@@ -219,8 +222,8 @@ $(() => {
         let accountId = self.attr("data-id");
         $.post('/steamaccount/stopfarming', { accountId: accountId }, doc => {
             self.find(".farming-modal").modal("toggle");
-            let intervalId = self.attr("data-farmingCountDownId")
-            clearInterval(intervalId)
+            // clear the interval
+            clearInterval(farmingTaskIds[accountId])
             setTimeout(() => updateAccountStatus(doc), 300);
         }).fail((xhr, status, err) => {
             self.find(".farming-errMsg").text(xhr.responseText).prop("hidden", false);

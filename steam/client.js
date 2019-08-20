@@ -23,14 +23,14 @@ class Client extends EventEmitter {
         this.STEAMCOMMUNITY_TIMEOUT = 2000
         this.STEAMCOMMUNITY_RETRY_DELAY = 1000
         this.CONNECTION_TIMEOUT = 5 // in seconds
-        this.CONNECT_DELAY = 60  // maximum delay in seconds
+        this.CONNECT_DELAY = 30  // maximum delay in seconds
         this.RECONNECT_DELAY = 5
 
         // set proper login delay
         if(this.account.noLoginDelay){
             var timeout = 1 // 3 seconds
         }else{
-            var timeout = 3 + Math.floor(Math.random() * this.CONNECT_DELAY)
+            var timeout = Math.floor(Math.random() * this.CONNECT_DELAY)
         }
 
         setTimeout(() => this.connect(), timeout * 1000);
@@ -445,7 +445,7 @@ class Client extends EventEmitter {
                 self.emit("login-res", {
                     steamid: self.account.steamid,
                     farmingData: farmingData || [],
-                    inventory: inventory || []
+                    inventory: inventory || null
                 })
 
                 // After login, account should have a reconnect delay
@@ -587,7 +587,7 @@ class Client extends EventEmitter {
         if(this.account.noLoginDelay){
             var timeout = 1 // only do 1 second
         }else{
-            var timeout = 3 + Math.floor(Math.random() * this.RECONNECT_DELAY)
+            var timeout = Math.floor(Math.random() * this.RECONNECT_DELAY)
         }
         console.log(`Reconnecting in ${timeout} sec: ${err} > user: ${this.account.user} | proxy IP: ${this.proxy.ip}`)
         setTimeout(() => this.connect(), timeout * 1000);
