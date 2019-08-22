@@ -4,13 +4,24 @@ $(() => {
      *               LOGIN ALL ACCS                     *
      * **************************************************/
     $("#all-login-btn").click(() => {
-        alert("This may take a while, depending on how many accounts you have. You will be notified once finished.");
+        if (apiLimit) {
+            alert("You have an ongoing request, please wait until it finished.")
+            return;
+        }
+        apiLimit = true
+        alert("This may take a while, depending on how many accounts you have.");
         showSpinner();
-        $.post("/steamaccounts/login", (res) => {
+        socket.on("logged-in", doc => {
+            updateAccountStatus(doc);
+        })
+        $.post("/steamaccounts/login", { socketId: socket.id }, res => {
+            socket.removeAllListeners();
+            apiLimit = false;
             hideSpinner();
             alert(res);
-            location.reload();
         }).fail((xhr, status, err) => {
+            socket.removeAllListeners();
+            apiLimit = false;
             hideSpinner();
             alert(xhr.responseText);
         })

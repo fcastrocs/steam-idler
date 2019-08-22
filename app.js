@@ -15,9 +15,26 @@ const AccountHandler = require("./account-handler");
 const SteamAccount = require('./models/steam-accounts')
 const ApiLimiter = require('./models/api-limiter')
 
+// SSL Certificate
+const privateKey = fs.readFileSync(`${__dirname}/ssl/private.key`, 'utf8');
+const certificate = fs.readFileSync(`${__dirname}/ssl/certificate.crt`, 'utf8');
+const ca = fs.readFileSync(`${__dirname}/ssl/ca_bundle.crt`, 'utf8');
+const credentials = {
+    key: privateKey,
+    cert: certificate,
+    ca: ca
+};
+
+// Starting both http & https servers
+const httpServer = http.createServer(app);
+const httpsServer = https.createServer(credentials, app);
+
+// Start socket.io
+module.exports.io = require('socket.io')(httpServer);
+
 // Handler must be kept in RAM at all times
 let accountHandler = new AccountHandler();
-module.exports = accountHandler;
+module.exports.accountHandler = accountHandler;
 
 //Initialization process.
 (async () => {
@@ -72,8 +89,8 @@ module.exports = accountHandler;
     //     return;
     // }
 
-    // Initialize web
-    initWeb();
+    // Initialize express.js
+    initExpress();
 })();
 
 async function DBconnect() {
@@ -120,18 +137,7 @@ async function fetchProxies() {
     }
 }
 
-function initWeb() {
-    // Certificate
-    const privateKey = fs.readFileSync(`${__dirname}/ssl/private.key`, 'utf8');
-    const certificate = fs.readFileSync(`${__dirname}/ssl/certificate.crt`, 'utf8');
-    const ca = fs.readFileSync(`${__dirname}/ssl/ca_bundle.crt`, 'utf8');
-
-    const credentials = {
-        key: privateKey,
-        cert: certificate,
-        ca: ca
-    };
-
+function initExpress() {
     // set HTTP headers appropriately to counter web vulnerabilities
     app.use(helmet())
 
@@ -190,11 +196,6 @@ function initWeb() {
         res.redirect("/");
     });
 
-
-    //Start listening on port
-    // Starting both http & https servers
-    const httpServer = http.createServer(app);
-    const httpsServer = https.createServer(credentials, app);
 
     httpServer.listen(process.env.HTTP_PORT, () => {
         console.log(' - HTTP Server running on port 8080');

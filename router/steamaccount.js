@@ -1,42 +1,63 @@
 const Router = require('express').Router();
 const isLoggedIn = require('./util/isLoggedIn')
 const apiLimiter = require('./util/api-limiter');
-const AccountHandler = require("../app")
+const AccountHandler = require("../app").accountHandler
 
 
 // Add a new steam account
-Router.post("/steamaccount/add", isLoggedIn, async (req, res) => {
+Router.post("/steamaccount/add", [isLoggedIn, apiLimiter.checker], async (req, res) => {
     if (!req.body.user || !req.body.pass) {
-        return res.status(400).send("user/pass needed")
+        apiLimiter.remove(req.session.userId);
+        return res.status(400).send("User/pass needed.")
     }
 
-    let account = {
+    if (!req.body.socketId) {
+        apiLimiter.remove(req.session.userId);
+        return res.status(400).send("socket ID needed.")
+    }
+
+    // setup login options
+    let options = {
         user: req.body.user.toLowerCase().trim(),
         pass: req.body.pass,
-        emailGuard: req.body.emailGuard,
-        shared_secret: req.body.sharedSecret
+        shared_secret: req.body.sharedSecret,
+        socketId: req.body.socketId
     }
 
     try {
-        let result = await AccountHandler.addAccount(req.session.userId, account)
+        let result = await AccountHandler.addAccount(req.session.userId, options)
+        apiLimiter.remove(req.session.userId);
         return res.send(result);
     } catch (error) {
+        apiLimiter.remove(req.session.userId);
+        console.log(error)
         return res.status(400).send(error)
     }
-
 })
 
 
 // connects a steam account to steam
-Router.post('/steamaccount/login', isLoggedIn, async function (req, res) {
+Router.post('/steamaccount/login', [isLoggedIn, apiLimiter.checker], async function (req, res) {
     if (!req.body.accountId) {
+        apiLimiter.remove(req.session.userId);
         return res.status(400).send("accountId needed")
     }
 
+    if (!req.body.socketId) {
+        apiLimiter.remove(req.session.userId);
+        return res.status(400).send("socket ID needed.")
+    }
+
     try {
-        let result = await AccountHandler.loginAccount(req.session.userId, req.body.accountId, { noLoginDelay: true })
-        return res.send(result);
+        let doc = await AccountHandler.loginAccount(req.session.userId, req.body.accountId, {
+            noLoginDelay: true,
+            socketId: req.body.socketId
+        })
+        apiLimiter.remove(req.session.userId);
+        return res.send(doc);
     } catch (error) {
+        apiLimiter.remove(req.session.userId);
+        console.log(error)
         return res.status(400).send(error)
     }
 })

@@ -1,98 +1,175 @@
 $(() => {
-
-    $.ajaxSetup({
-        timeout: 180000
-    });
-
-    /**************************************************** 
-     *               ADD STEAM ACCOUNT                  *
-     * **************************************************/
+    /***************************************************
+    *               ADD STEAM ACCOUNT                  *
+    * **************************************************/
     $('#add-steamaccount-form').submit((e) => {
         e.preventDefault();
 
-        // Hide msg
-        $('#add-acc-msg').removeAttr("hidden").hide(0)
+        //clear previous listeners
+        socket.removeAllListeners();
+
         // Hide form
-        $("#add-steamaccount-form").hide(0);
+        $("#add-steamaccount-form").prop("hidden", true)
+        // show warning
+        $("#add-acc-warning-msg").prop("hidden", false)
+        // clear and hide messages
+        $('#add-acc-console').prop("hidden", true).html("");
+        $('#add-acc-error-msg').prop("hidden", true).text("")
+        $('#add-acc-success-msg').prop("hidden", true);
 
-        //show loading spinner
-        $('#add-acc-errMsg').removeAttr("hidden").show(0).text("Wait, do not refresh the page.")
-        $("#spinner").removeAttr("hidden").show(0);
+        // get form data and transform it into an object
+        let data = $('#add-steamaccount-form').serializeArray();
+        let dataObj = new Object();
+        data.forEach(item => {
+            if (item.value === "") {
+                return;
+            }
+            dataObj[`${item.name}`] = item.value;
+        })
 
-        //form handler
-        let data = $('#add-steamaccount-form').serialize();
+        /*********************************
+        *          LOG MESSAGES         *
+        ********************************/
+        socket.on("login-log-msg", msg => {
+            let newMsg = `<p>• ${msg}</p>${$('#add-acc-console').html()}`
+            $('#add-acc-console').html(newMsg).prop("hidden", false);
+        })
 
-        $.post('/steamaccount/add', data, (doc) => {
+        /********************************
+        *          ERROR MESSAGE        *
+        ********************************/
+        socket.on("add-acc-error-msg", msg => {
+            // hide warning message
+            $("#add-acc-warning-msg").prop("hidden", true);
+            // show error msg
+            $('#add-acc-error-msg').prop("hidden", false).text(msg)
+
+            /********************************
+            *          EMAIL GUARD          *
+            ********************************/
+            if (msg === "Invalid email guard code." || msg === "Email guard code needed.") {
+                // show email guard form
+                $("#email-guard-form").prop("hidden", false);
+                $("#email-guard-form")[0].reset();
+
+                $('#email-guard-form').submit((e) => {
+                    e.preventDefault();
+                    // show warning
+                    $("#add-acc-warning-msg").prop("hidden", false);
+                    // hide form
+                    $("#email-guard-form").prop("hidden", true)
+                    // hide error msg
+                    $('#add-acc-error-msg').text("").prop("hidden", true);
+                    // get code
+                    let code = $("input[name='emailGuard").val();
+                    if (!code) {
+                        return;
+                    }
+                    socket.emit("email-guard", code)
+                })
+
+            }
+
+            /********************************
+            *         SHARED SECRET         *
+            ********************************/
+            else if (msg === "Invalid shared secret.") {
+                // show form
+                $("#add-steamaccount-form").prop("hidden", false);
+                $("input[name='sharedSecret").val("");
+            }
+            /********************************
+            *         BAD PASSWORD          *
+            ********************************/
+            else {
+                // show form
+                $("#add-steamaccount-form").prop("hidden", false);
+                $("#add-steamaccount-form")[0].reset();
+            }
+        })
+
+        socket.on("logged-in", doc => {
+            $('#add-acc-success-msg').prop("hidden", false);
+            // Show form
+            $('#add-steamaccount-form')[0].reset();
+            $("#add-steamaccount-form").prop("hidden", false);
+            // hide warning message
+            $("#add-acc-warning-msg").prop("hidden", true)
             // Add account to content-body
             $("#no-accounts").hide(0);
             let account = buildAccount(doc);
             $("#accounts-box").append(account)
 
-            // success message
-            $('#add-acc-msg').show(0).text("Success, account added.")
-            //hide spinner
-            $("#spinner").hide(0)
-            //hide err message
-            $('#add-acc-errMsg').hide(0)
-            //show form again
-            $("#add-steamaccount-form").show(0);
-            //hide email guard inputs
-            $("#email-guard").hide(0)
-            $("input[name='emailGuard").val("")
-            $("#shared-secret").show(0)
-            $("input[name='sharedSecret").val("")
-            $("#username").show(0)
-            $("input[name='user").val("")
-            $("#password").show(0)
-            $("input[name='pass").val("")
-            //show pass, user, shared secret inputs
-        }).fail((xhr, status, err) => {
-            //show form again
-            $("#add-steamaccount-form").show(0);
-            //stop loading spinner
-            $("#spinner").hide(0)
-
-            if (xhr.responseText === "Email guard code needed") {
-                $('#add-acc-msg').text("Enter email guard code").show(0)
-                $('#add-acc-errMsg').hide(0)
-                $("#shared-secret").hide(0);
-                $("#username").hide(0);
-                $("#password").hide(0);
-                $("#email-guard").attr("hidden", false).show(0) //show email guard input
-            } else if (xhr.responseText === "Bad User/Pass") {
-                $('#add-acc-errMsg').show(0).text("Bad user/pass")
-                $("input[name='pass").val("")
-            } else if (xhr.responseText == "Invalid guard code") {
-                $('#add-acc-errMsg').text("Invalid email guard code, retry").show(0)
-                $("#username").hide();
-                $("#password").hide();
-                $("#shared-secret").hide();
-                $("#email-guard").attr("hidden", false).show(0);
-                $("input[name='emailGuard").val("")
-            } else if (xhr.responseText == "Invalid shared secret") {
-                $('#add-acc-errMsg').show(0).text(xhr.responseText)
-                $("input[name='sharedSecret").val("")
-            } else {
-                $('#add-acc-msg').text(xhr.responseText).show(0)
-            }
+            //clear listeners
+            socket.removeAllListeners();
         })
+
+        // attach the socketId to data
+        dataObj.socketId = socket.id
+
+        // send request
+        $.post('/steamaccount/add', dataObj);
+    })
+
+    //  modal close, clean everythinkg
+    $('#add-acc-modal').on('hidden.bs.modal', function () {
+        // show form
+        $("#add-steamaccount-form").prop("hidden", false)
+        // Reset form
+        $('#add-steamaccount-form')[0].reset();
+        // hide warning
+        $("#add-acc-warning-msg").prop("hidden", true)
+        // clear and hide messages
+        $('#add-acc-console').prop("hidden", true).text("");
+        $('#add-acc-error-msg').prop("hidden", true).text("")
+        $('#add-acc-success-msg').prop("hidden", true);
+        // email guard form
+        $("#email-guard-form").prop("hidden", true);
+        $("#email-guard-form")[0].reset();
     })
 
     /**************************************************** 
     *               STEAM - LOGIN                       *
     * **************************************************/
     $(document).on('click', ".acc-login-btn", function () {
+        if (apiLimit) {
+            alert("You have an ongoing request. Use the Actions button to login all accounts at once.")
+            return;
+        }
+
+        apiLimit = true;
+
         let self = $(this).closest("div.account")
         let accountId = self.attr("data-id");
-        // hide all buttons
-        self.find("#acc-buttons").hide();
-        // enable spinner
-        self.find(".acc-spinner").prop("hidden", false);
-        $.post('/steamaccount/login', { accountId: accountId }, doc => {
-            updateAccountStatus(doc);
-        }).fail((xhr, status, err) => {
-            alert(xhr.responseText)
+        // hide buttons
+        self.find(".acc-buttons").hide();
+        // show console box
+        consoleBox = self.find(".console");
+        consoleBox.prop("hidden", false).html("")
+
+        socket.removeAllListeners();
+
+        /*********************************
+        *          LOG MESSAGES         *
+        ********************************/
+        socket.on("login-log-msg", msg => {
+            let newMsg = `<p>• ${msg}</p>${consoleBox.html()}`
+            consoleBox.html(newMsg).prop("hidden", false);
         })
+
+        socket.on("logged-in", doc => {
+            apiLimit = false;
+            socket.removeAllListeners();
+            updateAccountStatus(doc);
+        })
+
+        // send request
+        $.post('/steamaccount/login', { accountId: accountId, socketId: socket.id })
+            .fail((xhr, status, err) => {
+                apiLimit = false;
+                socket.removeAllListeners();
+                alert(xhr.responseText)
+            })
     })
 
 

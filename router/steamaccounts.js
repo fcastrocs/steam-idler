@@ -1,13 +1,13 @@
 const Router = require('express').Router();
 const isLoggedIn = require('./util/isLoggedIn')
 const apiLimiter = require('./util/api-limiter');
-const AccountHandler = require("../app")
+const AccountHandler = require("../app").accountHandler
 const allSettled = require('promise.allsettled');
 
 // Remove API limit before sending response
 Router.use("/steamaccounts/*", function (req, res, next) {
     let send = res.send;
-    res.send = function (body) { 
+    res.send = function (body) {
         // This will prevent this from being called twice, as res.send is called twice
         if (typeof (body) === 'string' && !res.dontRemoveApiLimit) {
             apiLimiter.remove(req.session.userId);
@@ -35,12 +35,18 @@ Router.post('/steamaccounts/login', [isLoggedIn, apiLimiter.checker], async func
             return res.status(400).send("You don't have any accounts.")
         }
 
+        if (!req.body.socketId) {
+            apiLimiter.remove(req.session.userId);
+            return res.status(400).send("socket ID needed.")
+        }
+
         // Log in all accounts
         let promises = [];
         for (let i in accounts) {
             promises.push(AccountHandler.loginAccount(req.session.userId, accounts[i]._id, {
                 dontGetAccount: true,
-                account: accounts[i]
+                account: accounts[i],
+                socketId: req.body.socketId
             }))
         }
 
@@ -52,9 +58,9 @@ Router.post('/steamaccounts/login', [isLoggedIn, apiLimiter.checker], async func
                 }
             })
 
-            if(fulfilled == 0){
+            if (fulfilled == 0) {
                 return res.status(400).send("It appears all your accounts are already online.")
-            }else{
+            } else {
                 return res.send(`${fulfilled} accounts were logged in.`)
             }
         })

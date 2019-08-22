@@ -11,10 +11,13 @@ const Request = require("request-promise-native")
 const SocksProxyAgent = require('socks-proxy-agent');
 const SteamCrypto = require("@doctormckay/steam-crypto")
 const cheerio = require('cheerio')
+const io = require("../app").io;
 
 class Client extends EventEmitter {
-    constructor(loginOptions) {
+    constructor(loginOptions, socketId) {
         super();
+
+        this.socketId = socketId
 
         // copy login options obj
         this.account = {}
@@ -27,12 +30,15 @@ class Client extends EventEmitter {
         this.RECONNECT_DELAY = 5
 
         // set proper login delay
-        if(this.account.noLoginDelay){
-            var timeout = 1 // 3 seconds
-        }else{
+        if (this.account.noLoginDelay) {
+            var timeout = 0
+        } else {
             var timeout = Math.floor(Math.random() * this.CONNECT_DELAY)
         }
 
+        if (this.socketId) {
+            io.to(`${this.socketId}`).emit("login-log-msg", "Connecting to Steam.");
+        }
         setTimeout(() => this.connect(), timeout * 1000);
     }
 
@@ -90,7 +96,7 @@ class Client extends EventEmitter {
         if (!this.loggedIn) {
             return;
         }
-        
+
         return new Promise((resolve, reject) => {
             // register the event first
             this.client.once('redeem-key', games => {
@@ -402,7 +408,15 @@ class Client extends EventEmitter {
                 // generate web cookie
                 try {
                     await self.GenerateWebCookie(res.webapi_authenticate_user_nonce);
+
+                    if (this.socketId) {
+                        io.to(`${this.socketId}`).emit("login-log-msg", "Received web cookie.");
+                    }
                 } catch (error) {
+                    if (this.socketId) {
+                        io.to(`${this.socketId}`).emit("login-log-msg", "Could not get web cookie, retrying with new proxy.");
+                    }
+
                     // could not generate web cookie, account will relogin.
                     self.RenewConnection("cookie")
                     return;
@@ -414,7 +428,15 @@ class Client extends EventEmitter {
                         var farmingData = await self.GetFarmingData();
                         // do not fetch data again.
                         self.account.skipFarmingData = true;
+
+                        if (this.socketId) {
+                            io.to(`${this.socketId}`).emit("login-log-msg", "Received Steam cards data.");
+                        }
                     } catch (error) {
+                        if (this.socketId) {
+                            io.to(`${this.socketId}`).emit("login-log-msg", "Could not get Steam cards data, retrying with new proxy.");
+                        }
+
                         // could not get farming data, account will relogin.
                         self.RenewConnection("farming data")
                         return;
@@ -424,7 +446,15 @@ class Client extends EventEmitter {
                 // Get inventory 
                 try {
                     var inventory = await self.GetIventory();
+
+                    if (this.socketId) {
+                        io.to(`${this.socketId}`).emit("login-log-msg", "Received inventory data.");
+                    }
                 } catch (error) {
+                    if (this.socketId) {
+                        io.to(`${this.socketId}`).emit("login-log-msg", "Could not get inventory data, retrying with new proxy.");
+                    }
+
                     self.RenewConnection("inventory")
                     return
                 }
@@ -442,51 +472,83 @@ class Client extends EventEmitter {
                 self.setPersona(self.account.forcedStatus)
 
                 console.log(`Steam Login > user: ${self.account.user}`)
+
                 self.emit("login-res", {
                     steamid: self.account.steamid,
                     farmingData: farmingData || [],
                     inventory: inventory || null
                 })
 
+                if (this.socketId) {
+                    io.to(`${this.socketId}`).emit("login-log-msg", "Successful login.");
+                }
+
                 // After login, account should have a reconnect delay
                 self.account.noLoginDelay = false;
+                // After login, don't send more messages
+                this.socketId = null;
 
                 return;
             }
 
             else if (code == 5) {
-                errMsg = "Bad User/Pass"
+                errMsg = "Bad User/Pass."
             }
 
             // EMAIL GUARD 
-            else if (code == 63) {
-                errMsg = "Email guard code needed"
-            }
+            else if (code == 63 || code == 65) {
+                this.dontReconnect = true;
 
-            // InvalidLoginAuthCode
-            else if (code == 65) {
-                errMsg = "Invalid guard code"
-            }
+                if (this.socketId) {
+                    if (code == 63) {
+                        io.to(`${this.socketId}`).emit("add-acc-error-msg", "Email guard code needed.");
+                    }
+                    else {
+                        io.to(`${this.socketId}`).emit("add-acc-error-msg", "Invalid email guard code.");
+                    }
 
+                    io.sockets.sockets[this.socketId].once("email-guard", code => {
+                        io.to(`${this.socketId}`).emit("login-log-msg", "Email guard code received, retrying.");
+                        this.dontReconnect = false;
+                        this.account.emailGuard = code;
+                        self.connect({ usePrevious: true });
+                    })
+                }
+                return;
+            }
             // RATE LIMIT
             else if (code == 84) {
+                if (this.socketId && !this.badProxyMsgSent) {
+                    this.badProxyMsgSent = true;
+                    io.to(`${this.socketId}`).emit("login-log-msg", "Bad proxy, re-attemping login. (This may take some time)");
+                }
+
                 self.RenewConnection("rate limit")
                 return;
             }
 
             // 2FA
             else if (code == 85) {
-                errMsg = "2FA code needed"
+                errMsg = "2FA code needed."
+
             }
 
             else if (code == 88) {
-                errMsg = "Invalid shared secret"
+                errMsg = "Invalid shared secret."
             }
             // Some other error code
             else {
+                if (this.socketId) {
+                    io.to(`${this.socketId}`).emit("login-log-msg", "Bad Steam CM, trying another one.");
+                }
+
                 console.log(`Login failed code: ${code} > user: ${self.account.user}`)
                 self.RenewConnection(`code ${code}`)
                 return;
+            }
+
+            if (this.socketId) {
+                io.to(`${this.socketId}`).emit("login-log-msg", errMsg);
             }
 
             self.loggedIn = false;
@@ -497,14 +559,26 @@ class Client extends EventEmitter {
 
         this.client.once('games', games => {
             self.emit("games", games);
+
+            if (this.socketId) {
+                io.to(`${this.socketId}`).emit("login-log-msg", "Received games.");
+            }
         })
 
         this.client.once("persona-name", persona_name => {
             self.emit("persona-name", persona_name)
+
+            if (this.socketId) {
+                io.to(`${this.socketId}`).emit("login-log-msg", "Received persona name.");
+            }
         })
 
         this.client.once("avatar", avatar => {
             self.emit("avatar", avatar)
+
+            if (this.socketId) {
+                io.to(`${this.socketId}`).emit("login-log-msg", "Received avatar.");
+            }
         })
 
         // sentry
@@ -527,6 +601,10 @@ class Client extends EventEmitter {
             // clear email guard
             self.account.emailGuard = null
 
+            if (this.socketId) {
+                io.to(`${this.socketId}`).emit("login-log-msg", "Received sentry.");
+            }
+
             self.emit("sentry", sentry);
         });
 
@@ -537,12 +615,14 @@ class Client extends EventEmitter {
     /************************************************************************
      * 					  ESTABLISH CONNECTION WITH STEAM					*
      ************************************************************************/
-    async connect() {
+    async connect(options) {
         let self = this;
 
         // Get a SteamCM
-        let steamcm = await GetSteamCM();
-        this.proxy = await GetProxy();
+        if (!options || !options.usePrevious) {
+            this.steamcm = await GetSteamCM();
+            this.proxy = await GetProxy();
+        }
 
         // connection options
         this.options = {
@@ -553,8 +633,8 @@ class Client extends EventEmitter {
                 type: 4
             },
             destination: {
-                host: steamcm.ip,
-                port: steamcm.port
+                host: this.steamcm.ip,
+                port: this.steamcm.port
             }
         }
 
@@ -563,11 +643,21 @@ class Client extends EventEmitter {
 
         // SUCCESSFUL CONNECTION
         self.client.once('connected', () => {
+            if (this.socketId && !this.loginMessageSent) {
+                this.loginMessageSent = true;
+                io.to(`${this.socketId}`).emit("login-log-msg", "Connected to Steam, attemping login.");
+            }
+
             self.login();
         })
 
         // CONNECTION LOST
         self.client.once('error', err => {
+            // wait for email guard, don't reconnect;
+            if (this.dontReconnect) {
+                return;
+            }
+
             // notify connection has been lost
             if (self.loggedIn) {
                 self.reconnecting = true;
@@ -584,9 +674,9 @@ class Client extends EventEmitter {
         // Remove the proxy
         RemoveProxy(this.proxy);
 
-        if(this.account.noLoginDelay){
-            var timeout = 1 // only do 1 second
-        }else{
+        if (this.account.noLoginDelay) {
+            var timeout = 0 // only do 1 second
+        } else {
             var timeout = Math.floor(Math.random() * this.RECONNECT_DELAY)
         }
         console.log(`Reconnecting in ${timeout} sec: ${err} > user: ${this.account.user} | proxy IP: ${this.proxy.ip}`)

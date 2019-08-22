@@ -71,12 +71,31 @@
     height: 100px;
     width: 100%;
     bottom: 0;
-    padding: 2px;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
+.console{
+    margin-top: auto;
+    background: rgba(0, 0, 0, 0.5);
+    height: 100px;
+    width: 100%;
+    bottom: 0;
+    font-family: Consolas,monaco,monospace;
+    font-size: 12px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding: 2px;
+    white-space: pre-line
+}
+
+.console p{
+    margin-left: 15px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    text-indent: -15px;
+}
 
 .account-Bad{
     background: linear-gradient(0deg, rgba(148, 0, 0, 0.6) 0%, rgba(54, 0, 0, 0.6) 100%);
@@ -160,7 +179,7 @@
     border: solid 3px rgb(255, 0, 0)
 }
 
-#acc-buttons{
+.acc-buttons{
     display: flex;
     flex-flow: row;
     flex-wrap: wrap;
@@ -209,11 +228,34 @@ input[name="emailGuard"] {
 }
 
 #email-guard{
-    width: 215px;
+    width: 220px;
     text-align: center;
 }
-/* END ADD ACCOUT MODAL */
 
+.add-acc-dialog{
+    min-width: 520px;
+}
+
+#add-steamaccount-form{
+    margin: 0 auto;
+}
+
+#add-acc-console{
+    font-size: 14px;
+    padding: 5px;
+}
+
+
+::-webkit-scrollbar {
+    width: 0px;
+    background: transparent; /* make scrollbar transparent */
+}
+
+#email-guard-btn{
+    margin-left: 20px;
+}
+
+/* END ADD ACCOUT MODAL */
 
 
 /* GAME IDLE MODAL */
@@ -317,6 +359,8 @@ input[name="emailGuard"] {
 #all-acc-actions-spinner{
     margin: 0 2.5px;
 }
+
+
 
 @media only screen and (max-width: 800px) {
     #logo{

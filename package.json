@@ -28,6 +28,7 @@
     "protobufjs": "^5.0.3",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7",
+    "socket.io": "^2.2.0",
     "socks": "^2.3.2",
     "socks-proxy-agent": "^4.0.2",
     "steam-totp": "^2.1.0",

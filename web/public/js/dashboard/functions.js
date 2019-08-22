@@ -132,10 +132,10 @@ function buildAccount(account) {
             <div class="status status-${account.forcedStatus}">${account.forcedStatus}</div>
             
             ${info || ""}
-
+    
             <div class="buttons-box">
-                <div class="spinner-border text-primary acc-spinner" role="status" hidden></div>
-                <div id="acc-buttons">${buttons}</div>
+                <div class="console" hidden></div>
+                <div class="acc-buttons">${buttons}</div>
             </div>
 
             <div class="modal fade idle-modal" tabindex="-1" role="dialog" aria-hidden="true">

@@ -5,17 +5,23 @@ const Client = require('../steam/client');
 const Security = require("../util/security");
 const SteamAccount = require('../models/steam-accounts')
 const mongoose = require('mongoose');
+const io = require("../app").io;
 
 /**
  * Login to steam
  * Returns promise with account
  */
-module.exports.addAccount = async function (userId, loginOptions) {
+module.exports.addAccount = async function (userId, options) {
     let self = this;
+
+    let socketId = options.socketId;
+    delete options.socketId;
+
     return new Promise(async function (resolve, reject) {
         // Find account in DB
-        let doc = await self.getAccount({ user: loginOptions.user });
+        let doc = await self.getAccount({ user: options.user });
         if (doc) {
+            io.to(`${socketId}`).emit("add-acc-error-msg", "This account has already been added.");
             return reject("Account already in DB.");
         }
 
@@ -24,13 +30,17 @@ module.exports.addAccount = async function (userId, loginOptions) {
                 dontGetAccount: true,
                 skipOnlineCheck: true,
                 skipLoginOptions: true,
-                loginOptions: loginOptions,
+                loginOptions: options,
                 noLoginDelay: true,
                 skipIdlingFarmingRestart: true,
-                noDelay: true // set no delay for account login
+                newAccount: true,
+                noDelay: true, // set no delay for account login
+                socketId: socketId,
             })
-            return resolve(doc);
+
+            return resolve();
         } catch (error) {
+            io.to(`${socketId}`).emit("add-acc-error-msg", error);
             return reject(error)
         }
     })
@@ -45,7 +55,7 @@ module.exports.loginAccount = async function (userId, accountId, options) {
     let self = this;
     return new Promise(async function (resolve, reject) {
 
-        // account doc passed
+        // account doc passed, no need to fetch it from db
         if (options && options.account) {
             var doc = options.account
         }
@@ -83,8 +93,8 @@ module.exports.loginAccount = async function (userId, accountId, options) {
                 loginOptions.noLoginDelay = true;
             }
 
-            // login, loginOptions gets modified
-            let client = await self.steamConnect(loginOptions);
+            // attempt login, loginOptions gets modified during the process.
+            let client = await self.steamConnect(loginOptions, options.socketId);
 
             // new account, request came from addAccount
             if (options && options.newAccount) {
@@ -97,7 +107,8 @@ module.exports.loginAccount = async function (userId, accountId, options) {
                     forcedStatus: "Online",
                     farmingData: loginOptions.farmingData,
                     inventory: loginOptions.inventory,
-                    steamid: loginOptions.steamid
+                    steamid: loginOptions.steamid,
+                    games: loginOptions.games
                 })
 
                 // Only 2FA accs get shared secret
@@ -108,10 +119,10 @@ module.exports.loginAccount = async function (userId, accountId, options) {
                 if (loginOptions.sentry) {
                     doc.sentry = loginOptions.sentry;
                 }
+            } else {
+                doc.games = self.addGames(loginOptions.games, doc.games);
             }
 
-            //update account properties after login
-            doc.games = self.addGames(loginOptions.games, doc.games);
             doc.persona_name = loginOptions.persona_name;
             doc.avatar = loginOptions.avatar;
             doc.status = loginOptions.status || "Online"
@@ -131,11 +142,16 @@ module.exports.loginAccount = async function (userId, accountId, options) {
             // Save account
             await self.saveAccount(doc);
 
-            return resolve(self.filterSensitiveAcc(doc))
+            doc = self.filterSensitiveAcc(doc)
+
+            if (options && options.socketId) {
+                io.to(`${options.socketId}`).emit("logged-in", doc);
+            }
+
+            return resolve(doc)
         } catch (error) {
-            console.log(error)
             //login error
-            if (!options || !options.newAccount) {
+            if (doc) {
                 doc.status = error;
                 self.saveAccount(doc)
             }
@@ -239,14 +255,14 @@ module.exports.playGames = async function (userId, accountId, games, options) {
  * Registers steam events
  * Resolves once we get needed data
  */
-module.exports.steamConnect = async function (loginOptions) {
+module.exports.steamConnect = async function (loginOptions, socketId) {
     let self = this;
     // Resolve promise once we get needed data
     return new Promise(async function (resolve, reject) {
         let event_count = 0
 
         // Create client
-        let client = new Client(loginOptions);
+        let client = new Client(loginOptions, socketId);
 
         // account has logged in
         client.once('login-res', (res) => {

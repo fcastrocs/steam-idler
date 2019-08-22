@@ -1,16 +1,11 @@
 <link rel="stylesheet" type="text/css" href="../static/css/dashboard.css">
 
-<!-- declare needed global variables -->
-<script>
-    var farmingTaskIds = []
-    var lastReconnectTaskIds = []
-</script>
-
-<script src="../static/js/dashboard/build-accounts.js"></script>
+<script src="../static/js/dashboard/globals.js"></script>
 <script src="../static/js/dashboard/functions.js"></script>
+<script src="../static/js/dashboard/build-accounts.js"></script>
+<script src="../static/js/dashboard/refresher.js"></script>
 <script src="../static/js/dashboard/single-acc-actions.js"></script>
 <script src="../static/js/dashboard/all-acc-actions.js"></script>
-<script src="../static/js/dashboard/refresher.js"></script>
 <script src="../static/js/dashboard/filters.js"></script>
 
 <!-- container -->
@@ -22,20 +17,23 @@
     <div id="accounts-box"></div>
 
     <!-- Add account Modal -->
-    <div class="modal fade" id="add-acc-modal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog" role="document">
+    <div class="modal fade" id="add-acc-modal" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog add-acc-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Add Steam Account</h5>
                 </div>
                 <div class="modal-body">
 
-                    <div class="alert alert-primary" role="alert" id="add-acc-msg" hidden></div>
-                    <div class="alert alert-danger" role="alert" id="add-acc-errMsg" hidden></div>
-
-                    <div class="d-flex justify-content-center">
-                        <div class="spinner-border text-info" id="spinner" role="status" hidden></div>
+                    <div class="alert alert-warning" id="add-acc-warning-msg" role="alert" hidden>
+                        This process may take a while, please be patient.
                     </div>
+                    <div class="alert alert-success" id="add-acc-success-msg" role="alert" hidden>
+                        Account added successfullly.
+                    </div>
+                    <div class="alert alert-danger" id="add-acc-error-msg" role="alert" hidden></div>
+                    
+                    <div class="alert console" id="add-acc-console" hidden></div>
 
                     <form id="add-steamaccount-form">
                         <div class="form-group" id="username">
@@ -52,26 +50,19 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">Password</span>
                                 </div>
-                                <input type="password" name="pass" class="form-control" required>
+                                <input type="password" name="pass" class="form-control" required
+                                    autocomplete="new-password">
                             </div>
                         </div>
 
                         <div class="form-group" id="shared-secret">
-                            Needed for accounts with 2FA
+                            Needed for accounts with 2FA (leave blank for email guard)
+                            <a href="https://bit.ly/2ZcDNX2">Learn more here</a>
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">Shared Secret</span>
                                 </div>
-                                <input type="password" name="sharedSecret" class="form-control">
-                            </div>
-                        </div>
-
-                        <div class="form-group" id="email-guard" hidden>
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">Email Guard</span>
-                                </div>
-                                <input type="text" name="emailGuard" class="form-control" minlength="5" maxlength="5">
+                                <input autocomplete="new-password" type="password" name="sharedSecret" class="form-control" placeholder="looks like this: CThopgCf3+3av5xwWVzeycfIPyQ=">
                             </div>
                         </div>
 
@@ -80,7 +71,18 @@
                             <button type="submit" class="btn btn-primary modal-submit" id="add-account">Add
                                 account</button>
                         </div>
+                    </form>
 
+                    <form id="email-guard-form" hidden>
+                        <div class="form-group d-inline-block" id="email-guard">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Email Guard</span>
+                                </div>
+                                <input type="text" name="emailGuard" class="form-control" minlength="5" maxlength="5">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary modal-submit d-inline-block" id="email-guard-btn">Login</button>
                     </form>
                 </div>
             </div>
