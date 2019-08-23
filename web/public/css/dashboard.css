@@ -44,6 +44,17 @@
     margin-top: 5px;
 }
 
+.change-avatar-btn{
+    position: relative;
+    text-align: center;
+    top: -25px;
+    background: rgba(0, 0, 0, 0.507);
+    margin: 0 auto;
+    margin-bottom: -18px;
+    width: 60%;
+    border-radius: 5px;
+}
+
 .status{
     font-weight: bolder;
     margin-top: 5px;
@@ -360,7 +371,11 @@ input[name="emailGuard"] {
     margin: 0 2.5px;
 }
 
-
+#change-avatar-spinner{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
 @media only screen and (max-width: 800px) {
     #logo{

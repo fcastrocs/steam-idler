@@ -213,6 +213,32 @@ Router.post('/steamaccount/stopfarming', isLoggedIn, async function (req, res) {
     }
 })
 
+Router.post('/steamaccount/changeavatar', isLoggedIn, async function (req, res) {
+    if (!req.body.accountId) {
+        return res.status(400).send("accountId needed")
+    }
+
+    if (!req.body.binaryImg) {
+        return res.status(400).send("binaryImg needed.")
+    }
+
+    if (!req.body.filename) {
+        return res.status(400).send("filename needed.")
+    }
+
+    let accountId = req.body.accountId;
+    let userId = req.session.userId;
+    let binaryImg = req.body.binaryImg;
+    let filename = req.body.filename;
+
+    try {
+        let result = await AccountHandler.changeAvatar(userId, accountId, binaryImg, filename);
+        return res.send(result);
+    } catch (error) {
+        return res.status(400).send(error)
+    }
+})
+
 // Removes a steam account
 Router.delete('/steamaccount', isLoggedIn, async function (req, res) {
     if (!req.body.accountId) {

@@ -23,7 +23,7 @@ class Client extends EventEmitter {
         this.account = {}
         Object.assign(this.account, loginOptions);
 
-        this.STEAMCOMMUNITY_TIMEOUT = 2000
+        this.STEAMCOMMUNITY_TIMEOUT = 4500
         this.STEAMCOMMUNITY_RETRY_DELAY = 1000
         this.CONNECTION_TIMEOUT = 5 // in seconds
         this.CONNECT_DELAY = 30  // maximum delay in seconds
@@ -40,6 +40,89 @@ class Client extends EventEmitter {
             io.to(`${this.socketId}`).emit("login-log-msg", "Connecting to Steam.");
         }
         setTimeout(() => this.connect(), timeout * 1000);
+    }
+
+
+    async changeAvatar(binaryImg, filename) {
+        let buffer = new Buffer.from(binaryImg, "binary");
+
+        let ext = filename.substring(7);
+        if (ext === "jpg") {
+            var contentType = "image/jpeg"
+        } else {
+            var contentType = `image/${ext}`
+        }
+
+        if (!this.loggedIn) {
+            return Promise.reject("Account is not logged in.")
+        }
+
+        if (!this.webCookie) {
+            return Promise.reject("Account doesn't have a webcookie.")
+        }
+
+        let self = this;
+        return new Promise(async (resolve, reject) => {
+            (async function attempt(retries) {
+                if (!retries) {
+                    retries = 0;
+                }
+
+                retries++;
+
+                // too many tries, get a new proxy
+                if (retries == 3) {
+                    //return reject("Could not upload image right now.");
+                }
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: "https://steamcommunity.com/actions/FileUploader",
+                    method: 'POST',
+                    agent: agent,
+                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
+                    json: true,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    },
+                    formData: {
+                        "MAX_FILE_SIZE": buffer.length,
+                        "type": "player_avatar_image",
+                        "sId": self.account.steamid,
+                        "sessionid": self.sessionId,
+                        "doSub": 1,
+                        "json": 1,
+                        "avatar": {
+                            "value": buffer,
+                            "options": {
+                                "filename": filename,
+                                "contentType": contentType
+                            }
+                        }
+                    }
+                }
+
+                try {
+                    let data = await Request(options)
+                    if (data.success) {
+                        return resolve(data.images.full)
+                    } else {
+                        if (retries === 3) {
+                            return reject(data)
+                        }
+                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                    }
+                } catch (error) {
+                    if (retries === 3) {
+                        return reject("Too many retries, could not upload avatar.")
+                    }
+                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                }
+            })();
+        })
     }
 
     /************************************************************************
@@ -89,8 +172,8 @@ class Client extends EventEmitter {
     /************************************************************************
     *  					       REDEEM CDKEY			                        *
     * 	"redeem-key" event will be emitted along with:                      *
-	*    on success: Array of objects {appid, name, logo}                   *                                          *
-	*    on fail: String with error message                                 *
+    *    on success: Array of objects {appid, name, logo}                   *                                          *
+    *    on fail: String with error message                                 *
     ************************************************************************/
     redeemKey(cdkey) {
         if (!this.loggedIn) {
@@ -113,13 +196,13 @@ class Client extends EventEmitter {
     /************************************************************************
     *  				  SET PERSONA state, name(optional)			            *
     * 	"Offline": 0,                                                       *
-	*   "Online": 1,                                                        *
-	*   "Busy": 2,                                                          *
-	*   "Away": 3,                                                          *
-	*   "Snooze": 4,                                                        *
-	*   "LookingToTrade": 5,                                                *
-	*   "LookingToPlay": 6,                                                 *
-	*   "Invisible": 7                                                      *
+    *   "Online": 1,                                                        *
+    *   "Busy": 2,                                                          *
+    *   "Away": 3,                                                          *
+    *   "Snooze": 4,                                                        *
+    *   "LookingToTrade": 5,                                                *
+    *   "LookingToPlay": 6,                                                 *
+    *   "Invisible": 7                                                      *
     ************************************************************************/
     setPersona(state, name) {
         if (!this.loggedIn) {
@@ -187,6 +270,7 @@ class Client extends EventEmitter {
                         setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
                     } else {
                         let sessionId = Crypto.randomBytes(12).toString('hex')
+                        self.sessionId = sessionId;
                         let steamLogin = data.authenticateuser.token
                         let steamLoginSecure = data.authenticateuser.tokensecure
                         self.webCookie = `sessionid=${sessionId}; steamLogin=${steamLogin}; steamLoginSecure=${steamLoginSecure};`

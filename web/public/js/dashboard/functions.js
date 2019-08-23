@@ -125,10 +125,13 @@ function buildAccount(account) {
 
             <div class="nick">${account.persona_name}</div>
 
-            <a href="https://steamcommunity.com/profiles/${account.steamid}" target="_blank">
-                <img class="avatar avatar-${account.status}" src="${account.avatar}">
-            </a>
-           
+            <div>
+                <a href="https://steamcommunity.com/profiles/${account.steamid}" target="_blank">
+                    <img class="avatar avatar-${account.status}" src="${account.avatar}">
+                </a>
+                <a href="#" class="change-avatar-btn" hidden>Change avatar</a>
+            </div>
+            
             <div class="status status-${account.forcedStatus}">${account.forcedStatus}</div>
             
             ${info || ""}

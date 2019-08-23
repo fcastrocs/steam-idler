@@ -32,7 +32,7 @@
                         Account added successfullly.
                     </div>
                     <div class="alert alert-danger" id="add-acc-error-msg" role="alert" hidden></div>
-                    
+
                     <div class="alert console" id="add-acc-console" hidden></div>
 
                     <form id="add-steamaccount-form">
@@ -62,7 +62,8 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">Shared Secret</span>
                                 </div>
-                                <input autocomplete="new-password" type="password" name="sharedSecret" class="form-control" placeholder="looks like this: CThopgCf3+3av5xwWVzeycfIPyQ=">
+                                <input autocomplete="new-password" type="password" name="sharedSecret"
+                                    class="form-control" placeholder="looks like this: CThopgCf3+3av5xwWVzeycfIPyQ=">
                             </div>
                         </div>
 
@@ -82,7 +83,8 @@
                                 <input type="text" name="emailGuard" class="form-control" minlength="5" maxlength="5">
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary modal-submit d-inline-block" id="email-guard-btn">Login</button>
+                        <button type="submit" class="btn btn-primary modal-submit d-inline-block"
+                            id="email-guard-btn">Login</button>
                     </form>
                 </div>
             </div>
@@ -257,6 +259,36 @@
 
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- UPLOAD AVATAR -->
+<div class="modal fade" id="change-avatar-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Change Avatar</h5>
+            </div>
+            <div class="modal-body">
+                <div id="change-avatar-spinner" hidden>
+                    <div class="spinner-border text-primary"></div>
+                </div>
+                <form id="change-avatar-form">
+                    <div class="form-group d-inline-block">
+                        <label for="avatar-file">Select an image of type jpg, png, or gif</label>
+                        <input type="file" accept="image/*" name="avatar" class="form-control-file" id="avatar-file"
+                            required>
+                    </div>
+                    <img src="http://placehold.it/150x150" id="avatar-preview" alt="avatar" height="150" width="150"
+                        class="d-inline-block">
+                    <div>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary modal-submit" id="change-avatar-btn"
+                            data-id="">Upload</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

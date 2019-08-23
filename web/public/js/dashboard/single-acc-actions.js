@@ -556,4 +556,96 @@ $(() => {
         self.find(".inventory-modal").modal("toggle")
     })
 
+    /**************************************************** 
+    *              STEAM - AVATAR CHANGE                *
+     **************************************************/
+
+    // open avatar modal
+    $(document).on("click", ".change-avatar-btn", function () {
+        let self = $(this).closest("div.account");
+        let accountId = self.attr("data-id")
+        $("#change-avatar-modal").modal("toggle")
+        $("#change-avatar-btn").attr("data-id", accountId)
+    })
+
+    // image preview
+    $("#avatar-file").change(function () {
+        let file = this.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = e => {
+                $('#avatar-preview').attr('src', e.target.result);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
+    $("#change-avatar-form").submit(function (e) {
+        e.preventDefault();
+        let accountId = $("#change-avatar-btn").attr("data-id");
+        if (!accountId) {
+            alert("Accound Id is needed.")
+            return;
+        }
+
+        let file = $('#avatar-file').get(0).files[0];
+        if (!file) {
+            alert("Select an image.")
+            return;
+        }
+
+        if (!file.type.match(/^image\//)) {
+            alert("Select a valid image type.")
+            return;
+        }
+
+        $("#change-avatar-spinner").prop("hidden", false);
+        $(this).hide();
+
+        let ext = file.type.substring(6)
+        let filename = `avatar.${ext}`
+
+        let reader = new FileReader();
+        reader.onload = e => {
+            let binaryImg = e.target.result;
+
+            //send request
+            let data = {
+                accountId: accountId,
+                binaryImg: binaryImg,
+                filename: filename
+            }
+            $.post('/steamaccount/changeavatar', data, avatar => {
+                $(`div.account[data-id=${accountId}]`).find(".avatar").attr("src", avatar)
+                $('#change-avatar-modal').modal("toggle")
+            }).fail((xhr, status, err) => {
+                $('#change-avatar-modal').modal("toggle")
+                alert(xhr.responseText)
+            })
+
+        }
+        reader.readAsBinaryString(file);
+    })
+
+    // change avatar modal close
+    $('#change-avatar-modal').on('hidden.bs.modal', function () {
+        $("#change-avatar-spinner").prop("hidden", true);
+        $("#change-avatar-form").show();
+        $("#change-avatar-form")[0].reset();
+        $("#avatar-preview").attr("src", "http://placehold.it/150x150")
+    })
+
+    $(document).on("mouseenter", ".avatar", function(){
+        let self = $(this).closest("div.account");
+        self.find(".change-avatar-btn").prop("hidden", false).show()
+    })
+
+    $(document).on("mouseleave", ".avatar", function(){
+        let self = $(this).closest("div.account");
+        setTimeout(() => {
+            self.find(".change-avatar-btn").fadeOut(1000)
+        }, 3000);
+    })
+
+
 })

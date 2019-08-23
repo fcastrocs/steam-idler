@@ -486,3 +486,26 @@ module.exports.setStatus = async function (userId, accountId, status, options) {
     this.filterSensitiveAcc(doc)
     return Promise.resolve(doc)
 }
+
+
+module.exports.changeAvatar = async function (userId, accountId, binaryImg, filename) {
+    // check account is logged in
+    let client = this.isAccountOnline(userId, accountId);
+    if (!client) {
+        return Promise.reject("Account is not online.")
+    }
+
+    let doc = await this.getAccount({ userId: userId, accountId: accountId });
+    if (!doc) {
+        return Promise.reject("Account not found.")
+    }
+
+    try {
+        let avatar = await client.changeAvatar(binaryImg, filename);
+        doc.avatar = avatar;
+        await this.saveAccount(doc);
+        return Promise.resolve(doc.avatar);
+    } catch (error) {
+        return Promise.reject(error);
+    }
+}
