@@ -572,6 +572,8 @@ class Client extends EventEmitter {
                 // After login, don't send more messages
                 this.socketId = null;
 
+                // not a new account anymore, this will cause for code 88 retries
+                self.account.newAccount = false;
                 return;
             }
 
@@ -614,11 +616,16 @@ class Client extends EventEmitter {
             // 2FA
             else if (code == 85) {
                 errMsg = "2FA code needed."
-
             }
 
             else if (code == 88) {
                 errMsg = "Invalid shared secret."
+
+                // only keep retrying if request did not come from addAccount
+                if (!self.account.newAccount) {
+                    self.RenewConnection(errMsg)
+                    return;
+                }
             }
             // Some other error code
             else {

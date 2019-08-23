@@ -81,7 +81,7 @@ function buildAccount(account) {
                 let diff = account.nextFarmingCheck - Date.now();
                 if (diff < 1) {
                     $(`div[data-id="${account._id}"]`).find(".farming-mode").text("updating")
-                    clearInterval(id)
+                    clearInterval(farmingTaskIds[account._id])
                     return;
                 }
                 farmingStatus = `${time(account.nextFarmingCheck)}`
@@ -118,6 +118,9 @@ function buildAccount(account) {
         lastReconnectTaskIds[account._id] = setInterval(() => {
             $(`div[data-id="${account._id}"]`).find(".last-connect").text(time(account.lastConnect))
         }, 1000);
+
+        // Change avatar btn
+        var changeAvatarBtn = `<a href="#" class="change-avatar-btn">Change avatar</a>`
     }
 
     let acc = `
@@ -129,10 +132,11 @@ function buildAccount(account) {
                 <a href="https://steamcommunity.com/profiles/${account.steamid}" target="_blank">
                     <img class="avatar avatar-${account.status}" src="${account.avatar}">
                 </a>
-                <a href="#" class="change-avatar-btn" hidden>Change avatar</a>
+                ${changeAvatarBtn || ""}
             </div>
             
             <div class="status status-${account.forcedStatus}">${account.forcedStatus}</div>
+
             
             ${info || ""}
     

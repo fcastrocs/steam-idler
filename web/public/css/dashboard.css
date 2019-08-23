@@ -45,6 +45,7 @@
 }
 
 .change-avatar-btn{
+    visibility:hidden;
     position: relative;
     text-align: center;
     top: -25px;
@@ -57,7 +58,7 @@
 
 .status{
     font-weight: bolder;
-    margin-top: 5px;
+    margin: 5px 0;
     padding: 5px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 2.5px;
@@ -66,7 +67,7 @@
 .info{
     text-align: center;
     width: 100%;
-    margin: 5px 0;
+    margin-bottom: 5px;
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
@@ -428,5 +429,9 @@ input[name="emailGuard"] {
         width: 100%;
         margin-top: 30px;
     }
+
+    .change-avatar-btn{
+        visibility: visible;
+    } 
 
 }

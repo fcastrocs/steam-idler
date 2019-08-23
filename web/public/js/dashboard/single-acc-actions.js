@@ -223,8 +223,33 @@ $(() => {
     /**************************************************** 
     *               STEAM - CHANGE NICK                 *
     * **************************************************/
+    $(document).on("mouseenter", ".nick", function(){
+        let status = $(this).closest("div.account").attr("data-realstatus")
+        if(!(status === "Online" || status === "In-game")){
+            return;
+        }
+
+        let nick = $(this).text();
+        $(this).attr("data-nick", nick)
+        $(this).text("Change nick");
+    })
+
+    $(document).on("mouseleave", ".nick", function(){
+        let status = $(this).closest("div.account").attr("data-realstatus")
+        if(!(status === "Online" || status === "In-game")){
+            return;
+        }
+
+        $(this).text($(this).attr("data-nick"))
+    })
+
     // open modal
     $(document).on('click', ".nick", function () {
+        let status = $(this).closest("div.account").attr("data-realstatus")
+        if(!(status === "Online" || status === "In-game")){
+            return;
+        }
+
         let accountId = $(this).closest("div.account").attr("data-id");
         $("#change-nick-button").attr("data-id", accountId);
         $("#change-nick-modal").modal("toggle")
@@ -637,7 +662,7 @@ $(() => {
 
     $(document).on("mouseenter", ".avatar", function(){
         let self = $(this).closest("div.account");
-        self.find(".change-avatar-btn").prop("hidden", false).show()
+        self.find(".change-avatar-btn").css('visibility', 'visible').show()
     })
 
     $(document).on("mouseleave", ".avatar", function(){

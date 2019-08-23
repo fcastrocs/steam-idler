@@ -93,6 +93,10 @@ module.exports.loginAccount = async function (userId, accountId, options) {
                 loginOptions.noLoginDelay = true;
             }
 
+            if(options && options.newAccount){
+                loginOptions.newAccount = true;
+            }
+
             // attempt login, loginOptions gets modified during the process.
             let client = await self.steamConnect(loginOptions, options.socketId);
 

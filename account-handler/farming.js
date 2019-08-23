@@ -64,6 +64,7 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
 
 // Farming checker. How many cards have dropped after an interval
 module.exports.FarmingRecheck = async function (userId, accountId) {
+    console.log("here")
     // Get account from Db
     let doc = await this.getAccount({ accountId: accountId })
     if (!doc) {
@@ -96,6 +97,7 @@ module.exports.FarmingRecheck = async function (userId, accountId) {
     // Get 32 games to farm
     doc.farmingGames = this.get32GameAppIds(doc.farmingData);
     client.playGames(doc.farmingGames);
+    doc.nextFarmingCheck = Date.now() + this.FARMING_RECHECK_INTERVAL
     this.saveAccount(doc);
 
     client.farmingReCheckId = setTimeout(() => {
