@@ -2,76 +2,51 @@
 // builds account div
 function buildAccount(account) {
     let buttons = ""
-    let data_games = ""; // for start idle button
-    let gamesDiv = "" // game images
-    let cardsLeft = 0
     let farmingInfo = "" // farming modal info
     let farmingStatus = "off"
+    let gamesDiv = "" // game images
+    let gameIds = ""; // for start idle button
     let inventory = "";
+    let cardsLeft = 0
 
-    // SET CORRECT BUTTON AND STATUS
     if (account.status === "Online" || account.status === "In-game") {
-        buttons = `
-              <button type="button" class="btn btn-primary btn-sm acc-logout-btn">Logout</button>
-              <button type="button" class="btn btn-primary btn-sm acc-set-status-btn">Status</button>
-              <button type="button" class="btn btn-primary btn-sm acc-idle-game-btn">Idle Games</button>
-              <button type="button" class="btn btn-primary btn-sm redeem-key">Redeem Key</button>
-              <button type="button" class="btn btn-primary btn-sm acc-farming-btn">Farming</button>
-              <button type="button" class="btn btn-primary btn-sm acc-get-game-btn">Get Games</button>
-              <button type="button" class="btn btn-primary btn-sm acc-inventory-btn">Inventory</button>
-              <button type="button" class="btn btn-primary btn-sm btn-danger acc-delete-acc-btn">Delete</button>`
-    } else if (account.status === "Offline") {
-        account.forcedStatus = "Offline"
-        buttons = `
-              <button type="button" class="btn btn-primary btn-sm acc-login-btn">Login</button>
-              <button type="button" class="btn btn-primary btn-sm btn-danger acc-delete-acc-btn">Delete</button>`
-    } else if (account.status === "Reconnecting") {
-        account.forcedStatus = "Reconnecting"
-    }
-    else { // bad account
-        account.forcedStatus = "Bad"
-        buttons = `<button type="button" class="btn btn-primary btn-sm acc-delete-acc-btn">Delete Acc</button>`
-    }
+        // BUILD GAMES MODAL
+        for (let i in account.games) {
+            // create image div
+            let steamurl = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps"
+            let gameImgUrl = `${steamurl}/${account.games[i].appId}/${account.games[i].logo}.jpg`
 
-    // only execute when account is online
-    if (account.status === "Online" || account.status === "In-game") {
-        // BUILD IDLE MODAL
-        for (let j in account.games) {
-            let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${account.games[j].appId}/${account.games[j].logo}.jpg`
             // find if game should be selected/unselected
             let index = -1;
             if (account.isFarming) {
-                index = account.farmingGames.findIndex(x => x.game_id === account.games[j].appId)
+                index = account.farmingGames.findIndex(x => x.game_id === account.games[i].appId)
             } else {
-                index = account.gamesPlaying.findIndex(x => x.game_id === account.games[j].appId)
+                index = account.gamesPlaying.findIndex(x => x.game_id === account.games[i].appId)
             }
 
-            let selected_unselected = ""
-            if (index > -1) { //not found
-                data_games += `${account.games[j].appId} `
-                selected_unselected = "selected"
-            } else {
-                selected_unselected = "unselected"
+            let select = ""
+            // game found
+            if (index > -1) {
+                gameIds += `${account.games[i].appId} `
+                select = "selected"
+            } else { // not found
+                select = "unselected"
             }
-            gamesDiv += `<img class="game-img ${selected_unselected}" data-gameId="${account.games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${account.games[j].name}">`
+
+            gamesDiv += `<img class="game-img ${select}" data-gameId="${account.games[i].appId}" src="${gameImgUrl}" data-toggle="tooltip" data-placement="top" title="${account.games[i].name}">`
         }
-        data_games = data_games.trim()
-
 
         // BUILD FARMING MODAL
-
-        // No games to farm
         if (account.farmingData.length == 0) {
-            farmingInfo = "<div>No games to farm</div>";
-            // there are games to farm
+            var disableFarmingBtn = "disabled"
         } else {
             account.farmingData.forEach((game) => {
                 cardsLeft += game.cardsRemaining;
                 farmingInfo += `<div class="game-farming-info">
-                                <div class="game-title" data-id="${game.appId}">${game.title}</div>
-                                <div class="play-time">Play time: ${game.playTime}</div>
-                                <div class="cards-remaining">Cards Remaining: ${game.cardsRemaining}</div>
-                            </div>`
+                                    <div class="game-title" data-id="${game.appId}">${game.title}</div>
+                                    <div class="play-time">Play time: ${game.playTime}</div>
+                                    <div class="cards-remaining">Cards Remaining: ${game.cardsRemaining}</div>
+                                </div>`
             })
         }
 
@@ -91,7 +66,7 @@ function buildAccount(account) {
 
         // BUILD INVENTORY MODAL
         if (!account.inventory) {
-            inventory = "You do not have an inventory";
+            var disableInventoryBtn = "disabled"
         }
         else {
             for (let i in account.inventory) {
@@ -103,24 +78,87 @@ function buildAccount(account) {
             }
         }
 
-        var info = `<div class="info">
-                        <div class="farming-info">
-                            <div><span>Farming: </span><span class="farming-mode info-value">${farmingStatus}</span></div>
-                            <div><span>Games left to farm: </span><span class="games-left info-value">${account.farmingData.length}</span></div>
-                            <div><span>Cards left: </span><span class="cards-left info-value">${cardsLeft}</span></div>
-                        </div>
-                        <div class="connection-info">
-                            <div><span>Last reconnect: </span><span class="last-connect info-value">∞</span></div>
-                            <div><span>Reconnects last hr: </span><span class="last-hr-reconnects info-value">${account.lastHourReconnects}</span></div>
-                        </div>
-                    </div>`;
-
         lastReconnectTaskIds[account._id] = setInterval(() => {
             $(`div[data-id="${account._id}"]`).find(".last-connect").text(time(account.lastConnect))
         }, 1000);
 
         // Change avatar btn
         var changeAvatarBtn = `<a href="#" class="change-avatar-btn">Change avatar</a>`
+
+        //set buttons
+        buttons = `
+        <button type="button" class="btn btn-primary btn-sm acc-logout-btn">
+            Logout
+        </button>
+        <button type="button" class="btn btn-primary btn-sm acc-set-status-btn">
+            Status
+        </button>
+        <button type="button" class="btn btn-primary btn-sm acc-idle-game-btn">
+            Idle Games
+        </button>
+        <button type="button" class="btn btn-primary btn-sm redeem-key">
+            Redeem Key
+        </button>
+        <button type="button" class="btn btn-primary btn-sm acc-farming-btn" ${disableFarmingBtn || ""}>
+            Farming
+        </button>
+        <button type="button" class="btn btn-primary btn-sm acc-get-game-btn">
+            Get Games
+        </button>
+        <button type="button" class="btn btn-primary btn-sm acc-inventory-btn" ${disableInventoryBtn || ""}>
+            Inventory
+        </button>
+        <button type="button" class="btn btn-primary btn-sm btn-danger acc-delete-acc-btn">
+            Delete
+        </button>`
+
+        // Set up info
+        var info =
+            `<div class="info">
+             <div class="farming-info">
+                 <div>
+                     <span>Farming: </span>
+                     <span class="farming-mode info-value">${farmingStatus}</span>
+                 </div>
+                 <div>
+                     <span>Games left to farm: </span>
+                     <span class="games-left info-value">${account.farmingData.length}</span>
+                 </div>
+                 <div>
+                     <span>Cards left: </span>
+                     <span class="cards-left info-value">${cardsLeft}</span>
+                 </div>
+             </div>
+             <div class="connection-info">
+                 <div>
+                     <span>Last reconnect: </span>
+                     <span class="last-connect info-value">∞</span>
+                 </div>
+                 <div>
+                     <span>Reconnects last hr: </span>
+                     <span class="last-hr-reconnects info-value">${account.lastHourReconnects}</span>
+                 </div>
+             </div>
+         </div>`;
+
+    } else if (account.status === "Offline") {
+        account.forcedStatus = "Offline"
+        buttons = `
+              <button type="button" class="btn btn-primary btn-sm acc-login-btn">
+                Login
+              </button>
+              <button type="button" class="btn btn-primary btn-sm btn-danger acc-delete-acc-btn">
+                Delete
+              </button>`
+    } else if (account.status === "Reconnecting") {
+        account.forcedStatus = "Reconnecting"
+    }
+    else { // bad account
+        account.forcedStatus = "Bad"
+        buttons = `
+        <button type="button" class="btn btn-primary btn-sm acc-delete-acc-btn">
+            Delete Acc
+        </button>`
     }
 
     let acc = `
@@ -162,7 +200,7 @@ function buildAccount(account) {
                             <div class="modal-buttons">
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                 <button type="button" class="btn btn-danger stop-idle-btn">Stop Idle</button>
-                                <button type="button" class="btn btn-primary start-idle-btn" data-games="${data_games}">Start Idle</button>
+                                <button type="button" class="btn btn-primary start-idle-btn" data-games="${gameIds.trim()}">Start Idle</button>
                             </div>
                         </div>
                     </div>
