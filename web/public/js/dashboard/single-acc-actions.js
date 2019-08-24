@@ -224,7 +224,8 @@ $(() => {
     *               STEAM - CHANGE NICK                 *
     * **************************************************/
     $(document).on("mouseenter", ".nick", function () {
-        let status = $(this).closest("div.account").attr("data-realstatus")
+        let accountId = $(this).closest("div.account").attr("data-id")
+        let status = accounts_cache[accountId].status
         if (!(status === "Online" || status === "In-game")) {
             return;
         }
@@ -235,7 +236,8 @@ $(() => {
     })
 
     $(document).on("mouseleave", ".nick", function () {
-        let status = $(this).closest("div.account").attr("data-realstatus")
+        let accountId = $(this).closest("div.account").attr("data-id")
+        let status = accounts_cache[accountId].status
         if (!(status === "Online" || status === "In-game")) {
             return;
         }
@@ -245,12 +247,13 @@ $(() => {
 
     // open modal
     $(document).on('click', ".nick", function () {
-        let status = $(this).closest("div.account").attr("data-realstatus")
+        let accountId = $(this).closest("div.account").attr("data-id")
+        let status = accounts_cache[accountId].status
+
         if (!(status === "Online" || status === "In-game")) {
             return;
         }
 
-        let accountId = $(this).closest("div.account").attr("data-id");
         $("#change-nick-button").attr("data-id", accountId);
         $("#change-nick-modal").modal("toggle")
     })

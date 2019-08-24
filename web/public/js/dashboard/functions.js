@@ -310,7 +310,7 @@ function updateAccountStatus(account) {
     }
 
     account = buildAccount(account)
-    
+
     // Replace old acc with this one
     $(`.account[data-id="${accountId}"]`).replaceWith(account);
 }
