@@ -312,7 +312,6 @@ $(() => {
     /**************************************************** 
     *                  STEAM - FARMING                  *
     ***************************************************/
-
     // open modal
     $(document).on('click', ".acc-farming-btn", function () {
         let self = $(this).closest("div.account");
@@ -344,7 +343,6 @@ $(() => {
             self.find(".farming-modal").modal("toggle");
             setTimeout(() => updateAccountStatus(doc), 300);
         }).fail((xhr, status, err) => {
-            // set error message
             alert(xhr.responseText)
         })
     })
@@ -358,11 +356,6 @@ $(() => {
         $(this).closest("div.account").find(".idle-modal").modal('toggle');
     })
 
-    // on close modal
-    $(document).on('hidden.bs.modal', ".idle-modal", function () {
-        $(this).find(".idle-errMsg").text("Account is not idling.").prop("hidden", true)
-    })
-
     // start game idle
     $(document).on('click', ".start-idle-btn", function () {
         let self = $(this).closest("div.account");
@@ -370,7 +363,7 @@ $(() => {
 
         let games = accounts_cache[accountId].selectedGames;
         if (games.length == 0) {
-            self.find(".idle-errMsg").text("Select a game to idle.").prop("hidden", false)
+            alert("Select a game to idle.")
             return
         }
 
@@ -389,7 +382,7 @@ $(() => {
         let accountId = self.attr("data-id")
         //check if accounts is idling
         if (accounts_cache[accountId].selectedGames.length == 0) {
-            self.find(".idle-errMsg").text("Account is not idling.").prop("hidden", false)
+            alert("Account is not idling.")
             return;
         }
 

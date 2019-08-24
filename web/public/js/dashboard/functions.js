@@ -191,7 +191,6 @@ function buildAccount(account) {
                             </button>
                         </div>
                         <div class="modal-body game-body">
-                            <div class="alert alert-danger idle-errMsg" role="alert" hidden></div>
                             <div class="games-box">
                                 ${gamesDiv}
                             </div>
