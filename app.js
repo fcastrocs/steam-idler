@@ -30,7 +30,10 @@ const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
 
 // Start socket.io
-module.exports.io = require('socket.io')(httpServer);
+const io = require('socket.io');
+io.listen(httpServer);
+io.listen(httpsServer)
+module.exports.io = io;
 
 // Handler must be kept in RAM at all times
 let accountHandler = new AccountHandler();
