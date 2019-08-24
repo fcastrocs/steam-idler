@@ -91,6 +91,7 @@ Router.post('/steamaccount/playgames', isLoggedIn, async function (req, res) {
     if (games.length > 33) {
         return res.status(400).send("More than 33 games is not allowed.")
     }
+    
     // Format array so steam accepts it
     games = games.map(gameId => { return { game_id: gameId } })
 

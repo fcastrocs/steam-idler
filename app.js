@@ -26,11 +26,11 @@ const credentials = {
 };
 
 // Starting both http & https servers
-//const httpServer = http.createServer(app);
+const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
 
 // Start socket.io
-module.exports.io = require('socket.io')(httpsServer);
+module.exports.io = require('socket.io')(httpServer);
 
 // Handler must be kept in RAM at all times
 let accountHandler = new AccountHandler();
@@ -197,9 +197,9 @@ function initExpress() {
     });
 
 
-    // httpServer.listen(process.env.HTTP_PORT, () => {
-    //     console.log(' - HTTP Server running on port 8080');
-    // });
+    httpServer.listen(process.env.HTTP_PORT, () => {
+        console.log(' - HTTP Server running on port 8080');
+    });
 
     httpsServer.listen(process.env.HTTPS_PORT, () => {
         console.log(' - HTTPS Server running on port 8443');

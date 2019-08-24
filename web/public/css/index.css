@@ -16,7 +16,6 @@
     width: 800px;
     display: flex;
     flex-direction: row;
-    margin-top: 20px;
 }
 
 .feature-col{

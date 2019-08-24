@@ -262,34 +262,38 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- UPLOAD AVATAR -->
-<div class="modal fade" id="change-avatar-modal" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Change Avatar</h5>
-            </div>
-            <div class="modal-body">
-                <div id="change-avatar-spinner" hidden>
-                    <div class="spinner-border text-primary"></div>
+
+
+    <!-- UPLOAD AVATAR -->
+    <div class="modal fade" id="change-avatar-modal" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Change Avatar</h5>
                 </div>
-                <form id="change-avatar-form">
-                    <div class="form-group d-inline-block">
-                        <label for="avatar-file">Select an image of type jpg, png, or gif</label>
-                        <input type="file" accept="image/*" name="avatar" class="form-control-file" id="avatar-file"
-                            required>
+                <div class="modal-body">
+                    <div id="change-avatar-spinner" hidden>
+                        <div class="spinner-border text-primary"></div>
                     </div>
-                    <img src="http://placehold.it/150x150" id="avatar-preview" alt="avatar" height="150" width="150"
-                        class="d-inline-block">
-                    <div>
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary modal-submit" id="change-avatar-btn"
-                            data-id="">Upload</button>
-                    </div>
-                </form>
+                    <form id="change-avatar-form">
+                        <div class="form-group d-inline-block">
+                            <label for="avatar-file">Select an image of type jpg, png, or gif</label>
+                            <input type="file" accept="image/*" name="avatar" class="form-control-file" id="avatar-file"
+                                required>
+                        </div>
+                        <img src="http://placehold.it/150x150" id="avatar-preview" alt="avatar" height="150" width="150"
+                            class="d-inline-block">
+                        <div>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary modal-submit" id="change-avatar-btn"
+                                data-id="">Upload</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
+
+
 </div>
