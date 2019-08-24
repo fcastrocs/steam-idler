@@ -80,20 +80,17 @@ Router.post('/steamaccount/logout', isLoggedIn, async function (req, res) {
 
 // 
 Router.post('/steamaccount/playgames', isLoggedIn, async function (req, res) {
-    if (!req.body.games || !req.body.accountId || (req.body.games.length < 1)) {
+    if (!req.body.games || !req.body.accountId || (req.body.games.length == 0)) {
         return res.status(400).send("games/accountId needed")
     }
 
-    // string to array
-    let games = req.body.games.split(" ");
-
     //do not allow more than 33 games
-    if (games.length > 33) {
+    if (req.body.games.length > 33) {
         return res.status(400).send("More than 33 games is not allowed.")
     }
     
     // Format array so steam accepts it
-    games = games.map(gameId => { return { game_id: gameId } })
+    let games = req.body.games.map(gameId => { return { game_id: gameId } })
 
     try {
         let result = await AccountHandler.playGames(req.session.userId, req.body.accountId, games)

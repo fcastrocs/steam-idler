@@ -12,6 +12,8 @@ $(async () => {
         for (let i in accounts) {
             // save accounts in cache
             accounts_cache[accounts[i]._id] = accounts[i];
+            // create selected games array
+            accounts_cache[accounts[i]._id].selectedGames = [];
             // build account
             accountsHtml += buildAccount(accounts[i])
         }
@@ -19,7 +21,6 @@ $(async () => {
 
     $("#body-spinner").hide()
     $("#accounts-box").html(accountsHtml)
-
 
     // Refresh dashboard every 30 seconds
     let interval = 0.5 * 60 * 1000

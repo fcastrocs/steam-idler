@@ -223,9 +223,9 @@ $(() => {
     /**************************************************** 
     *               STEAM - CHANGE NICK                 *
     * **************************************************/
-    $(document).on("mouseenter", ".nick", function(){
+    $(document).on("mouseenter", ".nick", function () {
         let status = $(this).closest("div.account").attr("data-realstatus")
-        if(!(status === "Online" || status === "In-game")){
+        if (!(status === "Online" || status === "In-game")) {
             return;
         }
 
@@ -234,9 +234,9 @@ $(() => {
         $(this).text("Change nick");
     })
 
-    $(document).on("mouseleave", ".nick", function(){
+    $(document).on("mouseleave", ".nick", function () {
         let status = $(this).closest("div.account").attr("data-realstatus")
-        if(!(status === "Online" || status === "In-game")){
+        if (!(status === "Online" || status === "In-game")) {
             return;
         }
 
@@ -246,7 +246,7 @@ $(() => {
     // open modal
     $(document).on('click', ".nick", function () {
         let status = $(this).closest("div.account").attr("data-realstatus")
-        if(!(status === "Online" || status === "In-game")){
+        if (!(status === "Online" || status === "In-game")) {
             return;
         }
 
@@ -367,11 +367,13 @@ $(() => {
     $(document).on('click', ".start-idle-btn", function () {
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id");
-        let games = $(this).attr("data-games")
-        if (!games) {
+
+        let games = accounts_cache[accountId].selectedGames;
+        if (games.length == 0) {
             self.find(".idle-errMsg").text("Select a game to idle.").prop("hidden", false)
             return
         }
+
         $.post('/steamaccount/playgames', { accountId: accountId, games: games }, doc => {
             //close the modal
             self.find(".idle-modal").modal('toggle');
@@ -384,17 +386,18 @@ $(() => {
     // stop games idle button click
     $(document).on('click', ".stop-idle-btn", function () {
         let self = $(this).closest("div.account");
+        let accountId = self.attr("data-id")
         //check if accounts is idling
-        let games = self.find(".start-idle-btn").attr("data-games")
-        if (!games) {
+        if (accounts_cache[accountId].selectedGames.length == 0) {
             self.find(".idle-errMsg").text("Account is not idling.").prop("hidden", false)
             return;
         }
 
-        let accountId = self.attr("data-id");
         $.post('/steamaccount/stopgames', { accountId: accountId }, (doc) => {
             //close the modal
             self.find(".idle-modal").modal('toggle');
+            // clear selected games
+            accounts_cache[accountId].selectedGames = [];
             setTimeout(() => updateAccountStatus(doc), 300);
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
@@ -411,9 +414,8 @@ $(() => {
     $(document).on('click', ".game-img", function () {
         // Get gameID
         let gameId = $(this).attr("data-gameId");
-
-        let start_idle_button = $(this).closest(".modal-body").find("div .start-idle-btn")
-        let games = start_idle_button.attr("data-games");
+        let accountId = $(this).closest("div.account").attr("data-id")
+        let cache = accounts_cache[accountId];
 
         //not selected
         if ($(this).hasClass("unselected")) {
@@ -421,42 +423,13 @@ $(() => {
             $(this).removeClass("unselected").addClass("selected")
             $(this).closest("div.account").attr("data-id");
 
-            // add gameId to start idle button
-            //no games set
-            if (!games) {
-                start_idle_button.attr("data-games", gameId);
-                return;
-            }
-
-            //split string into an array
-            games = games.split(" ");
-            //check if gameId is already in array
-            let index = games.indexOf(gameId);
-            //only add gameId if not in array already
-            if (index < 0) {
-                games.push(gameId);
-                games = games.join(" ");
-                start_idle_button.attr("data-games", games);
-            }
+            // Add game to selected games
+            cache.selectedGames.push(gameId)
         } else { //selected
             $(this).removeClass("selected").addClass("unselected")
-            //no games set
-            if (!games) {
-                return;
-            }
-            //split string into an array
-            games = games.split(" ");
 
-            // check if gameId is in array
-            let index = games.indexOf(gameId);
-            if (index < 0) {
-                return;
-            }
-
-            //delete gameId from array
-            games.splice(index, 1);
-            games = games.join(" ");
-            start_idle_button.attr("data-games", games);
+            let index = cache.selectedGames.indexOf(gameId)
+            cache.selectedGames.splice(index, 1)
         }
     })
 
@@ -661,12 +634,12 @@ $(() => {
         $("#avatar-preview").attr("src", "http://placehold.it/150x150")
     })
 
-    $(document).on("mouseenter", ".avatar", function(){
+    $(document).on("mouseenter", ".avatar", function () {
         let self = $(this).closest("div.account");
         self.find(".change-avatar-btn").css('visibility', 'visible').show()
     })
 
-    $(document).on("mouseleave", ".avatar", function(){
+    $(document).on("mouseleave", ".avatar", function () {
         let self = $(this).closest("div.account");
         setTimeout(() => {
             self.find(".change-avatar-btn").fadeOut(1000)

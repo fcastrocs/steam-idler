@@ -5,7 +5,6 @@ function buildAccount(account) {
     let farmingInfo = "" // farming modal info
     let farmingStatus = "off"
     let gamesDiv = "" // game images
-    let gameIds = ""; // for start idle button
     let inventory = "";
     let cardsLeft = 0
 
@@ -25,9 +24,8 @@ function buildAccount(account) {
             }
 
             let select = ""
-            // game found
             if (index > -1) {
-                gameIds += `${account.games[i].appId} `
+                accounts_cache[account._id].selectedGames.push(account.games[i].appId);
                 select = "selected"
             } else { // not found
                 select = "unselected"
@@ -200,7 +198,7 @@ function buildAccount(account) {
                             <div class="modal-buttons">
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                 <button type="button" class="btn btn-danger stop-idle-btn">Stop Idle</button>
-                                <button type="button" class="btn btn-primary start-idle-btn" data-games="${gameIds.trim()}">Start Idle</button>
+                                <button type="button" class="btn btn-primary start-idle-btn">Start Idle</button>
                             </div>
                         </div>
                     </div>
