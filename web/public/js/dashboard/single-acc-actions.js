@@ -586,7 +586,8 @@ $(() => {
      **************************************************/
 
     // open avatar modal
-    $(document).on("click", ".change-avatar-btn", function () {
+    $(document).on("click", ".change-avatar-btn", function (e) {
+        e.preventDefault();
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id")
         $("#change-avatar-modal").modal("toggle")
