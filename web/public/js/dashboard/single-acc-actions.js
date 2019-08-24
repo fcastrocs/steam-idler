@@ -312,6 +312,8 @@ $(() => {
     /**************************************************** 
     *                  STEAM - FARMING                  *
     ***************************************************/
+
+    // open modal
     $(document).on('click', ".acc-farming-btn", function () {
         let self = $(this).closest("div.account");
         //open modal
@@ -328,7 +330,7 @@ $(() => {
             clearInterval(farmingTaskIds[accountId])
             setTimeout(() => updateAccountStatus(doc), 300);
         }).fail((xhr, status, err) => {
-            self.find(".farming-errMsg").text(xhr.responseText).prop("hidden", false);
+            alert(xhr.responseText)
         })
     })
 
@@ -337,22 +339,15 @@ $(() => {
         e.preventDefault();
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id");
-        // clear error msg txt
-        self.find(".farming-errMsg").text("").prop("hidden", true);
+
         $.post('/steamaccount/startfarming', { accountId: accountId }, doc => {
             self.find(".farming-modal").modal("toggle");
             setTimeout(() => updateAccountStatus(doc), 300);
         }).fail((xhr, status, err) => {
             // set error message
-            self.find(".farming-errMsg").text(xhr.responseText).prop("hidden", false)
+            alert(xhr.responseText)
         })
     })
-
-    // on close modal
-    $(document).on('hidden.bs.modal', ".farming-modal", function () {
-        $(this).find(".farming-errMsg").text("").prop("hidden", true)
-    })
-
 
 
     /**************************************************** 
@@ -361,6 +356,11 @@ $(() => {
     // Open correct modal
     $(document).on('click', ".acc-idle-game-btn", function () {
         $(this).closest("div.account").find(".idle-modal").modal('toggle');
+    })
+
+    // on close modal
+    $(document).on('hidden.bs.modal', ".idle-modal", function () {
+        $(this).find(".idle-errMsg").text("Account is not idling.").prop("hidden", true)
     })
 
     // start game idle
@@ -404,12 +404,6 @@ $(() => {
         })
     })
 
-    // on close modal
-    $(document).on('hidden.bs.modal', ".idle-modal", function () {
-        $(this).find(".idle-errMsg").text("Account is not idling.").prop("hidden", true)
-    })
-
-
     // game image click
     $(document).on('click', ".game-img", function () {
         // Get gameID
@@ -432,7 +426,6 @@ $(() => {
             cache.selectedGames.splice(index, 1)
         }
     })
-
 
 
     /**************************************************** 

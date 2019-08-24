@@ -213,7 +213,6 @@ function buildAccount(account) {
                             <h5 class="modal-title">Farming Info</h5>
                         </div>
                         <div class="modal-body farming-body">
-                            <div class="alert alert-danger farming-errMsg" role="alert" hidden></div>
                             <div class="farming-info">
                                 ${farmingInfo}
                                 <div class="modal-buttons">
