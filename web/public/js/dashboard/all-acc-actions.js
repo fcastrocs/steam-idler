@@ -8,18 +8,23 @@ $(() => {
             alert("You have an ongoing request, please wait until it finished.")
             return;
         }
-        apiLimit = true
         alert("This may take a while, depending on how many accounts you have.");
         showSpinner();
+        apiLimit = true
+        pauseDashboardRefresh = true;
+
         socket.on("logged-in", doc => {
             updateAccountStatus(doc);
         })
+
         $.post("/steamaccounts/login", { socketId: socket.id }, res => {
+            pauseDashboardRefresh = false;
             socket.removeAllListeners();
             apiLimit = false;
             hideSpinner();
             alert(res);
         }).fail((xhr, status, err) => {
+            pauseDashboardRefresh = false;
             socket.removeAllListeners();
             apiLimit = false;
             hideSpinner();

@@ -361,6 +361,11 @@ $(() => {
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id");
 
+        if(accounts_cache[accountId].isFarming){
+            alert("Cannot start idle while account is farming cards.")
+            return;
+        }
+
         let games = accounts_cache[accountId].selectedGames;
         if (games.length == 0) {
             alert("Select a game to idle.")
@@ -380,6 +385,12 @@ $(() => {
     $(document).on('click', ".stop-idle-btn", function () {
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id")
+        // can't stop idling if account is farming
+        if(accounts_cache[accountId].isFarming){
+            alert("Cannot stop idling while account is farming cards.")
+            return;
+        }
+
         //check if accounts is idling
         if (accounts_cache[accountId].selectedGames.length == 0) {
             alert("Account is not idling.")
@@ -402,6 +413,12 @@ $(() => {
         // Get gameID
         let gameId = $(this).attr("data-gameId");
         let accountId = $(this).closest("div.account").attr("data-id")
+
+        if(accounts_cache[accountId].isFarming){
+            alert("Cannot make changes while account is farming cards.")
+            return;
+        }
+
         let cache = accounts_cache[accountId];
 
         //not selected

@@ -160,7 +160,7 @@ function buildAccount(account) {
     }
 
     let acc = `
-        <div class="account account-${account.forcedStatus}" data-id="${account._id}" data-realstatus="${account.status}" data-farmcheck="${account.nextFarmingCheck}" data-isFarming="${account.isFarming}">
+        <div class="account account-${account.forcedStatus}" data-id="${account._id}">
 
             <div class="nick">${account.persona_name}</div>
 
@@ -270,42 +270,37 @@ function time(time) {
 // Replaces status of existing account in dashboard
 // if force == true, then force update
 function updateAccountStatus(account) {
-    // find account div
-    let self = $(`.account[data-id="${account._id}"]`)
-
+    let accountId = account._id;
     let checkTimeChanged = false;
     let realStatusChanged = false;
     let forcedStatusChanged = false;
     let isFarmingChanged = false
 
     // check if isFarming changed.
-    let oldFarmingStatus = Boolean(self.attr("data-isFarming"));
-    if (oldFarmingStatus === "true") {
-        oldFarmingStatus = true;
-    } else {
-        oldFarmingStatus = false;
-    }
+    let oldFarmingStatus = accounts_cache[accountId].isFarming;
     if (oldFarmingStatus !== account.isFarming) {
         isFarmingChanged = true;
     }
 
     // Check if farming check time changed
     if (account.isFarming) {
-        let nextCheck = parseInt(self.attr("data-farmcheck"));
+        let oldFarmingCheck = accounts_cache[accountId].nextFarmingCheck
         // farming check time hasnt changed
-        if (nextCheck != account.nextFarmingCheck) {
+        if (oldFarmingCheck !== account.nextFarmingCheck) {
             checkTimeChanged = true;
         }
     }
 
     // real status changed
-    if (self.attr("data-realstatus") !== account.status) {
+    let oldStatus = accounts_cache[accountId].status
+    
+    if (oldStatus !== account.status) {
         realStatusChanged = true;
     }
 
     // check if forced status changed while account is online
-    let status = self.find(".status").first().text()
-    if (status != account.forcedStatus && (account.status !== "Offline")) {
+    let forcedStatus = accounts_cache[accountId].forcedStatus;
+    if (forcedStatus !== account.forcedStatus) {
         forcedStatusChanged = true;
     }
 
@@ -315,9 +310,9 @@ function updateAccountStatus(account) {
     }
 
     account = buildAccount(account)
-
+    
     // Replace old acc with this one
-    self.replaceWith(account);
+    $(`.account[data-id="${accountId}"]`).replaceWith(account);
 }
 
 

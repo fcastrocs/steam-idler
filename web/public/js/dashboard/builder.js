@@ -25,6 +25,10 @@ $(async () => {
     // Refresh dashboard every 30 seconds
     let interval = 0.5 * 60 * 1000
     setInterval(async () => {
+        if(pauseDashboardRefresh){
+            return;
+        }
+        
         try {
             let accounts = await FetchAllAccounts();
             if (accounts.length == 0) {
