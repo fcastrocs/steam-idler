@@ -328,20 +328,41 @@ input[name="emailGuard"] {
     font-weight: bolder;
 }
 
+#change-avatar-spinner{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-#user-box{
-    margin-left: auto;
+
+
+
+/* HEADER  */
+#dashboard-header{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+#dashboard-header-btns{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#header-userbox{
+    margin-left: 100px;
 }
 
 #header-username{
     text-transform: uppercase;
-    margin-right: 10px;
+    margin-right: 2.5px;
 }
 
 #settings-icon{
-    display: inline;
     transition: transform .8s ease-in-out;
-    margin-right: 10px;
 } 
 
 #settings-icon:hover{
@@ -371,41 +392,29 @@ input[name="emailGuard"] {
 #all-acc-actions-spinner{
     margin: 0 2.5px;
 }
+/* END HEADER */
 
-#change-avatar-spinner{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+
 
 @media only screen and (max-width: 800px) {
-    #logo{
-        display: none;
+    #header{
+        padding-top: 2px;
+        flex-direction: column;
+        font-size: 8px;
     }
 
-    #header, #footer{
-        padding: 1px;
-        font-size: 10px;
+    #dashboard-header{
+        justify-content: space-around;
     }
 
-    .header-btn{
-        font-size: 10px;
-        margin-right: 0px;
-        padding:  2;
-        height: 100%;
-    }
-    
-    #header-username{
-        margin-right: 0px;
-    }
-    
-    #settings-icon{
-        margin-right: 0px
+    #header-userbox{
+        margin-left: 0;
     }
 
     #current-filter-txt{
-        margin-left: 2px;
+        margin-left: 2.5px;
     }
+
 
     .modal{
         width: 100%;
@@ -423,6 +432,10 @@ input[name="emailGuard"] {
 
     .selected{
         padding: 2.5px;
+    }
+
+    .add-acc-dialog{
+        min-width: 95%;
     }
 
     #set-status-content{

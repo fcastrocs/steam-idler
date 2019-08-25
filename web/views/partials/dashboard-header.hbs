@@ -1,47 +1,53 @@
-<button type="button" class="btn header-btn" data-toggle="modal" data-target="#add-acc-modal">Add
-    Account
-</button>
+<div id="dashboard-header">
 
-<div class="spinner-border text-primary" id="all-acc-actions-spinner" role="status" hidden>
-    <span class="sr-only">Loading...</span>
-</div>
+    <div id="dashboard-header-btns">
+        <button type="button" class="header-btn" data-toggle="modal" data-target="#add-acc-modal">Add
+            Account
+        </button>
 
-<div class="dropdown" id="all-acc-actions-dropdown-box">
-    <button class="btn header-btn dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true"
-        aria-expanded="false">Actions</button>
-    <div class="dropdown-menu">
-        <div id="dropdown-notice">Actions applied to all your accounts</div>
-        <a href="#" class="filter-btn" id="all-login-btn">Login</a>
-        <a href="#" class="filter-btn" id="all-logout-btn">Logout</a>
-        <a href="#" class="filter-btn" id="all-status-btn">Status</a>
-        <a href="#" class="filter-btn" id="all-getgame-btn">Get Game</a>
-        <a href="#" class="filter-btn" id="all-stopidle-btn">Stop Idling</a>
-        <a href="#" class="filter-btn" id="all-startfarm-btn">Farm All Cards</a>
-        <a href="#" class="filter-btn" id="all-stopfarm-btn">Stop Farming</a>
+        <div class="spinner-border text-primary" id="all-acc-actions-spinner" role="status" hidden>
+            <span class="sr-only">Loading...</span>
+        </div>
+
+        <div class="dropdown" id="all-acc-actions-dropdown-box">
+            <button class="header-btn dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true"
+                aria-expanded="false">Actions</button>
+            <div class="dropdown-menu">
+                <div id="dropdown-notice">Actions applied to all your accounts</div>
+                <a href="#" class="filter-btn" id="all-login-btn">Login</a>
+                <a href="#" class="filter-btn" id="all-logout-btn">Logout</a>
+                <a href="#" class="filter-btn" id="all-status-btn">Status</a>
+                <a href="#" class="filter-btn" id="all-getgame-btn">Get Game</a>
+                <a href="#" class="filter-btn" id="all-stopidle-btn">Stop Idling</a>
+                <a href="#" class="filter-btn" id="all-startfarm-btn">Farm All Cards</a>
+                <a href="#" class="filter-btn" id="all-stopfarm-btn">Stop Farming</a>
+            </div>
+        </div>
+
+        <div class="dropdown" id="filter-dropdown-box">
+            <button class="header-btn dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true"
+                aria-expanded="false">
+                Filters
+            </button>
+            <div class="dropdown-menu">
+                <a href="#" class="filter-btn" id="show-all-filter">All</a>
+                <a href="#" class="filter-btn" id="show-online-filter">Online</a>
+                <a href="#" class="filter-btn" id="show-idling-filter">In-Game</a>
+                <a href="#" class="filter-btn" id="show-notingame-filter">Not In-Game</a>
+                <a href="#" class="filter-btn" id="show-farming-filter">Farming</a>
+                <a href="#" class="filter-btn" id="show-farmable-filter">Farmable</a>
+                <a href="#" class="filter-btn" id="show-offline-filter">Offline</a>
+                <a href="#" class="filter-btn" id="show-reconnecting-filter">Reconnecting</a>
+                <a href="#" class="filter-btn" id="show-bad-filter">Bad</a>
+            </div>
+        </div>
+        <div id="current-filter-txt">Showing All</div>
     </div>
-</div>
 
-<div class="dropdown" id="filter-dropdown-box">
-    <button class="btn header-btn dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true"
-        aria-expanded="false">
-        Filters
-    </button>
-    <div class="dropdown-menu">
-        <a href="#" class="filter-btn" id="show-all-filter">All</a>
-        <a href="#" class="filter-btn" id="show-online-filter">Online</a>
-        <a href="#" class="filter-btn" id="show-idling-filter">In-Game</a>
-        <a href="#" class="filter-btn" id="show-notingame-filter">Not In-Game</a>
-        <a href="#" class="filter-btn" id="show-farming-filter">Farming</a>
-        <a href="#" class="filter-btn" id="show-farmable-filter">Farmable</a>
-        <a href="#" class="filter-btn" id="show-offline-filter">Offline</a>
-        <a href="#" class="filter-btn" id="show-reconnecting-filter">Reconnecting</a>
-        <a href="#" class="filter-btn" id="show-bad-filter">Bad</a>
+    <div id="header-userbox">
+        <span id="header-username">{{{username}}}</span>
+        <img src="{{path}}/static/images/icon-settings.png" alt="settings" id="settings-icon">
+        <button type="button" class="header-btn" onclick="location.href='/logout'">Logout</button>
     </div>
-</div>
-<div id="current-filter-txt">Showing All</div>
 
-<div id="user-box">
-    <span id="header-username">{{{username}}}</span>
-    <img src="{{path}}/static/images/icon-settings.png" alt="settings" id="settings-icon">
-    <button type="button" class="btn header-btn" onclick="location.href='/logout'">Logout</button>
 </div>
