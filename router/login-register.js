@@ -197,24 +197,24 @@ router.post("/recovery", async function (req, res) {
         return res.status(400).send("A user with this email was not found.")
     }
 
-    //user found, create token
-    user.passwordResetToken = Security.createToken();
-    user.passwordResetExpires = Date.now() + 30 * 60 * 1000
+    // remove any existing token
+    query = Token.findOneAndDelete({ userId: user._id })
+    let token = await query.exec();
 
-    user.save(async (err, doc) => {
-        if (err) {
-            return res.status(500).send("Unexpected error occurred. Code: 6")
-        }
+    // create a new token.
+    token = new Token({ userId: user._id, token: Security.createToken() });
 
-        //send recovery link
-        let url = `https://${req.headers.host}/recovery/${doc.username}/${doc.passwordResetToken}`
-
-        try {
-            return res.send(await Mailer.sendRecovery(url, doc.email));
-        } catch (error) {
-            return res.status(500).send(error);
-        }
-    })
+    try {
+        await token.save();
+        // send recovery link
+        let url = `https://${req.headers.host}/recovery/${user.username}/${token.token}`
+        // send email.
+        await Mailer.sendRecovery(url, user);
+        return res.send(`A pasword reset email has been sent to ${user.email}.`)
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send("Unexpected error occurred. Code: 6")
+    }
 })
 
 // Recover link redirect to change password
@@ -233,69 +233,54 @@ router.get("/recovery/:user/:token", async function (req, res) {
 })
 
 
-router.post("/recovery/changepass", function (req, res) {
+router.post("/recovery/changepass", async function (req, res) {
     if (req.session.loggedIn) {
-        return res.status(403).send("You are already logged in.")
+        return res.status(400).send("You are already logged in.")
     }
 
     if (!req.body.recoverUsername || !req.body.recoverPassword || !req.body.recoverPassword2
         || !req.body.recoverToken) {
-        return res.status(403).send("Bad changepassword request.")
+        return res.status(400).send("Bad changepassword request.")
     }
 
     // compare passwords
     if (req.body.recoverPassword !== req.body.recoverPassword2) {
-        return res.status(403).send("Passwords do not math.")
+        return res.status(400).send("Passwords do not match.")
     }
 
-    signup.validate({
-        password: req.body.recoverPassword
-    }, async err => {
-        // validation failed
-        if (err) {
-            let errMsg = "";
-            for (let i in err.details) {
-                errMsg += err.details[i].message
-            }
-            return res.status(400).send(errMsg)
-        }
+    // validate password
+    let valRes = signup.validate({ password: req.body.recoverPassword })
+    if (valRes.error) {
+        let errMsg = valRes.error.details[0].message
+        return res.status(400).send(errMsg)
+    }
 
-        //validation passed
-
-        // find user
-        let query = User.findOne({
-            username: req.body.recoverUsername,
-            passwordResetToken: req.body.recoverToken
-        })
-
-        let user = await query.exec();
-        if (!user) {
-            return res.status(403).send("Invalid token or bad username.")
-        }
-
-        //user found
-        //check token validity
-        let expiryDate = new Date(user.passwordResetExpires).getTime()
-        if (expiryDate < Date.now()) {
-            return res.status(403).send("Expired Token.")
-        }
-
-        // valid token
-        // remove token
-        user.passwordResetToken = ""
-        // change password 
-        user.password = Security.encrypt(req.body.recoverPassword)
-
-        // save user
-        user.save((err, doc) => {
-            if (err) {
-                return res.status(403).send("Unexpected error occurred. Code: 5")
-            }
-
-            // Redirect to login page
-            res.send("/login/?message=You+password+has+been+changed%2F")
-        })
+    // find user
+    let query = User.findOne({
+        username: req.body.recoverUsername,
     })
+    let user = await query.exec();
+    if (!user) {
+        return res.status(400).send("Username not found.")
+    }
+
+    // find token
+    query = Token.findOne({ userId: user._id });
+    let token = await query.exec();
+    if (!token) {
+        return res.status(400).send("Invalid/Expired token.")
+    }
+
+    //change password
+    user.password = Security.encrypt(req.body.recoverPassword)
+
+    try {
+        await token.remove();
+        await user.save();
+        res.send("Your password has been changed, please login.")
+    } catch (error) {
+        return res.status(500).send("Unexpected error occurred. Code: 5")
+    }
 })
 
 // invite link redirect to registration form
@@ -312,26 +297,15 @@ router.get('/invite/:token', async function (req, res) {
 // Creates or updates email confirmation token, sends email to user.
 async function createToken_sendConfirmation(doc, host) {
     return new Promise(async (resolve, reject) => {
-        // check if there's a token
-        let query = Token.findOne({ userId: doc._id });
+        // remove any existing token
+        query = Token.findOneAndDelete({ userId: doc._id })
         let token = await query.exec();
-        // Token not found
-        if (!token) {
-            token = new Token({ userId: doc._id, token: Security.createToken() });
-        } else {
-            //token found, update token and creation date
-            token.token = Security.createToken();
-            token.createdAt = Date.now();
-        }
 
-        // save token
+        // create new token
+        token = new Token({ userId: doc._id, token: Security.createToken() });
+
         try {
             await token.save();
-        } catch (error) {
-            return reject("Unexpected error occurred. Code: 2")
-        }
-
-        try {
             let url = `https://${host}/register/confirm/${token.token}`
             await Mailer.sendEmailConfirm(url, doc.email);
             return resolve()

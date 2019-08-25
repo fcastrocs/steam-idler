@@ -24,13 +24,13 @@ module.exports.sendEmailConfirm = (url, email) => {
     return sendEmail(data);
 }
 
-module.exports.sendRecovery = (url, email) => {
+module.exports.sendRecovery = (url, doc) => {
     const data = {
         from: "Steamidler.com <noreply@steamidler.com>",
-        to: email,
+        to: doc.email,
         subject: "Recover Your Account.",
         template: "forgotpassword",
-        'h:X-Mailgun-Variables': `{ "action_url": "${url}" }`
+        'h:X-Mailgun-Variables': `{ "username": "${doc.username}", "action_url": "${url}" }`
     };
     return sendEmail(data);
 }

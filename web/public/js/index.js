@@ -74,31 +74,34 @@ $(() => {
     // Recover form
     $("#recover-form").submit(function (e) {
         e.preventDefault();
-
-        $(this).find(".alert-danger").attr("hidden", true).html("");
-        let self = this;
+        // Clear danger alert
+        $(this).find(".alert-danger").prop("hidden", true).text("")
         let data = $(this).serialize();
-        $.post('/recovery', data, function (res) {
-            $(self).find(".alert-success").attr("hidden", false).html(res)
+        $.post('/recovery', data, (res)=>{
+            // recovery email sent
+            $(this).find(".alert-success").prop("hidden", false).text(res)
             $("#recover-form-box").hide(0)
         }).fail((xhr, status, err) => {
-            $(self).find(".alert-danger").attr("hidden", false).html(xhr.responseText);
+            $(this).find(".alert-danger").prop("hidden", false).text(xhr.responseText);
         })
     })
 
     // change password
     $('#changepass-form').submit(function (e) {
         e.preventDefault();
-
         $(this).find(".alert-danger").attr("hidden", true).html("");
-
-        let self = this;
         let data = $("#changepass-form").serialize();
-
-        $.post('/recovery/changepass', data, function (res) {
-            window.location = res;
+        console.log(data)
+        $.post('/recovery/changepass', data, res =>{
+            $(this).hide();
+            // Reset recover form
+            $(this).trigger("reset").hide();
+            // show login form
+            $("#login-message").text(res)
+            $("#login-form").show();
         }).fail((xhr, status, err) => {
-            $(self).find(".alert-danger").attr("hidden", false).html(xhr.responseText);
+            $(this).find(".alert-danger").attr("hidden", false).html(xhr.responseText);
+            $(this).trigger("reset")
         })
     })
 
