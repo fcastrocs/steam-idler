@@ -55,7 +55,7 @@ async function GetAndSaveProxies() {
                 if (err) {
                     return reject(" - could not store proxies to db")
                 }
-                return resolve(` - ${docs.length} proxies fetched`)
+                return resolve(docs.length)
             })
 
         } catch (error) {

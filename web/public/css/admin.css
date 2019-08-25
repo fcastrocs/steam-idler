@@ -1,3 +1,32 @@
-#admin{
-    margin-top: 80px;
+#body{
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.row{
+    width: 500px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    background: rgba(26, 26, 187, 0.459);
+    padding: 20px;
+    border: solid 1px rgb(0, 89, 255);
+    border-radius: 5px;
+    margin-bottom: 25px;
+}
+
+.text-margin{
+    margin-bottom: 5px;
+}
+
+#send-invite-form button{
+    float: right;
+    margin-top: 10px;
+}
+
+.block{
+    display: block !important;
+    width: 100%;
 }

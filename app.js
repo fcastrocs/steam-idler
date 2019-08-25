@@ -62,19 +62,19 @@ module.exports.accountHandler = accountHandler;
 
     // Fetch proxies now, then every 40 minutes
     try {
-        let res = await fetchProxies();
-        console.log(res);
+        let count = await fetchProxies();
+        console.log(` - ${count} proxies fetched`)
     } catch (error) {
         console.log(error);
     }
     setInterval(async () => {
         try {
-            let res = await fetchProxies();
-            console.log(res);
+            let count = await fetchProxies();
+            console.log(` - ${count} proxies fetched`)
         } catch (error) {
             console.log(error);
         }
-    }, 40 * 60 * 1000);
+    }, 120 * 60 * 1000);
 
     // Initialize accounts in handlers
     try {
@@ -85,8 +85,8 @@ module.exports.accountHandler = accountHandler;
 
     // Fetch Steam CM servers
     // try {
-    //     let res = await GetAndSaveSteamCMs();
-    //     console.log(res)
+    //     let count = await GetAndSaveSteamCMs();
+    //     console.log(`${count} Steam CMs saved to database.`)
     // } catch (error) {
     //     console.log(error)
     //     return;

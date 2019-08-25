@@ -30,12 +30,12 @@ module.exports.GetAndSaveSteamCMs = async () => {
                     servers.push(server)
                 }
 
-                SteamCM.insertMany(servers, (err, docs) =>{
-                    if(err){
+                SteamCM.insertMany(servers, (err, docs) => {
+                    if (err) {
                         return reject("Could not save SteamCMS to DB.")
                     }
 
-                    return resolve(`${docs.length} Steam CMs saved to database.`)
+                    return resolve(docs.length)
                 })
             });
         } catch (error) {

@@ -1,26 +1,46 @@
 <link rel="stylesheet" type="text/css" href="../static/css/admin.css">
 <script src="../static/js/admin.js"></script>
 
-<div id="admin">
-    <div>
-        <div>Proxies: {{{proxyCount}}}</div>
-        <button type="button" class="btn btn-primary" id="renew-proxies">Renew Proxies</button>
-    </div>
-    <div>
-        <div>SteamCMS: {{{steamcmsCount}}}</div>
-        <button type="button" class="btn btn-primary" id="renew-steamcms">Renew SteamCMS</button>
+<div id="body">
+
+    <div class="row">
+        <span>
+            <div class="text-margin">Proxies: {{{proxyCount}}}</div>
+            <button type="button" class="btn btn-primary" id="renew-proxies">Renew Proxies</button>
+        </span>
+        <span>
+            <div class="text-margin">SteamCMS: {{{steamcmsCount}}}</div>
+            <button type="button" class="btn btn-primary" id="renew-steamcms">Renew SteamCMS</button>
+        </span>
     </div>
 
-    <form id="send-invite-form" class="form-group">
-        <div class="form-group" id="form-account">
-            <div>Send invite</div>
+    <div class="row">
+        <div class="block text-margin">Send Invite</div>
+        <form id="send-invite-form" class="block">
             <div class="input-group">
                 <div class="input-group-prepend">
                     <span class="input-group-text">Email</span>
                 </div>
                 <input type="email" name="email" class="form-control" required>
             </div>
-        </div>
-        <button type="submit" class="btn btn-primary">Invite</button>
-    </form>
+            <button type="submit" id="invite-btn" class="btn btn-primary">Send invite</button>
+        </form>
+    </div>
+
+
+    <div class="row">
+        <div class="block text-margin">Ban user</div>
+        <form id="send-invite-form" class="block">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Username</span>
+                </div>
+                <input type="text" name="username" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Ban user</button>
+        </form>
+    </div>
+
+
+
 </div>

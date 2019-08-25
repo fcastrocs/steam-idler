@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const User = require('../models/user');
-const Mailer = require("./util/mailer");
+const Mailer = require("../mailer");
 const Security = require("../util/security")
 const Token = require("../models/token")
 const signup = require("./util/signup-schema")
@@ -230,7 +230,7 @@ router.post("/recovery", async function (req, res) {
         }
 
         //send recovery link
-        let url = `http://${req.headers.host}/recovery/${doc.username}/${doc.passwordResetToken}`
+        let url = `https://${req.headers.host}/recovery/${doc.username}/${doc.passwordResetToken}`
 
         try {
             let result = await Mailer.sendRecovery(url, doc.email);
@@ -347,9 +347,9 @@ async function createToken_SendVerification(doc, host) {
             if (err) {
                 return reject("Unexpected error occurred. Code: 2")
             }
-            let url = `http://${host}/register/confirm/${token.token}`
+            let url = `https://${host}/register/confirm/${token.token}`
             try {
-                await Mailer.sendVerification(url, doc.username, doc.email);
+                await Mailer.sendEmailConfirm(url, doc.email);
                 return resolve(`A confirmation email has been sent to ${doc.email}. Check junk folder.`)
             } catch (error) {
                 return reject(`Could not send verification email`)
