@@ -148,8 +148,8 @@ function initExpress() {
     app.use('/static', express.static(`${__dirname}/web/public`))
 
     // Use body-parser
-    app.use(bodyParser.json({limit: '10mb', extended: true}))
-    app.use(bodyParser.urlencoded({limit: '10mb', extended: true}))
+    app.use(bodyParser.json({ limit: '10mb', extended: true }))
+    app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }))
 
     // use Handlebars view engine
     app.engine('.hbs', exphbs({
@@ -180,11 +180,29 @@ function initExpress() {
         if (req.session.loggedIn) {
             return res.redirect(`/dashboard/${req.session.username}`);;
         }
-        res.render('index', {
+
+        let data = {
             header: function () {
                 return "index-header"
             }
-        });
+        }
+
+        // Password Recovery
+        if (req.session.passwordReset) {
+            data["recoverUser"] = req.session.passwordReset.recoverUser
+            data["recoverToken"] = req.session.passwordReset.recoverToken
+        }
+        else if (req.session.invite) {
+            data["invitecode"] = req.session.invite.token
+        }
+        else if (req.session.registerConfirm){
+            data['loginMessage'] = req.session.registerConfirm.message
+        }
+
+        req.session.destroy(()=>{
+            res.render("index", data);
+        })
+
     })
 
     // Routes

@@ -47,7 +47,7 @@
     <!-- LOGIN -->
     <form id="login-form">
         <p>Login</p>
-        <div class="text-success">{{{message}}}</div>
+        <div class="text-success" id="login-message">{{{loginMessage}}}</div>
         <div class="alert alert-danger" hidden></div>
         <div class="form-group">
             <div class="input-group">
@@ -121,7 +121,7 @@
                     <div class="input-group-prepend">
                         <span class="input-group-text">Invite Code</span>
                     </div>
-                    <input type="text" name="invitecode" class="form-control" value="{{{invite}}}" required>
+                    <input type="text" name="invitecode" class="form-control" value="{{{invitecode}}}" required>
                 </div>
             </div>
 

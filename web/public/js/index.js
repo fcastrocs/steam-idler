@@ -12,7 +12,13 @@ $(() => {
         $("#changepass-form").show();
     }
 
-    // Show register form
+    //show login form if there is a login message, such as from register/confirm
+    if ($("#login-message").text() !== "") {
+        $('#info').hide();
+        $("#login-form").show();
+    }
+
+    // Show login form
     $('#login-btn').click(() => {
         $('#info').hide()
         $("form").css("display", "none")
@@ -60,6 +66,7 @@ $(() => {
             $(self).find(".alert-success").attr("hidden", false).html(res)
             $("#register-inputs-box").hide(0);
         }).fail((xhr, status, err) => {
+            console.log(xhr.responseText)
             $(self).find(".alert-danger").attr("hidden", false).html(xhr.responseText);
         })
     })

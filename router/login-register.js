@@ -5,19 +5,7 @@ const Security = require("../util/security")
 const Token = require("../models/token")
 const signup = require("./util/signup-schema")
 const Invite = require("../models/invite")
-
-
-router.get('/login', function (req, res) {
-    if (req.session.loggedIn) {
-        res.redirect(`/dashboard/${req.session.username}`);
-    }
-
-    if (req.query.message) {
-        return res.render('login-register', { message: req.query.message })
-    }
-
-    return res.render('login-register')
-})
+const mongoose = require('mongoose');
 
 router.post('/login', async function (req, res) {
     if (req.session.loggedIn) {
@@ -44,13 +32,12 @@ router.post('/login', async function (req, res) {
         return res.status(400).send("Bad username/password.")
     }
 
-    // make sure user is verified. create new token and send verification
+    // make sure user is verified.
     if (!doc.isVerified) {
         try {
-            let result = await createToken_SendVerification(doc, req.headers.host);
-            return res.send(result);
+            return res.send(await createToken_sendConfirmation(doc, req.headers.host))
         } catch (error) {
-            return res.status(400).send(error);
+            return res.status(500).send(error);
         }
     }
 
@@ -67,92 +54,80 @@ router.post('/login', async function (req, res) {
 // Register request
 router.post('/register', async function (req, res) {
     if (req.session.loggedIn) {
-        return res.status(403).send("You are already logged in.")
+        return res.status(400).send("You are already logged in.")
     }
 
     if (!req.body.username || !req.body.password || !req.body.email ||
         !req.body.invitecode || !req.body.tradeurl || !req.body.password2) {
-        return res.status(403).send("Bad register request.")
+        return res.status(400).send("Bad register request.")
     }
 
     //check invite is valid
     let query = Invite.findOne({ token: req.body.invitecode });
     let invite = await query.exec();
     if (!invite) {
-        return res.status(403).send("Invalid invite code.")
+        return res.status(400).send("Invalid invite code.")
     }
 
     if (req.body.password2 !== req.body.password) {
-        return res.status(403).send("Passwords do not math.")
+        return res.status(400).send("Passwords do not math.")
     }
-
 
     // trim spaces and make it lower case.
     req.body.username = req.body.username.trim().toLowerCase();
-
     // trim spaces and make it lower case.
     req.body.email = req.body.email.trim().toLowerCase();
 
-
     // validate form data
-    signup.validate({
+    let valRes = signup.validate({
         username: req.body.username,
         password: req.body.password,
         email: req.body.email
-    }, async err => {
-        // validation failed
-        if (err) {
-            let errMsg = "";
-            for (let i in err.details) {
-                errMsg += err.details[i].message
-            }
-            return res.status(400).send(errMsg)
-        }
-
-        // Make sure the email is not in use
-        query = User.findOne({ email: req.body.email });
-        let user = await query.exec();
-        if (user) {
-            return res.status(400).send("This email is already in use.")
-        }
-
-        // Make sure the username does not exist
-        query = User.findOne({ username: req.body.username });
-        user = await query.exec();
-        if (user) {
-            return res.status(400).send("This username already exists.")
-        }
-
-        // create the user
-        user = new User({
-            username: req.body.username,
-            password: Security.encrypt(req.body.password),
-            email: req.body.email
-        })
-
-        // save the user
-        user.save(async (err, doc) => {
-            if (err) {
-                return res.status(400).send("Unexpected error occurred. Code: 1")
-            }
-
-            //delete the invite
-            invite.remove();
-
-            try {
-                let result = await createToken_SendVerification(doc, req.headers.host);
-                // delete the invite code.
-                return res.send(result);
-            } catch (error) {
-                return res.status(400).send(error);
-            }
-        })
     })
+
+    if (valRes.error) {
+        let errMsg = valRes.error.details[0].message
+        return res.status(400).send(errMsg)
+    }
+
+    // Make sure the email is not in use
+    query = User.findOne({ email: req.body.email });
+    let user = await query.exec();
+    if (user) {
+        return res.status(400).send("This email is already in use.")
+    }
+
+    // Make sure the username does not exist
+    query = User.findOne({ username: req.body.username });
+    user = await query.exec();
+    if (user) {
+        return res.status(400).send("This username already exists.")
+    }
+
+    // create the user
+    user = new User({
+        _id: mongoose.Types.ObjectId(),
+        username: req.body.username,
+        password: Security.encrypt(req.body.password),
+        email: req.body.email
+    })
+
+    try {
+        await createToken_sendConfirmation(user, req.headers.host);
+        await invite.remove();
+        await user.save();
+        let text = `An email has been sent to ${user.email} to confirm your account.\n`
+            + "If you don't receive an email, login and another email will be sent."
+        return res.send(text);
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send(error);
+    }
 })
 
 router.get('/register/confirm/:token', async function (req, res) {
     if (req.session.loggedIn) {
-        return res.status(403).send("You are already logged in.")
+        return res.redirect("/");
     }
 
     // find token
@@ -160,39 +135,41 @@ router.get('/register/confirm/:token', async function (req, res) {
     let token = await query.exec();
     // token not found
     if (!token) {
-        return res.status(403).send("Invalid token or expired.")
+        return res.redirect("/");
     }
 
-    // find user
+    // find user linked to token
     query = User.findOne({ _id: token.userId })
     let user = await query.exec();
-    if (!user) {
-        return res.status(403).send("No user found for this token.")
+    if (!user) { //this shouldn't happen, but check anyways
+        return res.redirect("/");
     }
 
-    if (user.isVerified) {
-        return res.status(403).send("User has already been verified.")
-    }
-
-    // Verify and save user
+    // Verify user
     user.isVerified = true;
-    user.save((err, doc) => {
-        if (err) {
-            return res.status(400).send("Unexpected error occurred. Code: 3")
-        }
 
-        res.render('login-register', { message: "Your account has been verified, please log in." })
-    })
+    try {
+        // save user
+        await user.save();
+        // delete token
+        await token.remove();
+        req.session.registerConfirm = {
+            message: "Your account has been confirmed, please log in."
+        }
+        return res.redirect("/")
+    } catch (error) {
+        return res.status(400).send("Unexpected error occurred. Code: 4")
+    }
 })
 
 
 router.get("/logout", async function (req, res) {
     if (!req.session.loggedIn) {
-        return res.status(400).send("You are not logged in.")
+        return res.redirect("/")
     }
     req.session.destroy((err) => {
         if (err) {
-            return res.status(500).send("Unexpected error occurred. Code: 6");
+            return res.status(500).send("Unexpected error occurred. Code: 5");
         }
         res.redirect("/")
     });
@@ -209,7 +186,7 @@ router.post("/recovery", async function (req, res) {
     }
 
     if (!req.body.recoverEmail) {
-        return res.status(400).send("Need recovery email")
+        return res.status(400).send("Need recovery email.")
     }
 
     // find user with this email
@@ -220,21 +197,20 @@ router.post("/recovery", async function (req, res) {
         return res.status(400).send("A user with this email was not found.")
     }
 
-    //user found
+    //user found, create token
     user.passwordResetToken = Security.createToken();
     user.passwordResetExpires = Date.now() + 30 * 60 * 1000
 
     user.save(async (err, doc) => {
         if (err) {
-            return res.status(500).send("Unexpected error occurred. Code: 4")
+            return res.status(500).send("Unexpected error occurred. Code: 6")
         }
 
         //send recovery link
         let url = `https://${req.headers.host}/recovery/${doc.username}/${doc.passwordResetToken}`
 
         try {
-            let result = await Mailer.sendRecovery(url, doc.email);
-            return res.send(result);
+            return res.send(await Mailer.sendRecovery(url, doc.email));
         } catch (error) {
             return res.status(500).send(error);
         }
@@ -244,11 +220,16 @@ router.post("/recovery", async function (req, res) {
 // Recover link redirect to change password
 router.get("/recovery/:user/:token", async function (req, res) {
     if (req.session.loggedIn) {
-        return res.status(403).send("You are already logged in.")
+        return res.redirect("/")
+    }
+
+    req.session.passwordReset = {
+        recoverUser: req.params.user,
+        recoverToken: req.params.token
     }
 
     // send to change password form
-    res.render('login-register', { recoverUser: req.params.user, recoverToken: req.params.token })
+    res.redirect("/");
 })
 
 
@@ -320,19 +301,20 @@ router.post("/recovery/changepass", function (req, res) {
 // invite link redirect to registration form
 router.get('/invite/:token', async function (req, res) {
     if (req.session.loggedIn) {
-        return res.status(403).send("You are already logged in.")
+        return res.redirect("/")
     }
-
-    //find invite
-    res.render('login-register', { invite: req.params.token })
+    req.session.invite = {
+        token: req.params.token
+    }
+    res.redirect("/")
 })
 
-async function createToken_SendVerification(doc, host) {
+// Creates or updates email confirmation token, sends email to user.
+async function createToken_sendConfirmation(doc, host) {
     return new Promise(async (resolve, reject) => {
         // check if there's a token
         let query = Token.findOne({ userId: doc._id });
         let token = await query.exec();
-
         // Token not found
         if (!token) {
             token = new Token({ userId: doc._id, token: Security.createToken() });
@@ -342,19 +324,20 @@ async function createToken_SendVerification(doc, host) {
             token.createdAt = Date.now();
         }
 
-        // save the token
-        token.save(async (err) => {
-            if (err) {
-                return reject("Unexpected error occurred. Code: 2")
-            }
+        // save token
+        try {
+            await token.save();
+        } catch (error) {
+            return reject("Unexpected error occurred. Code: 2")
+        }
+
+        try {
             let url = `https://${host}/register/confirm/${token.token}`
-            try {
-                await Mailer.sendEmailConfirm(url, doc.email);
-                return resolve(`A confirmation email has been sent to ${doc.email}. Check junk folder.`)
-            } catch (error) {
-                return reject(`Could not send verification email`)
-            }
-        });
+            await Mailer.sendEmailConfirm(url, doc.email);
+            return resolve()
+        } catch (error) {
+            return reject("Unexpected error occurred. Code: 3")
+        }
     })
 }
 
