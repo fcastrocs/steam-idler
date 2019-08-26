@@ -30,35 +30,40 @@
     font-size: 12px;
 }
 
-.nick{
+.persona-name{
     width: 100%;
-    color: rgb(163, 192, 255); 
     background: rgba(0, 0, 0, 0.3);
     text-align: center;
     font-size: 14px;
 }
 
+
+.avatar-box{
+    background: blue;
+    margin: 5px 0;
+}
+
+.acc-dropdown-btn{
+    position: absolute;
+    background: none;
+    margin-left: -40px;
+    border: rgb(0, 137, 250) solid 1px;
+    border-radius: 2px;
+    color: rgb(0, 137, 250);
+}
+
+.acc-dropdown-menu{
+    font-size: 12px;
+    background:  rgba(0, 89, 141, 0.856) !important;
+}
+
 .avatar{
     height: 155px;
     width: 155px;
-    margin-top: 5px;
-}
-
-.change-avatar-btn{
-    visibility:hidden;
-    position: relative;
-    text-align: center;
-    top: -25px;
-    background: rgba(0, 0, 0, 0.507);
-    margin: 0 auto;
-    margin-bottom: -18px;
-    width: 60%;
-    border-radius: 5px;
 }
 
 .status{
     font-weight: bolder;
-    margin: 5px 0;
     padding: 5px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 2.5px;
@@ -442,9 +447,4 @@ input[name="emailGuard"] {
         width: 100%;
         margin-top: 30px;
     }
-
-    .change-avatar-btn{
-        visibility: visible;
-    } 
-
 }

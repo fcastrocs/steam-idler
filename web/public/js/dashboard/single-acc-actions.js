@@ -223,30 +223,8 @@ $(() => {
     /**************************************************** 
     *               STEAM - CHANGE NICK                 *
     * **************************************************/
-    $(document).on("mouseenter", ".nick", function () {
-        let accountId = $(this).closest("div.account").attr("data-id")
-        let status = accounts_cache[accountId].status
-        if (!(status === "Online" || status === "In-game")) {
-            return;
-        }
-
-        let nick = $(this).text();
-        $(this).attr("data-nick", nick)
-        $(this).text("Change nick");
-    })
-
-    $(document).on("mouseleave", ".nick", function () {
-        let accountId = $(this).closest("div.account").attr("data-id")
-        let status = accounts_cache[accountId].status
-        if (!(status === "Online" || status === "In-game")) {
-            return;
-        }
-
-        $(this).text($(this).attr("data-nick"))
-    })
-
     // open modal
-    $(document).on('click', ".nick", function () {
+    $(document).on('click', ".change-nick", function () {
         let accountId = $(this).closest("div.account").attr("data-id")
         let status = accounts_cache[accountId].status
 
@@ -269,7 +247,7 @@ $(() => {
         }
         $.post('/steamaccount/changenick', { nickname: nickname, accountId: accountId }, function (nick) {
             $("#change-nick-modal").modal("toggle")
-            $(`div.account[data-id=${accountId}]`).find(".nick").text(nick)
+            $(`div.account[data-id=${accountId}]`).find(".persona-name").text(nick)
         }).fail((xhr, status, err) => {
             alert(xhr.responseText)
         })
@@ -639,18 +617,4 @@ $(() => {
         $("#change-avatar-form")[0].reset();
         $("#avatar-preview").attr("src", "http://placehold.it/150x150")
     })
-
-    $(document).on("mouseenter", ".avatar", function () {
-        let self = $(this).closest("div.account");
-        self.find(".change-avatar-btn").css('visibility', 'visible').show()
-    })
-
-    $(document).on("mouseleave", ".avatar", function () {
-        let self = $(this).closest("div.account");
-        setTimeout(() => {
-            self.find(".change-avatar-btn").fadeOut(1000)
-        }, 3000);
-    })
-
-
 })

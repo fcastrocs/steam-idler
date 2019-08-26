@@ -80,9 +80,6 @@ function buildAccount(account) {
             $(`div[data-id="${account._id}"]`).find(".last-connect").text(time(account.lastConnect))
         }, 1000);
 
-        // Change avatar btn
-        var changeAvatarBtn = `<a href="#" class="change-avatar-btn">Change avatar</a>`
-
         //set buttons
         buttons = `
         <button type="button" class="btn btn-primary btn-sm acc-logout-btn">
@@ -139,6 +136,19 @@ function buildAccount(account) {
              </div>
          </div>`;
 
+        var dropdownMenu = `
+         <div class="dropdown">
+            <button data-toggle="dropdown" class="acc-dropdown-btn" aria-haspopup="true"
+                aria-expanded="false">⯆</button>
+            <div class="dropdown-menu acc-dropdown-menu">
+                <a href="#" class="filter-btn change-avatar-btn">Change avatar</a>
+                <a href="#" class="filter-btn change-nick">Change nick</a>
+                <a href="#" class="filter-btn">Clear previous aliases</a>
+                <a href="#" class="filter-btn">Change privacy</a>
+                <a href="#" class="filter-btn">Setup profile</a>
+            </div>
+        </div>`
+
     } else if (account.status === "Offline") {
         account.forcedStatus = "Offline"
         buttons = `
@@ -162,13 +172,13 @@ function buildAccount(account) {
     let acc = `
         <div class="account account-${account.forcedStatus}" data-id="${account._id}">
 
-            <div class="nick">${account.persona_name}</div>
+            <div class="persona-name">${account.persona_name}</div>
 
-            <div>
+            <div class="avatar-box">
+                 ${dropdownMenu || ""}
                 <a href="https://steamcommunity.com/profiles/${account.steamid}" target="_blank">
                     <img class="avatar avatar-${account.status}" src="${account.avatar}">
                 </a>
-                ${changeAvatarBtn || ""}
             </div>
             
             <div class="status status-${account.forcedStatus}">${account.forcedStatus}</div>
@@ -293,7 +303,7 @@ function updateAccountStatus(account) {
 
     // real status changed
     let oldStatus = accounts_cache[accountId].status
-    
+
     if (oldStatus !== account.status) {
         realStatusChanged = true;
     }
