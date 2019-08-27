@@ -342,7 +342,7 @@ $(() => {
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id");
 
-        if(accounts_cache[accountId].isFarming){
+        if (accounts_cache[accountId].isFarming) {
             alert("Cannot start idle while account is farming cards.")
             return;
         }
@@ -367,7 +367,7 @@ $(() => {
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id")
         // can't stop idling if account is farming
-        if(accounts_cache[accountId].isFarming){
+        if (accounts_cache[accountId].isFarming) {
             alert("Cannot stop idling while account is farming cards.")
             return;
         }
@@ -395,7 +395,7 @@ $(() => {
         let gameId = $(this).attr("data-gameId");
         let accountId = $(this).closest("div.account").attr("data-id")
 
-        if(accounts_cache[accountId].isFarming){
+        if (accounts_cache[accountId].isFarming) {
             alert("Cannot make changes while account is farming cards.")
             return;
         }
@@ -617,4 +617,226 @@ $(() => {
         $("#change-avatar-form")[0].reset();
         $("#avatar-preview").attr("src", "http://placehold.it/150x150")
     })
+
+
+    /**************************************************** 
+    *              STEAM - CLEAR ALIASES             *
+    **************************************************/
+    // Open redeem key modal
+    $(document).on('click', ".clear-aliases-btn", function () {
+        let accountId = $(this).closest("div.account").attr("data-id")
+        $("#clear-aliases-btn").attr("data-id", accountId)
+        $("#clear-aliases-modal").modal("toggle")
+    })
+
+    $("#clear-aliases-form").submit(function (e) {
+        e.preventDefault();
+
+        $("#clear-aliases-spinner").prop("hidden", false);
+        $(this).hide();
+
+        let accountId = $("#clear-aliases-btn").attr("data-id")
+
+        $.post('/steamaccount/clearaliases', { accountId: accountId }, () => {
+            $(this).show();
+            $("#clear-aliases-spinner").prop("hidden", true);
+            $('#clear-aliases-modal').modal("toggle")
+        }).fail((xhr, status, err) => {
+            $("#clear-aliases-spinner").prop("hidden", true);
+            $(this).show();
+            alert(xhr.responseText)
+        })
+    })
+
+    /**************************************************** 
+    *              STEAM - CLEAR ALIASES             *
+    **************************************************/
+    // Open change privacy modal
+    $(document).on('click', ".change-privacy-btn", function () {
+        let accountId = $(this).closest("div.account").attr("data-id")
+        $("#change-privacy-btn").attr("data-id", accountId)
+        $("#change-privacy-modal").modal("toggle")
+    })
+
+    // set account settings
+    $("#change-privacy-modal").on('shown.bs.modal', function (e) {
+        let accountId = $("#change-privacy-btn").attr("data-id")
+        if(!accounts_cache[accountId].privacySettings){
+            return;
+        }
+
+        let data = accounts_cache[accountId].privacySettings
+
+        console.log(data)
+
+        // checkboxes first
+        for(let name in data.Privacy){
+            if(name === "PrivacyInventoryGifts" || name === "PrivacyPlaytime"){
+                continue;
+            }
+            $(`[name="${name}"]`).val(data.Privacy[name])
+        }
+
+        // set checkboxes
+        if(data.Privacy.PrivacyPlaytime === "1"){
+            $(`[name="PrivacyPlaytime"]`).prop("checked", true)
+        }
+
+        if(data.Privacy.PrivacyInventoryGifts === "1"){
+            $(`[name="PrivacyInventoryGifts"]`).prop("checked", true)
+        }
+
+        // set eCommentPermission
+        $(`[name="eCommentPermission"]`).val(data.eCommentPermission)
+
+    })
+
+
+    // form submit
+    $("#change-privacy-form").submit(function (e) {
+        e.preventDefault();
+
+        $("#change-privacy-form").hide();
+        $("#change-privacy-spinner").prop("hidden", false);
+
+        let accountId = $("#change-privacy-btn").attr("data-id");
+        let data = $(this).serializeArray();
+
+        let dataObj = new Object();
+        dataObj.Privacy = new Object();
+
+        data.forEach(item => {
+            if (item.name === "eCommentPermission") {
+                dataObj["eCommentPermission"] = item.value;
+            } else {
+                dataObj["Privacy"][`${item.name}`] = item.value;
+            }
+        })
+
+        // if checked then should be private value 1
+        if($(`[name="PrivacyPlaytime"]`).is(":checked")){
+            dataObj.Privacy.PrivacyPlaytime = "1"
+        }else{ // public value 3
+            dataObj.Privacy.PrivacyPlaytime = "3"
+        }
+
+        if($(`[name="PrivacyInventoryGifts"]`).is(":checked")){
+            dataObj.Privacy.PrivacyInventoryGifts = "1"
+        }else{ // public value 3
+            dataObj.Privacy.PrivacyInventoryGifts = "3"
+        }
+        
+        $.post('/steamaccount/changeprivacy', { accountId: accountId, formData: dataObj }, () => {
+            $('#change-privacy-modal').modal("toggle")
+            $(this).show();
+            $("#change-privacy-spinner").prop("hidden", true);
+            accounts_cache[accountId].privacySettings = dataObj;
+        }).fail((xhr, status, err) => {
+            $("#change-privacy-spinner").prop("hidden", true);
+            $(this).show();
+            alert(xhr.responseText)
+        })
+
+    })
+
+    $("#gamedetails-privacy").change(function () {
+        // PRIVATE
+        if ($(this).val() === "1") {
+            $("#playtime-privacy").prop("checked", true).prop('disabled', true)
+        } else {
+            $("#playtime-privacy").prop('disabled', false)
+        }
+    })
+
+    $("#inventory-privacy").change(function () {
+        // PRIVATE
+        if ($(this).val() === "1") {
+            $("#inventory-gifts-privacy").prop("checked", true).prop('disabled', true)
+        } else {
+            $("#inventory-gifts-privacy").prop('disabled', false)
+        }
+    })
+
+
+    // modify form based on selected settings
+    $("#profile-privacy").change(function () {
+
+        // FRIENDS ONLY
+        if ($(this).val() === "2") {
+            $("#playtime-privacy").prop('disabled', false)
+            $("#inventory-gifts-privacy").prop('disabled', false)
+
+            // disable public options
+            $("#change-privacy-form").find('select').each(function () {
+                let self = this;
+                //don't disable anything for #profile-privacy
+                if ($(this).is('#profile-privacy')) {
+                    return
+                }
+
+                let publicSelected = false;
+                $(this).children().each(function () {
+                    // hide and disable public option
+                    if ($(this).text() === "Public") {
+                        if ($(self).val() === $(this).val()) {
+                            publicSelected = true;
+                        }
+                        $(this).prop("disabled", true).hide();
+                    }
+
+                    if ($(this).text() === "Friends Only") {
+                        $(this).prop("disabled", false).show();
+                        if (publicSelected) {
+                            $(self).val($(this).val())
+                        }
+                    }
+                })
+            })
+        }
+
+        // PRIVATE - disable friends only and public
+        if ($(this).val() === "1") {
+            // play time should be checked when profile is private
+            $("#playtime-privacy").prop("checked", true).prop('disabled', true)
+            $("#inventory-gifts-privacy").prop("checked", true).prop('disabled', true)
+
+            // disable public options
+            $("#change-privacy-form").find('select').each(function () {
+                let self = this;
+                //don't disable anything for #profile-privacy
+                if ($(this).is('#profile-privacy')) {
+                    return
+                }
+
+                $(this).children().each(function () {
+                    if (($(this).text() === "Public") || ($(this).text() === "Friends Only")) {
+                        $(this).prop("disabled", true).hide();
+                    }
+
+                    if ($(this).text() === "Private") {
+                        $(self).val($(this).val())
+                    }
+                })
+            })
+        }
+
+        // PUBLIC - show all options
+        if ($(this).val() === "3") {
+            $("#playtime-privacy").prop('disabled', false)
+            $("#inventory-gifts-privacy").prop('disabled', false)
+
+            // disable public options
+            $("#change-privacy-form").find('select').each(function () {
+                //don't disable anything for #profile-privacy
+                if ($(this).is('#profile-privacy')) {
+                    return
+                }
+                $(this).children().each(function () {
+                    $(this).prop("disabled", false).show();
+                })
+            })
+        }
+    })
+
+
 })

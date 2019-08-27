@@ -237,6 +237,38 @@ Router.post('/steamaccount/changeavatar', isLoggedIn, async function (req, res) 
     }
 })
 
+Router.post("/steamaccount/clearaliases", isLoggedIn, async function(req, res){
+    if(!req.body.accountId){
+        return res.status(400).send("accountId needed.");
+    }
+
+    try {
+        await AccountHandler.clearAliases(req.session.userId, req.body.accountId);
+        return res.send()
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send(error);
+    }
+})
+
+Router.post("/steamaccount/changeprivacy", isLoggedIn, async function(req, res){
+    if(!req.body.accountId){
+        return res.status(400).send("accountId needed.");
+    }
+
+    if(!req.body.formData){
+        return res.status(400).send("formData needed.");
+    }
+
+    try {
+        await AccountHandler.changePrivacy(req.session.userId, req.body.accountId, req.body.formData);
+        return res.send()
+    } catch (error) {
+        console.log(error);
+        return res.status(400).send(error);
+    }
+})
+
 // Removes a steam account
 Router.delete('/steamaccount', isLoggedIn, async function (req, res) {
     if (!req.body.accountId) {

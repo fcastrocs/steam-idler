@@ -93,7 +93,7 @@ module.exports.loginAccount = async function (userId, accountId, options) {
                 loginOptions.noLoginDelay = true;
             }
 
-            if(options && options.newAccount){
+            if (options && options.newAccount) {
                 loginOptions.newAccount = true;
             }
 
@@ -509,6 +509,43 @@ module.exports.changeAvatar = async function (userId, accountId, binaryImg, file
         doc.avatar = avatar;
         await this.saveAccount(doc);
         return Promise.resolve(doc.avatar);
+    } catch (error) {
+        return Promise.reject(error);
+    }
+}
+
+module.exports.clearAliases = async function (userId, accountId) {
+    // check account is logged in
+    let client = this.isAccountOnline(userId, accountId);
+    if (!client) {
+        return Promise.reject("Account is not online.")
+    }
+
+    try {
+        await client.clearAliases();
+        return Promise.resolve();
+    } catch (error) {
+        return Promise.reject(error);
+    }
+}
+
+module.exports.changePrivacy = async function (userId, accountId, formData) {
+    // check account is logged in
+    let client = this.isAccountOnline(userId, accountId);
+    if (!client) {
+        return Promise.reject("Account is not online.")
+    }
+
+    let doc = await this.getAccount({ userId: userId, accountId: accountId });
+    if (!doc) {
+        return Promise.reject("Account not found.")
+    }
+
+    try {
+        await client.changePrivacy(formData);
+        doc.privacySettings = formData;
+        await this.saveAccount(doc);
+        return Promise.resolve();
     } catch (error) {
         return Promise.reject(error);
     }

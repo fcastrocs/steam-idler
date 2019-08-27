@@ -20,7 +20,8 @@ let steamAcc = new Schema({
     nextFarmingCheck: {type: Number, default: 0},
     inventory: {type: Object, default: null},
     lastConnect: {type: Number, default: 0},
-    lastHourReconnects: {type: Number, default: 0}
+    lastHourReconnects: {type: Number, default: 0},
+    privacySettings: {type: Object, default: null}
 });
 
 module.exports = mongoose.model('SteamAccount', steamAcc);

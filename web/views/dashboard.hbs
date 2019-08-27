@@ -294,5 +294,135 @@
         </div>
     </div>
 
+    <!-- CLEAR PREVIOUS ALISES -->
+    <div class="modal fade" id="clear-aliases-modal" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Clear previous aliases</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-center">
+                        <div id="clear-aliases-spinner" class="spinner-border text-primary" hidden></div>
+                    </div>
+                    <form id="clear-aliases-form">
+                        <p>Are you sure you wish to clear your profile name history? This will make it harder for users
+                            you have recently played with to find you, and may make it difficult for users in your
+                            friends list to identify you.
+                        </p>
+                        <div class="modal-buttons">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary modal-submit" id="clear-aliases-btn"
+                                data-id="">Okay</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGE PRIVACY  SETTINGS -->
+    <div class="modal fade" id="change-privacy-modal" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Change privacy settings</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-center">
+                        <div id="change-privacy-spinner" class="spinner-border text-primary" hidden></div>
+                    </div>
+                    <form id="change-privacy-form">
+
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">My profile</span>
+                                </div>
+                                <select class="form-control" id="profile-privacy" name="PrivacyProfile">
+                                    <option value="3">Public</option>
+                                    <option value="2">Friends Only</option>
+                                    <option value="1">Private</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Game details</span>
+                                </div>
+                                <select class="form-control" id="gamedetails-privacy" name="PrivacyOwnedGames">
+                                    <option value="3">Public</option>
+                                    <option value="2">Friends Only</option>
+                                    <option value="1">Private</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="playtime-privacy"
+                                name="PrivacyPlaytime">
+                            <label class="form-check-label">Always keep my total playtime private
+                                even if users can see my game details.</label>
+                        </div><br>
+
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Friends List</span>
+                                </div>
+                                <select class="form-control" id="friendslist-privacy" name="PrivacyFriendsList">
+                                    <option value="3">Public</option>
+                                    <option value="2">Friends Only</option>
+                                    <option value="1">Private</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Inventory</span>
+                                </div>
+                                <select class="form-control" id="inventory-privacy" name="PrivacyInventory">
+                                    <option value="3">Public</option>
+                                    <option value="2">Friends Only</option>
+                                    <option value="1">Private</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="inventory-gifts-privacy"
+                                name="PrivacyInventoryGifts">
+                            <label class="form-check-label">Always keep Steam Gifts private even if users can see my
+                                inventory.</label>
+                        </div><br>
+
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Comments</span>
+                                </div>
+                                <select class="form-control" id="comments-privacy" name="eCommentPermission">
+                                    <option value="1">Public</option>
+                                    <option value="0">Friends Only</option>
+                                    <option value="2">Private</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="modal-buttons">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary modal-submit" id="change-privacy-btn"
+                                data-id="">Set</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
 </div>

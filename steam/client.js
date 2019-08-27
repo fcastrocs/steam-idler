@@ -125,6 +125,115 @@ class Client extends EventEmitter {
         })
     }
 
+    async clearAliases() {
+        if (!this.loggedIn) {
+            return Promise.reject("Account is not logged in.")
+        }
+
+        if (!this.webCookie) {
+            return Promise.reject("Account doesn't have a webcookie.")
+        }
+
+        let self = this;
+        return new Promise(async (resolve, reject) => {
+            (async function attempt(retries) {
+                if (!retries) {
+                    retries = 0;
+                }
+
+                retries++;
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://steamcommunity.com/profiles/${self.account.steamid}/ajaxclearaliashistory/`,
+                    method: 'POST',
+                    agent: agent,
+                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
+                    json: true,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    },
+                    formData: { "sessionid": self.sessionId }
+                }
+
+                try {
+                    await Request(options)
+                    return resolve()
+                } catch (error) {
+                    if (retries === 3) {
+                        return reject("Too many retries, could not clear aliases.")
+                    }
+                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                }
+            })();
+        })
+    }
+
+    async changePrivacy(formData) {
+        if (!this.loggedIn) {
+            return Promise.reject("Account is not logged in.")
+        }
+
+        if (!this.webCookie) {
+            return Promise.reject("Account doesn't have a webcookie.")
+        }
+
+        if(!formData){
+            return Promise.reject("formData not passed.")
+        }
+
+        let self = this;
+        return new Promise(async (resolve, reject) => {
+            (async function attempt(retries) {
+                if (!retries) {
+                    retries = 0;
+                }
+
+                retries++;
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://steamcommunity.com/profiles/${self.account.steamid}/ajaxsetprivacy/`,
+                    method: 'POST',
+                    agent: agent,
+                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
+                    json: true,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    },
+                    formData: {
+                        "sessionid": self.sessionId,
+                        'Privacy': JSON.stringify(formData.Privacy),
+                        "eCommentPermission": formData.eCommentPermission
+                    }
+                }
+
+                try {
+                    let res = await Request(options)
+                    if(res.success === 1){
+                        return resolve()
+                    }else{
+                        if (retries === 3) {
+                            return reject("Too many retries, could not set privacy settings.")
+                        }
+                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                    }
+                } catch (error) {
+                    if (retries === 3) {
+                        return reject("Too many retries, could not set privacy settings.")
+                    }
+                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                }
+            })();
+        })
+    }
+
     /************************************************************************
     *  					       PLAY GAMES			                        *
     * 	"activated-apps" event will be emitted along with:                  *
