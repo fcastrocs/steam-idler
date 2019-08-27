@@ -143,8 +143,8 @@ function buildAccount(account) {
             <div class="dropdown-menu acc-dropdown-menu">
                 <a href="#" class="filter-btn change-avatar-btn">Change avatar</a>
                 <a href="#" class="filter-btn change-nick">Change nick</a>
-                <a href="#" class="filter-btn clear-aliases-btn">Clear previous aliases</a>
                 <a href="#" class="filter-btn change-privacy-btn">Change privacy</a>
+                <a href="#" class="filter-btn clear-aliases-btn">Clear previous aliases</a>
                 <a href="#" class="filter-btn">Setup profile</a>
             </div>
         </div>`

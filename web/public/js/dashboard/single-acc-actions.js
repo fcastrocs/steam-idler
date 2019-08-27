@@ -224,14 +224,14 @@ $(() => {
     *               STEAM - CHANGE NICK                 *
     * **************************************************/
     // open modal
-    $(document).on('click', ".change-nick", function () {
+    $(document).on('click', ".change-nick", function (e) {
+        e.preventDefault();
+
         let accountId = $(this).closest("div.account").attr("data-id")
         let status = accounts_cache[accountId].status
-
         if (!(status === "Online" || status === "In-game")) {
             return;
         }
-
         $("#change-nick-button").attr("data-id", accountId);
         $("#change-nick-modal").modal("toggle")
     })
@@ -544,7 +544,7 @@ $(() => {
 
     // open avatar modal
     $(document).on("click", ".change-avatar-btn", function (e) {
-        e.preventDefault();
+        e.preventDefault(); // This will prevent page scroll
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id")
         $("#change-avatar-modal").modal("toggle")
@@ -623,7 +623,8 @@ $(() => {
     *              STEAM - CLEAR ALIASES             *
     **************************************************/
     // Open redeem key modal
-    $(document).on('click', ".clear-aliases-btn", function () {
+    $(document).on('click', ".clear-aliases-btn", function (e) {
+        e.preventDefault();
         let accountId = $(this).closest("div.account").attr("data-id")
         $("#clear-aliases-btn").attr("data-id", accountId)
         $("#clear-aliases-modal").modal("toggle")
@@ -652,7 +653,8 @@ $(() => {
     *              STEAM - CLEAR ALIASES             *
     **************************************************/
     // Open change privacy modal
-    $(document).on('click', ".change-privacy-btn", function () {
+    $(document).on('click', ".change-privacy-btn", function (e) {
+        e.preventDefault(); // This will prevent page scroll
         let accountId = $(this).closest("div.account").attr("data-id")
         $("#change-privacy-btn").attr("data-id", accountId)
         $("#change-privacy-modal").modal("toggle")
