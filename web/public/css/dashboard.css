@@ -14,11 +14,6 @@
     padding-bottom: 400px;
 }
 
-#body-spinner{
-    height: 200px;
-    width: 200px;
-}
-
 .account{
     display: inline-flex;
     flex-direction: column;

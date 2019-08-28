@@ -9,8 +9,11 @@
 
 <!-- container -->
 <div id="body">
-    <div class="spinner-border text-primary" id="body-spinner" role="status">
-        <span class="sr-only">Loading...</span>
+    <div id="no-accounts-box" hidden>
+        <h2>No steam accounts associated with your account.</h2>
+        <button type="button" id="big-add-btn" class="btn header-btn" data-toggle="modal" data-target="#add-acc-modal">
+            Add Account
+        </button>
     </div>
 
     <div id="accounts-box"></div>
