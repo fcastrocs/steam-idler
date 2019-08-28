@@ -10,6 +10,7 @@ function buildAccount(account) {
 
     if (account.status === "Online" || account.status === "In-game") {
         // BUILD GAMES MODAL
+        accounts_cache[account._id].selectedGames = [];
         for (let i in account.games) {
             // create image div
             let steamurl = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps"
@@ -303,7 +304,6 @@ function updateAccountStatus(account) {
 
     // real status changed
     let oldStatus = accounts_cache[accountId].status
-
     if (oldStatus !== account.status) {
         realStatusChanged = true;
     }
@@ -319,10 +319,11 @@ function updateAccountStatus(account) {
         return
     }
 
-    account = buildAccount(account)
+    accounts_cache[account._id] = account;
+    let accountHtml = buildAccount(account)
 
     // Replace old acc with this one
-    $(`.account[data-id="${accountId}"]`).replaceWith(account);
+    $(`.account[data-id="${accountId}"]`).replaceWith(accountHtml);
 }
 
 
@@ -368,11 +369,13 @@ function getAllAccountIds() {
 // Fetch all user's steam accounts from db
 function FetchAllAccounts() {
     return new Promise((resolve, reject) => {
-        // Refresh account status every interval seconds
-        $.get("/steamaccounts", accounts => {
-            return resolve(accounts);
-        }).fail((xhr, status, err) => {
-            return reject(xhr.responseText)
+        $.ajax({
+            url: "/steamaccounts",
+            type: "GET",
+            headers: { "cache-control": "no-cache" },
+            cache: false,
+            success: accounts => resolve(accounts),
+            
         })
     })
 }

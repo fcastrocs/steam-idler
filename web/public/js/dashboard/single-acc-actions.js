@@ -210,13 +210,11 @@ $(() => {
         $.ajax({
             url: '/steamaccount',
             type: 'delete',
-            data: { accountId: accountId },
-            success: data => {
-                self.remove();
+            data: {
+                accountId: accountId
             },
-            error: (xhr, status, error) => {
-                alert(xhr.responseText)
-            }
+            success: () => self.fadeOut(800),
+            error: (xhr, status, error) => alert(xhr.responseText)
         });
     })
 
@@ -226,12 +224,7 @@ $(() => {
     // open modal
     $(document).on('click', ".change-nick", function (e) {
         e.preventDefault();
-
         let accountId = $(this).closest("div.account").attr("data-id")
-        let status = accounts_cache[accountId].status
-        if (!(status === "Online" || status === "In-game")) {
-            return;
-        }
         $("#change-nick-button").attr("data-id", accountId);
         $("#change-nick-modal").modal("toggle")
     })
@@ -242,9 +235,6 @@ $(() => {
         let accountId = $("#change-nick-button").attr("data-id");
         // get nick value
         let nickname = $("input[name='nick']").val();
-        if (!nickname) {
-            return
-        }
         $.post('/steamaccount/changenick', { nickname: nickname, accountId: accountId }, function (nick) {
             $("#change-nick-modal").modal("toggle")
             $(`div.account[data-id=${accountId}]`).find(".persona-name").text(nick)
@@ -261,11 +251,12 @@ $(() => {
     *             STEAM - SET STATUS                    *
     * **************************************************/
     // Open set status modal
-    $(document).on('click', ".acc-set-status-btn", function () {
+    $(document).on('click', ".acc-set-status-btn", function (e) {
+        e.preventDefault();
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id")
         //check radio btn with current status
-        let status = self.find(".status").text();
+        let status = accounts_cache[accountId].forcedStatus;
         $(`input[value="${status}"]`).prop('checked', true);
         //open modal
         $("#set-status-button").attr("data-id", accountId)
@@ -287,14 +278,15 @@ $(() => {
 
     // set status modal close
     $('#set-status-modal').on('hidden.bs.modal', function () {
-        $("#set-status-form").find("input:checked").first().prop('checked', false);
+        $("#set-status-form").find("input:checked").prop('checked', false);
     })
 
     /**************************************************** 
     *                  STEAM - FARMING                  *
     ***************************************************/
     // open modal
-    $(document).on('click', ".acc-farming-btn", function () {
+    $(document).on('click', ".acc-farming-btn", function (e) {
+        e.preventDefault();
         let self = $(this).closest("div.account");
         //open modal
         self.find(".farming-modal").modal("toggle")
@@ -333,7 +325,8 @@ $(() => {
     *               STEAM - PLAY GAME                   *
     * **************************************************/
     // Open correct modal
-    $(document).on('click', ".acc-idle-game-btn", function () {
+    $(document).on('click', ".acc-idle-game-btn", function (e) {
+        e.preventDefault();
         $(this).closest("div.account").find(".idle-modal").modal('toggle');
     })
 
@@ -423,7 +416,8 @@ $(() => {
     *           STEAM - ACTIVATE FREE GAME              *
     * **************************************************/
     // Open activate game modal
-    $(document).on('click', ".acc-get-game-btn", function () {
+    $(document).on('click', ".acc-get-game-btn", function (e) {
+        e.preventDefault();
         let accountId = $(this).closest("div.account").attr("data-id")
         $("#activate-free-game").attr("data-id", accountId)
         $("#activate-free-game-modal").modal("toggle")
@@ -442,17 +436,6 @@ $(() => {
     // form submit
     $("body").on('submit', "#activate-game-form", function (e) {
         e.preventDefault();
-
-        let accountId = $("#activate-free-game").attr("data-id");
-        if (!accountId) {
-            return;
-        }
-
-        let appIds = $("input[name=appId]").val();
-        if (!appIds) {
-            return
-        }
-
         //hide form
         $("#activate-game-form").prop("hidden", true)
         // show spinner
@@ -460,6 +443,9 @@ $(() => {
         //clean any previous messages
         $("#activate-game-msg").text("").prop("hidden", true)
         $("#activate-game-errMsg").text("").prop("hidden", true)
+
+        let accountId = $("#activate-free-game").attr("data-id");
+        let appIds = $("input[name='appId']").val();
 
         $.post('/steamaccount/activatefreegame', { accountId: accountId, appIds: appIds }, games => {
             $("#activate-game-errMsg").prop("hidden", true)
@@ -479,7 +465,8 @@ $(() => {
     *           STEAM - REDEEM KEY                      *
     * **************************************************/
     // Open redeem key modal
-    $(document).on('click', ".redeem-key", function () {
+    $(document).on('click', ".redeem-key", function (e) {
+        e.preventDefault();
         let accountId = $(this).closest("div.account").attr("data-id")
         $("#redeem-key").attr("data-id", accountId)
         $("#redeem-key-modal").modal("toggle")
@@ -500,14 +487,7 @@ $(() => {
     $("#redeem-key-form").submit(function (e) {
         e.preventDefault();
         let accountId = $("#redeem-key").attr("data-id");
-        if (!accountId) {
-            return;
-        }
-
         let cdkey = $("input[name=cdkey]").val();
-        if (!cdkey) {
-            return
-        }
 
         $("#spinner-redeem-key").prop("hidden", false)
 
@@ -532,9 +512,9 @@ $(() => {
     /**************************************************** 
     *                  STEAM - IVENTORY                 *
      **************************************************/
-    $(document).on('click', ".acc-inventory-btn", function () {
+    $(document).on('click', ".acc-inventory-btn", function (e) {
+        e.preventDefault();
         let self = $(this).closest("div.account");
-        //open modal
         self.find(".inventory-modal").modal("toggle")
     })
 
@@ -619,7 +599,7 @@ $(() => {
     })
 
 
-    /**************************************************** 
+    /**************************************************
     *              STEAM - CLEAR ALIASES             *
     **************************************************/
     // Open redeem key modal
@@ -649,8 +629,8 @@ $(() => {
         })
     })
 
-    /**************************************************** 
-    *              STEAM - CLEAR ALIASES             *
+    /************************************************** 
+    *              STEAM - CHANGE PRIVACY             *
     **************************************************/
     // Open change privacy modal
     $(document).on('click', ".change-privacy-btn", function (e) {
@@ -663,28 +643,26 @@ $(() => {
     // set account settings
     $("#change-privacy-modal").on('shown.bs.modal', function (e) {
         let accountId = $("#change-privacy-btn").attr("data-id")
-        if(!accounts_cache[accountId].privacySettings){
+        if (!accounts_cache[accountId].privacySettings) {
             return;
         }
 
         let data = accounts_cache[accountId].privacySettings
 
-        console.log(data)
-
         // checkboxes first
-        for(let name in data.Privacy){
-            if(name === "PrivacyInventoryGifts" || name === "PrivacyPlaytime"){
+        for (let name in data.Privacy) {
+            if (name === "PrivacyInventoryGifts" || name === "PrivacyPlaytime") {
                 continue;
             }
             $(`[name="${name}"]`).val(data.Privacy[name])
         }
 
         // set checkboxes
-        if(data.Privacy.PrivacyPlaytime === "1"){
+        if (data.Privacy.PrivacyPlaytime === "1") {
             $(`[name="PrivacyPlaytime"]`).prop("checked", true)
         }
 
-        if(data.Privacy.PrivacyInventoryGifts === "1"){
+        if (data.Privacy.PrivacyInventoryGifts === "1") {
             $(`[name="PrivacyInventoryGifts"]`).prop("checked", true)
         }
 
@@ -716,23 +694,23 @@ $(() => {
         })
 
         // if checked then should be private value 1
-        if($(`[name="PrivacyPlaytime"]`).is(":checked")){
+        if ($(`[name="PrivacyPlaytime"]`).is(":checked")) {
             dataObj.Privacy.PrivacyPlaytime = "1"
-        }else{ // public value 3
+        } else { // public value 3
             dataObj.Privacy.PrivacyPlaytime = "3"
         }
 
-        if($(`[name="PrivacyInventoryGifts"]`).is(":checked")){
+        if ($(`[name="PrivacyInventoryGifts"]`).is(":checked")) {
             dataObj.Privacy.PrivacyInventoryGifts = "1"
-        }else{ // public value 3
+        } else { // public value 3
             dataObj.Privacy.PrivacyInventoryGifts = "3"
         }
-        
+
         $.post('/steamaccount/changeprivacy', { accountId: accountId, formData: dataObj }, () => {
             $('#change-privacy-modal').modal("toggle")
-            $(this).show();
             $("#change-privacy-spinner").prop("hidden", true);
             accounts_cache[accountId].privacySettings = dataObj;
+            $(this).show();
         }).fail((xhr, status, err) => {
             $("#change-privacy-spinner").prop("hidden", true);
             $(this).show();

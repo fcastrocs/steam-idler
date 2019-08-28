@@ -44,21 +44,23 @@ class Client extends EventEmitter {
 
 
     async changeAvatar(binaryImg, filename) {
-        let buffer = new Buffer.from(binaryImg, "binary");
-
-        let ext = filename.substring(7);
-        if (ext === "jpg") {
-            var contentType = "image/jpeg"
-        } else {
-            var contentType = `image/${ext}`
-        }
-
         if (!this.loggedIn) {
             return Promise.reject("Account is not logged in.")
         }
 
         if (!this.webCookie) {
             return Promise.reject("Account doesn't have a webcookie.")
+        }
+
+        // convert binary image data to buffer 
+        let buffer = new Buffer.from(binaryImg, "binary");
+
+        // set the correct contenttype
+        let ext = filename.substring(7);
+        if (ext === "jpg") {
+            var contentType = "image/jpeg"
+        } else {
+            var contentType = `image/${ext}`
         }
 
         let self = this;
@@ -69,11 +71,6 @@ class Client extends EventEmitter {
                 }
 
                 retries++;
-
-                // too many tries, get a new proxy
-                if (retries == 3) {
-                    //return reject("Could not upload image right now.");
-                }
 
                 let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
                 let agent = new SocksProxyAgent(proxy);
@@ -106,18 +103,18 @@ class Client extends EventEmitter {
                 }
 
                 try {
-                    let data = await Request(options)
-                    if (data.success) {
-                        return resolve(data.images.full)
+                    let res = await Request(options)
+                    if (res.success) {
+                        return resolve(res.images.full)
                     } else {
-                        if (retries === 3) {
-                            return reject(data)
+                        if (retries > 3) {
+                            return reject("Could not upload avatar, try again.")
                         }
                         setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
                     }
                 } catch (error) {
-                    if (retries === 3) {
-                        return reject("Too many retries, could not upload avatar.")
+                    if (retries > 3) {
+                        return reject("Could not upload avatar, try again.")
                     }
                     setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
                 }
@@ -160,10 +157,17 @@ class Client extends EventEmitter {
                 }
 
                 try {
-                    await Request(options)
-                    return resolve()
+                    let res = await Request(options)
+                    if (res.success === 1) {
+                        return resolve()
+                    } else {
+                        if (retries > 3) {
+                            return reject("Could not clear previous aliases, try again.")
+                        }
+                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                    }
                 } catch (error) {
-                    if (retries === 3) {
+                    if (retries > 3) {
                         return reject("Too many retries, could not clear aliases.")
                     }
                     setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
@@ -181,7 +185,7 @@ class Client extends EventEmitter {
             return Promise.reject("Account doesn't have a webcookie.")
         }
 
-        if(!formData){
+        if (!formData) {
             return Promise.reject("formData not passed.")
         }
 
@@ -216,17 +220,17 @@ class Client extends EventEmitter {
 
                 try {
                     let res = await Request(options)
-                    if(res.success === 1){
+                    if (res.success === 1) {
                         return resolve()
-                    }else{
-                        if (retries === 3) {
-                            return reject("Too many retries, could not set privacy settings.")
+                    } else {
+                        if (retries > 3) {
+                            return reject("Could not set privacy settings, try again.")
                         }
                         setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
                     }
                 } catch (error) {
-                    if (retries === 3) {
-                        return reject("Too many retries, could not set privacy settings.")
+                    if (retries > 3) {
+                        return reject("Could not set privacy settings, try again.")
                     }
                     setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
                 }
