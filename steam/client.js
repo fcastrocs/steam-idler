@@ -619,25 +619,19 @@ class Client extends EventEmitter {
                     return;
                 }
 
-                // skip farming data if specified
-                if (!self.account.skipFarmingData) {
-                    try {
-                        var farmingData = await self.GetFarmingData();
-                        // do not fetch data again.
-                        self.account.skipFarmingData = true;
-
-                        if (this.socketId) {
-                            io.to(`${this.socketId}`).emit("login-log-msg", "Received Steam cards data.");
-                        }
-                    } catch (error) {
-                        if (this.socketId) {
-                            io.to(`${this.socketId}`).emit("login-log-msg", "Could not get Steam cards data, retrying with new proxy.");
-                        }
-
-                        // could not get farming data, account will relogin.
-                        self.RenewConnection("farming data")
-                        return;
+                try {
+                    var farmingData = await self.GetFarmingData();
+                    if (this.socketId) {
+                        io.to(`${this.socketId}`).emit("login-log-msg", "Received Steam cards data.");
                     }
+                } catch (error) {
+                    if (this.socketId) {
+                        io.to(`${this.socketId}`).emit("login-log-msg", "Could not get Steam cards data, retrying with new proxy.");
+                    }
+
+                    // could not get farming data, account will relogin.
+                    self.RenewConnection("farming data")
+                    return;
                 }
 
                 // Get inventory 

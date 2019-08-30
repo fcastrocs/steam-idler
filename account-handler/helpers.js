@@ -91,9 +91,6 @@ module.exports.setupLoginOptions = function (acc) {
         options.shared_secret = Security.decrypt(acc.shared_secret)
     }
 
-    //don't get farming data
-    options.skipFarmingData = true;
-
     return options;
 }
 
