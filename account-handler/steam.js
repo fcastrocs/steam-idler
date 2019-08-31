@@ -130,6 +130,7 @@ module.exports.loginAccount = async function (userId, accountId, options) {
             doc.persona_name = loginOptions.persona_name;
             doc.avatar = loginOptions.avatar;
             doc.status = loginOptions.status || "Online"
+            doc.farmingData = loginOptions.farmingData;
             doc.inventory = loginOptions.inventory;
             doc.lastConnect = Date.now();
 
