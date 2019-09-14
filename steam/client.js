@@ -850,7 +850,6 @@ class Client extends EventEmitter {
 
         // CONNECTION LOST
         self.client.once('error', err => {
-            console.log("HEREHREHRHEWRHEHREH 2")
             // wait for email guard, don't reconnect;
             if (this.dontReconnect) {
                 return;
@@ -865,16 +864,18 @@ class Client extends EventEmitter {
         })
 
         // connect to steam
-        this.client.Connect();
+        try {
+            await self.client.Connect();
+        } catch (err) {
+            // bad proxy
+            self.RenewConnection(err);
+        }
 
     }
 
     // Reconnect due to bad proxy.
     RenewConnection(err) {
-        // Give this some time, so events get handled?
-        setTimeout(() => {
-            this.Disconnect();
-        }, 5000);
+        this.Disconnect();
 
         // Remove the proxy
         RemoveProxy(this.proxy);

@@ -14,12 +14,12 @@ class Connection extends EventEmitter {
 
   Connect() {
     let self = this;
-    this.options.command = "connect";
 
-    // Create the connection with steam using socks type 4
-    SocksClient.createConnection(this.options)
-      .then(info => { //successful
-        self.socket = info.socket;
+    return new Promise(async (resolve, reject) => {
+      self.options.command = "connect";
+
+      try {
+        await SocksClient.createConnection(self.options);
 
         //Socket timeout from inactivity
         self.socket.setTimeout(options.timeout);
@@ -42,11 +42,13 @@ class Connection extends EventEmitter {
           self.ReadPacket();
         });
 
-      })
-      .catch(err => {
-        // Errors while trying to establish connection
-        self.emit("error", "dead proxy");
-      });
+
+      } catch (error) {
+        return reject("dead proxy");
+      }
+
+    })
+
   }
 
   // Sends data to steam

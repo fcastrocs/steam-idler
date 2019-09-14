@@ -33,7 +33,6 @@ class SteamClient extends EventEmitter {
 		// Errors while connection is active
 		this._connection.once("error", err => {
 			clearInterval(self._heartBeatFunc)
-			console.log("HEREHREHRHEWRHEHREH 1")
 			self.emit("error", err);
 		})
 
@@ -43,7 +42,7 @@ class SteamClient extends EventEmitter {
 	}
 	
 	Connect(){
-		this._connection.Connect();
+		return this._connection.Connect();
 	}
 
 	/************************************************************************
