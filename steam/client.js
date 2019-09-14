@@ -851,6 +851,7 @@ class Client extends EventEmitter {
 
         // CONNECTION LOST
         self.client.once('error', err => {
+            console.log("HEREHREHRHEWRHEHREH 2")
             // wait for email guard, don't reconnect;
             if (this.dontReconnect) {
                 return;

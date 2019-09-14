@@ -33,13 +33,7 @@ class Connection extends EventEmitter {
         self.socket.on("close", () => {
           self.emit("error", "socket closed");
         });
-
-        // Connection ended before login
-        // self.socket.on("end", ()=> {
-        //   //self.DestroyConnection();
-        //   //self.emit("error", "socket ended");
-        // })
-
+        
         self.socket.on('readable', err => {
           self.ReadPacket();
         });
