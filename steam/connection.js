@@ -29,12 +29,12 @@ class Connection extends EventEmitter {
         });
 
         // // Any errors with the connection
-        self.socket.on("error", err => {
+        self.socket.once("error", err => {
           console.log('CONNECTION ERROR: ' + err)
         })
 
         //socket had a transmission error
-        self.socket.on("close", () => {
+        self.socket.once("close", () => {
           self.emit("error", "socket closed");
         });
 
