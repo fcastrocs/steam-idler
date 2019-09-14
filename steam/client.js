@@ -836,7 +836,7 @@ class Client extends EventEmitter {
             }
         }
 
-        // Create the steam client, and connect to steam
+        // Create the steam client
         this.client = new Steam(self.options);
 
         // SUCCESSFUL CONNECTION
@@ -845,7 +845,6 @@ class Client extends EventEmitter {
                 this.loginMessageSent = true;
                 io.to(`${this.socketId}`).emit("login-log-msg", "Connected to Steam, attemping login.");
             }
-
             self.login();
         })
 
@@ -864,6 +863,9 @@ class Client extends EventEmitter {
             }
             self.RenewConnection(err);
         })
+
+        // connect to steam
+        this.client.Connect();
 
     }
 

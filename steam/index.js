@@ -27,7 +27,7 @@ class SteamClient extends EventEmitter {
 		this.packages = new Array();
 		this.apps = new Array();
 
-		//establish the connection
+		//create connection object, need to call connect method.
 		this._connection = new Connection(options);
 
 		// Errors while connection is active
@@ -41,7 +41,10 @@ class SteamClient extends EventEmitter {
 			self.NetMsgReceived(packet);
 		});
 	}
-
+	
+	Connect(){
+		this._connection.Connect();
+	}
 
 	/************************************************************************
 	 * 							 RESPONSE HANDLER							*

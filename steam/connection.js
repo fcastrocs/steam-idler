@@ -7,13 +7,17 @@ const SteamCrypto = require('@doctormckay/steam-crypto');
 class Connection extends EventEmitter {
   constructor(options) {
     super();
-    this.MAGIC = 'VT01';
-    var self = this;
 
-    options.command = "connect";
+    this.MAGIC = 'VT01';
+    this.options = options;
+  }
+
+  Connect() {
+    let self = this;
+    this.options.command = "connect";
 
     // Create the connection with steam using socks type 4
-    SocksClient.createConnection(options)
+    SocksClient.createConnection(this.options)
       .then(info => { //successful
         self.socket = info.socket;
 
@@ -33,7 +37,7 @@ class Connection extends EventEmitter {
         self.socket.on("close", () => {
           self.emit("error", "socket closed");
         });
-        
+
         self.socket.on('readable', err => {
           self.ReadPacket();
         });
@@ -56,7 +60,7 @@ class Connection extends EventEmitter {
     buf.write(this.MAGIC, 4);
     data.copy(buf, 8);
 
-    if(this.socket){
+    if (this.socket) {
       this.socket.write(buf);
     }
   };
