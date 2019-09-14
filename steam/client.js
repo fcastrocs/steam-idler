@@ -867,6 +867,7 @@ class Client extends EventEmitter {
         try {
             await self.client.Connect();
         } catch (err) {
+            console.log(err);
             // bad proxy
             self.RenewConnection(err);
         }

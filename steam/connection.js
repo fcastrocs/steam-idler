@@ -19,10 +19,11 @@ class Connection extends EventEmitter {
       self.options.command = "connect";
 
       try {
-        await SocksClient.createConnection(self.options);
+        let info = await SocksClient.createConnection(self.options);
+        self.socket = info.socket;
 
         //Socket timeout from inactivity
-        self.socket.setTimeout(options.timeout);
+        self.socket.setTimeout(self.options.timeout);
         // This will take care of any other errors
         self.socket.once('timeout', err => {
           self.emit("error", "socket timeout")
@@ -43,7 +44,7 @@ class Connection extends EventEmitter {
         });
 
         return resolve("connected");
-        
+
       } catch (error) {
         return reject("dead proxy");
       }
