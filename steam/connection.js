@@ -61,7 +61,10 @@ class Connection extends EventEmitter {
     buf.writeUInt32LE(data.length, 0);
     buf.write(this.MAGIC, 4);
     data.copy(buf, 8);
-    this.socket.write(buf);
+
+    if(this.socket){
+      this.socket.write(buf);
+    }
   };
 
   // Read packet from steam
