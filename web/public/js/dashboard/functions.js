@@ -92,14 +92,8 @@ function buildAccount(account) {
         <button type="button" class="btn btn-primary btn-sm acc-idle-game-btn">
             Idle Games
         </button>
-        <button type="button" class="btn btn-primary btn-sm redeem-key">
-            Redeem Key
-        </button>
         <button type="button" class="btn btn-primary btn-sm acc-farming-btn" ${disableFarmingBtn || ""}>
             Farming
-        </button>
-        <button type="button" class="btn btn-primary btn-sm acc-get-game-btn">
-            Get Games
         </button>
         <button type="button" class="btn btn-primary btn-sm acc-inventory-btn" ${disableInventoryBtn || ""}>
             Inventory
@@ -146,7 +140,9 @@ function buildAccount(account) {
                 <a href="#" class="filter-btn change-nick">Change nick</a>
                 <a href="#" class="filter-btn change-privacy-btn">Change privacy</a>
                 <a href="#" class="filter-btn clear-aliases-btn">Clear previous aliases</a>
-                <a href="#" class="filter-btn">Setup profile</a>
+                <a href="#" class="filter-btn acc-get-game-btn">Activate free game</a>
+                <a href="#" class="filter-btn acc-get-game-btn">Activate F2P game</a>
+                <a href="#" class="filter-btn redeem-key">Redeem CDKEY</a>
             </div>
         </div>`
 

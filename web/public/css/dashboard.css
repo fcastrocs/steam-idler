@@ -49,7 +49,7 @@
 
 .acc-dropdown-menu{
     font-size: 12px;
-    background:  rgba(0, 89, 141, 0.856) !important;
+    background:  rgba(0, 89, 141, 0.95) !important;
 }
 
 .avatar{
@@ -80,7 +80,7 @@
 .buttons-box{
     margin-top: auto;
     background: rgba(0, 0, 0, 0.3);
-    height: 100px;
+    height: 80px;
     width: 100%;
     bottom: 0;
     display: flex;
