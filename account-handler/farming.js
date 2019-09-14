@@ -64,7 +64,6 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
 
 // Farming checker. How many cards have dropped after an interval
 module.exports.FarmingRecheck = async function (userId, accountId) {
-    console.log("here")
     // Get account from Db
     let doc = await this.getAccount({ accountId: accountId })
     if (!doc) {

@@ -27,7 +27,7 @@ class Client extends EventEmitter {
         this.STEAMCOMMUNITY_RETRY_DELAY = 1000
         this.CONNECTION_TIMEOUT = 5 // in seconds
         this.CONNECT_DELAY = 30  // maximum delay in seconds
-        this.RECONNECT_DELAY = 5
+        this.RECONNECT_DELAY = 15
 
         // set proper login delay
         if (this.account.noLoginDelay) {
@@ -868,7 +868,11 @@ class Client extends EventEmitter {
 
     // Reconnect due to bad proxy.
     RenewConnection(err) {
-        this.Disconnect();
+        // Give this some time, so events get handled?
+        setTimeout(() => {
+            this.Disconnect();
+        }, 5000);
+
         // Remove the proxy
         RemoveProxy(this.proxy);
 
