@@ -42,7 +42,8 @@ class Connection extends EventEmitter {
           self.ReadPacket();
         });
 
-
+        return resolve("connected");
+        
       } catch (error) {
         return reject("dead proxy");
       }
