@@ -140,8 +140,8 @@ function buildAccount(account) {
                 <a href="#" class="filter-btn change-nick">Change nick</a>
                 <a href="#" class="filter-btn change-privacy-btn">Change privacy</a>
                 <a href="#" class="filter-btn clear-aliases-btn">Clear previous aliases</a>
-                <a href="#" class="filter-btn acc-get-game-btn">Activate free game</a>
-                <a href="#" class="filter-btn acc-get-game-btn">Activate F2P game</a>
+                <a href="#" class="filter-btn activate-free-game">Activate free game</a>
+                <a href="#" class="filter-btn activate-f2p-game">Activate F2P game</a>
                 <a href="#" class="filter-btn redeem-key">Redeem CDKEY</a>
             </div>
         </div>`
@@ -323,8 +323,8 @@ function updateAccountStatus(account) {
 }
 
 
-// shows games activated in modal, and adds them to account
-function processGames(accountId, games) {
+// shows games activated in modal
+function displayGames(games) {
     // Show activated games in modal
     let gamesDiv = ""
     for (let j in games) {
@@ -333,16 +333,6 @@ function processGames(accountId, games) {
     }
     $(".activated-game-body").html(gamesDiv)
     $(".activated-games").attr("hidden", false).show(0);
-
-    //show activated games in idle modal
-    if (accountId) {
-        gamesDiv = ""
-        for (let j in games) {
-            let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
-            gamesDiv += `<img class="game-img unselected" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
-        }
-        $(`div.account[data-id="${accountId}"]`).find(".game-body").first().append(gamesDiv)
-    }
 }
 
 // Remove selected games in idle modal

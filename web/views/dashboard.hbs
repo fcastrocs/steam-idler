@@ -94,21 +94,21 @@
     </div>
 
 
-    <!-- ACTIVATE FREE APP MODAL -->
-    <div class="modal fade" id="activate-free-game-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- ACTIVATE F2P GAME MODAL -->
+    <div class="modal fade" id="activate-f2p-game" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Activate Free Games</h5>
+                    <h5 class="modal-title">Activate F2P Games</h5>
                 </div>
                 <div class="modal-body">
 
                     <div class="d-flex justify-content-center">
-                        <div class="spinner-border text-info" id="spinner-activate-game" role="status" hidden></div>
+                        <div class="spinner-border text-info" id="spinner-activate-f2p-game" role="status" hidden></div>
                     </div>
 
-                    <div class="alert alert-primary" role="alert" id="activate-game-msg" hidden></div>
-                    <div class="alert alert-danger" role="alert" id="activate-game-errMsg" hidden></div>
+                    <div class="alert alert-primary" role="alert" id="activate-f2p-game-msg" hidden></div>
+                    <div class="alert alert-danger" role="alert" id="activate-f2p-game-errMsg" hidden></div>
 
                     <!-- activated games will be displayed here -->
                     <div class="activated-games" hidden>
@@ -116,7 +116,7 @@
                         <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">Close</button>
                     </div>
 
-                    <form id="activate-game-form">
+                    <form id="activate-f2p-game-form">
                         <p>Example to activate two games: 730, 570 </p>
                         <div class="form-group">
                             <div class="input-group">
@@ -128,7 +128,50 @@
                         </div>
                         <div class="modal-buttons">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary modal-submit" id="activate-free-game"
+                            <button type="submit" class="btn btn-primary modal-submit" id="activate-f2p-game-submit"
+                                data-id="">Activate</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ACTIVATE FREE GAME MODAL -->
+    <div class="modal fade" id="activate-free-game" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Activate Free Game</h5>
+                </div>
+                <div class="modal-body">
+
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border text-info" id="spinner-activate-free-game" role="status" hidden></div>
+                    </div>
+
+                    <div class="alert alert-primary" role="alert" id="activate-free-game-msg" hidden></div>
+                    <div class="alert alert-danger" role="alert" id="activate-free-game-errMsg" hidden></div>
+
+                    <!-- activated games will be displayed here -->
+                    <div class="activated-games" hidden>
+                        <div class="activated-game-body"></div>
+                        <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">Close</button>
+                    </div>
+
+                    <form id="activate-free-game-form">
+                        <div class="form-group">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">PackageID</span>
+                                </div>
+                                <input type="text" name="packageId" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="modal-buttons">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary modal-submit" id="activate-free-game-submit"
                                 data-id="">Activate</button>
                         </div>
                     </form>

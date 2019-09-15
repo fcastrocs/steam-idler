@@ -413,50 +413,93 @@ $(() => {
 
 
     /**************************************************** 
-    *           STEAM - ACTIVATE FREE GAME              *
+    *           STEAM - ACTIVATE F2P GAME              *
     * **************************************************/
-    // Open activate game modal
-    $(document).on('click', ".acc-get-game-btn", function (e) {
+    // Open modal
+    $(document).on('click', ".activate-f2p-game", function (e) {
         e.preventDefault();
         let accountId = $(this).closest("div.account").attr("data-id")
-        $("#activate-free-game").attr("data-id", accountId)
-        $("#activate-free-game-modal").modal("toggle")
+        $("#activate-f2p-game-submit").attr("data-id", accountId)
+        $("#activate-f2p-game").modal("toggle")
     })
 
     // modal hide
-    $('#activate-free-game-modal').on('hidden.bs.modal', function () {
-        $(".activated-games").prop("hidden", true);
-        $(".activated-game-body").html('');
-        $("#activate-game-form").prop("hidden", false)
+    $('#activate-f2p-game').on('hidden.bs.modal', function () {
+        $("#activate-f2p-game-form").prop("hidden", false)
         $("input[name=appId]").val("");
-        $("#activate-game-msg").prop("hidden", true).text("")
-        $("#activate-game-errMsg").prop("hidden", true).text("")
+        $("#activate-f2p-game-msg").prop("hidden", true).text("")
+        $("#activate-f2p-game-errMsg").prop("hidden", true).text("")
     })
 
     // form submit
-    $("body").on('submit', "#activate-game-form", function (e) {
+    $("body").on('submit', "#activate-f2p-game-form", function (e) {
         e.preventDefault();
         //hide form
-        $("#activate-game-form").prop("hidden", true)
+        $("#activate-f2p-game-form").prop("hidden", true)
         // show spinner
-        $("#spinner-activate-game").prop("hidden", false)
+        $("#spinner-activate-f2p-game").prop("hidden", false)
         //clean any previous messages
-        $("#activate-game-msg").text("").prop("hidden", true)
-        $("#activate-game-errMsg").text("").prop("hidden", true)
+        $("#activate-f2p-game-msg").text("").prop("hidden", true)
+        $("#activate-f2p-game-errMsg").text("").prop("hidden", true)
 
-        let accountId = $("#activate-free-game").attr("data-id");
+        let accountId = $("#activate-f2p-game-submit").attr("data-id");
         let appIds = $("input[name='appId']").val();
 
         $.post('/steamaccount/activatefreegame', { accountId: accountId, appIds: appIds }, games => {
-            $("#activate-game-errMsg").prop("hidden", true)
-            $("#activate-game-msg").prop("hidden", false).text("Game(s) activated.")
-            processGames(accountId, games);
-            //hide spinner
-            $("#spinner-activate-game").prop("hidden", true)
+            displayGames(games);
+            $("#activate-f2p-game-msg").prop("hidden", false).text("Game(s) activated." + " Reloading in 3 secs.")
+            $("#spinner-activate-f2p-game").hide();
+            setTimeout(() => location.reload(), 3000);
         }).fail((xhr, status, err) => {
-            $("#activate-game-form").prop("hidden", false)
-            $("#spinner-activate-game").prop("hidden", true)
-            $("#activate-game-errMsg").prop("hidden", false).text(`${xhr.responseText}`)
+            $("#activate-f2p-game-form").prop("hidden", false)
+            $("#spinner-activate-f2p-game").prop("hidden", true)
+            $("#activate-f2p-game-errMsg").prop("hidden", false).text(`${xhr.responseText}`)
+        })
+    })
+
+
+     /**************************************************** 
+    *           STEAM - ACTIVATE FREE GAME              *
+    * **************************************************/
+    // Open modal
+    $(document).on('click', ".activate-free-game", function (e) {
+        e.preventDefault();
+        let accountId = $(this).closest("div.account").attr("data-id")
+        $("#activate-free-game-submit").attr("data-id", accountId)
+        $("#activate-free-game").modal("toggle")
+    })
+
+    // modal hide
+    $('#activate-free-game').on('hidden.bs.modal', function () {
+        $("#activate-free-game-form").prop("hidden", false)
+        $("input[name=packageId]").val("");
+        $("#activate-free-game-msg").prop("hidden", true).text("")
+        $("#activate-free-game-errMsg").prop("hidden", true).text("")
+    })
+
+    // form submit
+    $("body").on('submit', "#activate-free-game-form", function (e) {
+        e.preventDefault();
+        //hide form
+        $("#activate-free-game-form").prop("hidden", true)
+        // show spinner
+        $("#spinner-activate-free-game").prop("hidden", false)
+        //clean any previous messages
+        $("#activate-free-game-msg").text("").prop("hidden", true)
+        $("#activate-free-game-errMsg").text("").prop("hidden", true)
+
+        let accountId = $("#activate-free-game-submit").attr("data-id");
+        let packageId = $("input[name='packageId']").val();
+
+        $.post('/steamaccount/activatefreegame', { accountId: accountId, packageId: packageId }, games => {
+            displayGames(games);
+            $("#activate-free-game-msg").prop("hidden", false).text("Game(s) activated." + " Reloading in 3 secs.")
+            $("#spinner-activate-free-game").hide();
+            setTimeout(() => location.reload(), 3000);
+        }).fail((xhr, status, err) => {
+            $("#activate-free-game-form").prop("hidden", false)
+            $("#spinner-activate-free-game").prop("hidden", true)
+            $("#activate-free-game-errMsg").prop("hidden", false).text(`${xhr.responseText}`)
         })
     })
 
