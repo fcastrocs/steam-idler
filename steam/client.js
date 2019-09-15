@@ -239,6 +239,76 @@ class Client extends EventEmitter {
     }
 
     /************************************************************************
+    *  				        Activate free game                              *
+    ************************************************************************/
+    activateFreeGame(packageId) {
+        if (!this.loggedIn) {
+            return Promise.reject("Account is not logged in.")
+        }
+
+        if (!this.webCookie) {
+            return Promise.reject("Account doesn't have a webcookie.")
+        }
+
+        if (!packageId) {
+            return Promise.reject("packageId not passed.")
+        }
+
+        let self = this;
+        return new Promise(async (resolve, reject) => {
+            (async function attempt(retries) {
+                if (!retries) {
+                    retries = 0;
+                }
+
+                retries++;
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://store.steampowered.com/checkout/addfreelicense/`,
+                    method: 'POST',
+                    agent: agent,
+                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
+                    json: true,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    },
+                    formData: {
+                        "snr": "1_5_9__403",
+                        "action": "add_to_cart",
+                        "sessionid": self.sessionId,
+                        "subid": packageId
+                    }
+                }
+
+                try {
+                    let res = await Request(options)
+                    const $ = cheerio.load(res);
+                    // game activated
+                    if ($("title").text() === "Purchase") {
+                        self.client.GetPkgInfo([packageId], appIds => {
+                            self.client.GetAppInfo(appIds, games => {
+                                console.log(games);
+                                return resolve(games);
+                            })
+                        })
+                    } else {
+                        return reject("Count not activate this game, check you entered the correct package ID.")
+                    }
+                } catch (error) {
+                    if (retries > 3) {
+                        return reject("Could not activate free game, try again.")
+                    }
+                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                }
+            })();
+        })
+    }
+
+    /************************************************************************
     *  					       PLAY GAMES			                        *
     * 	"activated-apps" event will be emitted along with:                  *
     *    on success: Array of objects {appid, name, logo}                   *                                          *
@@ -258,7 +328,7 @@ class Client extends EventEmitter {
     }
 
     /************************************************************************
-    *  					    ACTIVATE FREE GAME			                    *
+    *  					    ACTIVATE F2P/ GAME			                    *
     * 	"activated-apps" event will be emitted along with:                  *
     *    on success: Array of objects {appid, name, logo}                   *                                          *
     *    on fail: "Could not activate this game."                           *

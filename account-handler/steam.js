@@ -398,10 +398,7 @@ module.exports.deleteAccount = async function (userId, accountId) {
 }
 
 
-/**
- * Activate free game to account
- * Returns a promise with account
- */
+// Activate f2p game
 module.exports.activateF2pGames = async function (userId, accountId, appIds, options) {
     // check account is logged in
     let client = this.isAccountOnline(userId, accountId);
@@ -421,6 +418,35 @@ module.exports.activateF2pGames = async function (userId, accountId, appIds, opt
 
     try {
         let games = await client.activateF2pGames(appIds)
+        account.games = this.addGames(games, account.games);
+        await this.saveAccount(account)
+        return Promise.resolve(games)
+    } catch (error) {
+        console.log(error)
+        return Promise.reject(error)
+    }
+}
+
+// Activate free game
+module.exports.activateFreeGame = async function (userId, accountId, packageId, options) {
+    // check account is logged in
+    let client = this.isAccountOnline(userId, accountId);
+    if (!client) {
+        return Promise.reject("Account is not online.")
+    }
+
+    // don't fetch account if passed
+    if (options && options.account) {
+        var account = options.account
+    } else {
+        var account = await this.getAccount({ userId: userId, accountId: accountId });
+        if (!account) {
+            return Promise.reject("Account not found.")
+        }
+    }
+
+    try {
+        let games = await client.activateFreeGame(packageId)
         account.games = this.addGames(games, account.games);
         await this.saveAccount(account)
         return Promise.resolve(games)
