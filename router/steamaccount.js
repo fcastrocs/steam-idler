@@ -130,8 +130,28 @@ Router.post('/steamaccount/changenick', isLoggedIn, async function (req, res) {
     }
 })
 
+// Activate f2p game
+Router.post('/steamaccount/activatef2pgames', isLoggedIn, async function (req, res) {
+    if (!req.body.accountId || !req.body.appIds) {
+        return res.status(400).send("accountId/appIds needed")
+    }
+
+    // validation
+    let appIds = req.body.appIds.split(",").map(Number).filter(item => !isNaN(item))
+    if (appIds.length < 1) {
+        return res.status(400).send("Invalid input, enter valid appIds")
+    }
+
+    try {
+        let result = await AccountHandler.activateF2pGames(req.session.userId, req.body.accountId, appIds)
+        return res.send(result);
+    } catch (error) {
+        return res.status(400).send(error)
+    }
+})
+
 // Activate free game
-Router.post('/steamaccount/activatefreegame', isLoggedIn, async function (req, res) {
+Router.post('/steamaccount/activatef2pgame', isLoggedIn, async function (req, res) {
     if (!req.body.accountId || !req.body.appIds) {
         return res.status(400).send("accountId/appIds needed")
     }

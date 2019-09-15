@@ -263,22 +263,21 @@ class Client extends EventEmitter {
     *    on success: Array of objects {appid, name, logo}                   *                                          *
     *    on fail: "Could not activate this game."                           *
     ************************************************************************/
-    activateFreeGame(appIds) {
+    activateF2pGames(appIds) {
         if (!this.loggedIn) {
             return;
         }
 
         return new Promise((resolve, reject) => {
             // register the event first
-            this.client.once('activated-apps', games => {
+            this.client.once('activated-f2p-games', games => {
                 if (!games) {
-                    reject("Could not activate this game.")
+                    reject("Could not activate game(s).")
                 } else {
                     resolve(games)
                 }
             })
-
-            this.client.activateFreeGame(appIds)
+            this.client.activateF2pGames(appIds)
         })
     }
 

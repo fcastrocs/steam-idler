@@ -402,7 +402,7 @@ module.exports.deleteAccount = async function (userId, accountId) {
  * Activate free game to account
  * Returns a promise with account
  */
-module.exports.activateFreeGame = async function (userId, accountId, appIds, options) {
+module.exports.activateF2pGames = async function (userId, accountId, appIds, options) {
     // check account is logged in
     let client = this.isAccountOnline(userId, accountId);
     if (!client) {
@@ -420,7 +420,7 @@ module.exports.activateFreeGame = async function (userId, accountId, appIds, opt
     }
 
     try {
-        let games = await client.activateFreeGame(appIds)
+        let games = await client.activateF2pGames(appIds)
         account.games = this.addGames(games, account.games);
         await this.saveAccount(account)
         return Promise.resolve(games)

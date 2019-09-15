@@ -445,7 +445,7 @@ $(() => {
         let accountId = $("#activate-f2p-game-submit").attr("data-id");
         let appIds = $("input[name='appId']").val();
 
-        $.post('/steamaccount/activatefreegame', { accountId: accountId, appIds: appIds }, games => {
+        $.post('/steamaccount/activatef2pgame', { accountId: accountId, appIds: appIds }, games => {
             displayGames(games);
             $("#activate-f2p-game-msg").prop("hidden", false).text("Game(s) activated." + " Reloading in 3 secs.")
             $("#spinner-activate-f2p-game").hide();

@@ -148,8 +148,8 @@ Router.post('/steamaccounts/stopgames', [isLoggedIn, apiLimiter.checker], async 
 })
 
 
-// Activate free game
-Router.post('/steamaccounts/activatefreegame', [isLoggedIn, apiLimiter.checker], async (req, res) => {
+// Activate f2p game
+Router.post('/steamaccounts/activatef2pgame', [isLoggedIn, apiLimiter.checker], async (req, res) => {
     try {
         if (!req.body.appIds) {
             return res.status(400).send("appIds param needed")

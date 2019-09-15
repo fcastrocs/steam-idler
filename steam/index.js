@@ -136,12 +136,12 @@ class SteamClient extends EventEmitter {
 		}
 
 		/************************************************************************
-		 * 					  ACTIVATE FREE APP RESPONSE						*
+		 * 					  ACTIVATE F2P GAMES RESPONSE  					    *
 		 ************************************************************************/
 		else if (msg == this.EMsg.ClientRequestFreeLicenseResponse) {
 			body = this.Schema.CMsgClientRequestFreeLicenseResponse.decode(body)
 			this.GetAppInfo(body.granted_appids, games => {
-				this.emit("activated-apps", games)
+				this.emit("activated-f2p-games", games)
 			})
 		}
 
@@ -224,7 +224,7 @@ class SteamClient extends EventEmitter {
 	};
 
 
-	activateFreeGame(appIds) {
+	activateF2pGames(appIds) {
 		this.Send({
 			msg: this.EMsg.ClientRequestFreeLicense,
 			proto: {}
