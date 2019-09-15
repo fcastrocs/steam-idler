@@ -151,19 +151,19 @@ Router.post('/steamaccount/activatef2pgames', isLoggedIn, async function (req, r
 })
 
 // Activate free game
-Router.post('/steamaccount/activatef2pgame', isLoggedIn, async function (req, res) {
-    if (!req.body.accountId || !req.body.appIds) {
-        return res.status(400).send("accountId/appIds needed")
+Router.post('/steamaccount/activatefreegame', isLoggedIn, async function (req, res) {
+    if (!req.body.accountId || !req.body.packageId) {
+        return res.status(400).send("accountId/packageId needed")
     }
 
     // validation
-    let appIds = req.body.appIds.split(",").map(Number).filter(item => !isNaN(item))
-    if (appIds.length < 1) {
-        return res.status(400).send("Invalid input, enter valid appIds")
+    let packageId = parseInt(req.body.packageId);
+    if(Number.isNaN(packageId)){
+        return res.status(400).send("Invalid input, enter a single numeric package ID")
     }
 
     try {
-        let result = await AccountHandler.activateFreeGame(req.session.userId, req.body.accountId, appIds)
+        let result = await AccountHandler.activateFreeGame(req.session.userId, req.body.accountId, packageId)
         return res.send(result);
     } catch (error) {
         return res.status(400).send(error)
