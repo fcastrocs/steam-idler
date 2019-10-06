@@ -121,7 +121,7 @@ $(() => {
         $("#activate-f2p-game-msg").text("").prop("hidden", true)
         $("#activate-f2p-game-errMsg").text("").prop("hidden", true)
 
-        $.post('/steamaccounts/activatef2pgame', { appIds: appIds }, res => {
+        $.post('/steamaccounts/activatefreetoplaygames', { appIds: appIds }, res => {
             $("#activate-f2p-game-msg").prop("hidden", false).text(res.msg + "\nReloading in 3 secs.")
             $("#spinner-activate-f2p-game").prop("hidden", true)
             displayGames(res.games);

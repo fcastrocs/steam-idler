@@ -290,8 +290,8 @@ class Client extends EventEmitter {
                     // game activated
                     if ($("title").text() === "Purchase") {
                         self.client.GetPkgInfo([packageId], appIds => {
+                            console.log(appIds)
                             self.client.GetAppInfo(appIds, games => {
-                                console.log(games);
                                 return resolve(games);
                             })
                         })

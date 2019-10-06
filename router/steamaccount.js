@@ -131,7 +131,7 @@ Router.post('/steamaccount/changenick', isLoggedIn, async function (req, res) {
 })
 
 // Activate f2p game
-Router.post('/steamaccount/activatef2pgames', isLoggedIn, async function (req, res) {
+Router.post('/steamaccount/activatefreetoplaygames', isLoggedIn, async function (req, res) {
     if (!req.body.accountId || !req.body.appIds) {
         return res.status(400).send("accountId/appIds needed")
     }
