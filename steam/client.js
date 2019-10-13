@@ -41,597 +41,10 @@ class Client extends EventEmitter {
         }
         setTimeout(() => this.connect(), timeout * 1000);
     }
-
-
-    async changeAvatar(binaryImg, filename) {
-        if (!this.loggedIn) {
-            return Promise.reject("Account is not logged in.")
-        }
-
-        if (!this.webCookie) {
-            return Promise.reject("Account doesn't have a webcookie.")
-        }
-
-        // convert binary image data to buffer 
-        let buffer = new Buffer.from(binaryImg, "binary");
-
-        // set the correct contenttype
-        let ext = filename.substring(7);
-        if (ext === "jpg") {
-            var contentType = "image/jpeg"
-        } else {
-            var contentType = `image/${ext}`
-        }
-
-        let self = this;
-        return new Promise(async (resolve, reject) => {
-            (async function attempt(retries) {
-                if (!retries) {
-                    retries = 0;
-                }
-
-                retries++;
-
-                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
-                let agent = new SocksProxyAgent(proxy);
-
-                let options = {
-                    url: "https://steamcommunity.com/actions/FileUploader",
-                    method: 'POST',
-                    agent: agent,
-                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
-                    json: true,
-                    headers: {
-                        "User-Agent": "Valve/Steam HTTP Client 1.0",
-                        "Cookie": self.webCookie
-                    },
-                    formData: {
-                        "MAX_FILE_SIZE": buffer.length,
-                        "type": "player_avatar_image",
-                        "sId": self.account.steamid,
-                        "sessionid": self.sessionId,
-                        "doSub": 1,
-                        "json": 1,
-                        "avatar": {
-                            "value": buffer,
-                            "options": {
-                                "filename": filename,
-                                "contentType": contentType
-                            }
-                        }
-                    }
-                }
-
-                try {
-                    let res = await Request(options)
-                    if (res.success) {
-                        return resolve(res.images.full)
-                    } else {
-                        if (retries > 3) {
-                            return reject("Could not upload avatar, try again.")
-                        }
-                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
-                    }
-                } catch (error) {
-                    if (retries > 3) {
-                        return reject("Could not upload avatar, try again.")
-                    }
-                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
-                }
-            })();
-        })
-    }
-
-    async clearAliases() {
-        if (!this.loggedIn) {
-            return Promise.reject("Account is not logged in.")
-        }
-
-        if (!this.webCookie) {
-            return Promise.reject("Account doesn't have a webcookie.")
-        }
-
-        let self = this;
-        return new Promise(async (resolve, reject) => {
-            (async function attempt(retries) {
-                if (!retries) {
-                    retries = 0;
-                }
-
-                retries++;
-
-                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
-                let agent = new SocksProxyAgent(proxy);
-
-                let options = {
-                    url: `https://steamcommunity.com/profiles/${self.account.steamid}/ajaxclearaliashistory/`,
-                    method: 'POST',
-                    agent: agent,
-                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
-                    json: true,
-                    headers: {
-                        "User-Agent": "Valve/Steam HTTP Client 1.0",
-                        "Cookie": self.webCookie
-                    },
-                    formData: { "sessionid": self.sessionId }
-                }
-
-                try {
-                    let res = await Request(options)
-                    if (res.success === 1) {
-                        return resolve()
-                    } else {
-                        if (retries > 3) {
-                            return reject("Could not clear previous aliases, try again.")
-                        }
-                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
-                    }
-                } catch (error) {
-                    if (retries > 3) {
-                        return reject("Too many retries, could not clear aliases.")
-                    }
-                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
-                }
-            })();
-        })
-    }
-
-    async changePrivacy(formData) {
-        if (!this.loggedIn) {
-            return Promise.reject("Account is not logged in.")
-        }
-
-        if (!this.webCookie) {
-            return Promise.reject("Account doesn't have a webcookie.")
-        }
-
-        if (!formData) {
-            return Promise.reject("formData not passed.")
-        }
-
-        let self = this;
-        return new Promise(async (resolve, reject) => {
-            (async function attempt(retries) {
-                if (!retries) {
-                    retries = 0;
-                }
-
-                retries++;
-
-                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
-                let agent = new SocksProxyAgent(proxy);
-
-                let options = {
-                    url: `https://steamcommunity.com/profiles/${self.account.steamid}/ajaxsetprivacy/`,
-                    method: 'POST',
-                    agent: agent,
-                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
-                    json: true,
-                    headers: {
-                        "User-Agent": "Valve/Steam HTTP Client 1.0",
-                        "Cookie": self.webCookie
-                    },
-                    formData: {
-                        "sessionid": self.sessionId,
-                        'Privacy': JSON.stringify(formData.Privacy),
-                        "eCommentPermission": formData.eCommentPermission
-                    }
-                }
-
-                try {
-                    let res = await Request(options)
-                    if (res.success === 1) {
-                        return resolve()
-                    } else {
-                        if (retries > 3) {
-                            return reject("Could not set privacy settings, try again.")
-                        }
-                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
-                    }
-                } catch (error) {
-                    if (retries > 3) {
-                        return reject("Could not set privacy settings, try again.")
-                    }
-                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
-                }
-            })();
-        })
-    }
-
-    /************************************************************************
-    *  				        Activate free game                              *
-    ************************************************************************/
-    activateFreeGame(packageId) {
-        if (!this.loggedIn) {
-            return Promise.reject("Account is not logged in.")
-        }
-
-        if (!this.webCookie) {
-            return Promise.reject("Account doesn't have a webcookie.")
-        }
-
-        if (!packageId) {
-            return Promise.reject("packageId not passed.")
-        }
-
-        let self = this;
-        return new Promise(async (resolve, reject) => {
-            (async function attempt(retries) {
-                if (!retries) {
-                    retries = 0;
-                }
-
-                retries++;
-
-                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
-                let agent = new SocksProxyAgent(proxy);
-
-                let options = {
-                    url: `https://store.steampowered.com/checkout/addfreelicense/`,
-                    method: 'POST',
-                    agent: agent,
-                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
-                    json: true,
-                    headers: {
-                        "User-Agent": "Valve/Steam HTTP Client 1.0",
-                        "Cookie": self.webCookie
-                    },
-                    formData: {
-                        "snr": "1_5_9__403",
-                        "action": "add_to_cart",
-                        "sessionid": self.sessionId,
-                        "subid": packageId
-                    }
-                }
-
-                try {
-                    let res = await Request(options)
-                    const $ = cheerio.load(res);
-                    // game activated
-                    if ($("title").text() === "Purchase") {
-                        self.client.GetPkgInfo([packageId], appIds => {
-                            console.log(appIds)
-                            self.client.GetAppInfo(appIds, games => {
-                                return resolve(games);
-                            })
-                        })
-                    } else {
-                        return reject("Count not activate this game, check you entered the correct package ID.")
-                    }
-                } catch (error) {
-                    if (retries > 3) {
-                        return reject("Could not activate free game, try again.")
-                    }
-                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
-                }
-            })();
-        })
-    }
-
-    /************************************************************************
-    *  					       PLAY GAMES			                        *
-    * 	"activated-apps" event will be emitted along with:                  *
-    *    on success: Array of objects {appid, name, logo}                   *                                          *
-    *    on fail: does not fail                                             *
-    ************************************************************************/
-    playGames(games) {
-        if (!this.loggedIn) {
-            return;
-        }
-        this.client.playGames(games);
-
-        if (games.length > 0) {
-            return "In-game"
-        } else {
-            return "Online"
-        }
-    }
-
-    /************************************************************************
-    *  					    ACTIVATE F2P/ GAME			                    *
-    * 	"activated-apps" event will be emitted along with:                  *
-    *    on success: Array of objects {appid, name, logo}                   *                                          *
-    *    on fail: "Could not activate this game."                           *
-    ************************************************************************/
-    activateF2pGames(appIds) {
-        if (!this.loggedIn) {
-            return;
-        }
-
-        return new Promise((resolve, reject) => {
-            // register the event first
-            this.client.once('activated-f2p-games', games => {
-                if (!games) {
-                    reject("Could not activate game(s).")
-                } else {
-                    resolve(games)
-                }
-            })
-            this.client.activateF2pGames(appIds)
-        })
-    }
-
-    /************************************************************************
-    *  					       REDEEM CDKEY			                        *
-    * 	"redeem-key" event will be emitted along with:                      *
-    *    on success: Array of objects {appid, name, logo}                   *                                          *
-    *    on fail: String with error message                                 *
-    ************************************************************************/
-    redeemKey(cdkey) {
-        if (!this.loggedIn) {
-            return;
-        }
-
-        return new Promise((resolve, reject) => {
-            // register the event first
-            this.client.once('redeem-key', games => {
-                if (Array.isArray(games)) {
-                    resolve(games)
-                } else {
-                    reject(games)
-                }
-            })
-            this.client.redeemKey(cdkey)
-        })
-    }
-
-    /************************************************************************
-    *  				  SET PERSONA state, name(optional)			            *
-    * 	"Offline": 0,                                                       *
-    *   "Online": 1,                                                        *
-    *   "Busy": 2,                                                          *
-    *   "Away": 3,                                                          *
-    *   "Snooze": 4,                                                        *
-    *   "LookingToTrade": 5,                                                *
-    *   "LookingToPlay": 6,                                                 *
-    *   "Invisible": 7                                                      *
-    ************************************************************************/
-    setPersona(state, name) {
-        if (!this.loggedIn) {
-            return;
-        }
-        // Save status if account loses connection
-        this.account.forcedStatus = state;
-        if (state == "Online") {
-            state = 1;
-        } else if (state == "Busy") {
-            state = 2;
-        } else if (state == "Away") {
-            state = 3;
-        } else if (state == "Invisible") {
-            state = 7
-        }
-
-        this.client.setPersona(state, name)
-    }
-
-    /************************************************************************
-    *  					    Generate web cookie            			        * 
-    ************************************************************************/
-    async GenerateWebCookie(nonce) {
-        if (!this.loggedIn) {
-            return Promise.reject()
-        }
-
-        let self = this;
-        return new Promise(async (resolve, reject) => {
-            (async function attempt(retries) {
-                if (!retries) {
-                    retries = 0;
-                }
-                retries++;
-                // too many tries, get a new proxy
-                if (retries == 3) {
-                    return reject();
-                }
-
-                let sessionKey = SteamCrypto.generateSessionKey();
-                let encryptedNonce = SteamCrypto.symmetricEncryptWithHmacIv(nonce, sessionKey.plain);
-
-                let data = {
-                    steamid: self.account.steamid,
-                    sessionkey: sessionKey.encrypted,
-                    encrypted_loginkey: encryptedNonce
-                };
-
-                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
-                let agent = new SocksProxyAgent(proxy);
-
-                let options = {
-                    url: `https://api.steampowered.com/ISteamUserAuth/AuthenticateUser/v1`,
-                    method: 'POST',
-                    agent: agent,
-                    formData: data,
-                    json: true,
-                    timeout: self.STEAMCOMMUNITY_TIMEOUT
-                }
-
-                try {
-                    let data = await Request(options);
-                    if (!data.authenticateuser) {
-                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
-                    } else {
-                        let sessionId = Crypto.randomBytes(12).toString('hex')
-                        self.sessionId = sessionId;
-                        let steamLogin = data.authenticateuser.token
-                        let steamLoginSecure = data.authenticateuser.tokensecure
-                        self.webCookie = `sessionid=${sessionId}; steamLogin=${steamLogin}; steamLoginSecure=${steamLoginSecure};`
-                        return resolve();
-                    }
-                } catch (error) {
-                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
-                }
-
-            })();
-        })
-    }
-
-    /************************************************************************
-    *  					    Get farming data                                *
-    * returns array of objs   { title, appId, playTime, cardsRemaining }    * 
-    ************************************************************************/
-    async GetFarmingData() {
-        if (!this.webCookie) {
-            return Promise.reject()
-        }
-
-        if (!this.loggedIn) {
-            return Promise.reject()
-        }
-
-        let self = this;
-        return new Promise(async (resolve, reject) => {
-            (async function attempt(retries) {
-                if (!retries) {
-                    retries = 0;
-                }
-
-                retries++;
-
-                // too many tries, get a new proxy
-                if (retries == 3) {
-                    return reject();
-                }
-
-                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
-                let agent = new SocksProxyAgent(proxy);
-
-                let options = {
-                    url: `https://steamcommunity.com/profiles/${self.account.steamid}/badges`,
-                    method: 'GET',
-                    agent: agent,
-                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
-                    headers: {
-                        "User-Agent": "Valve/Steam HTTP Client 1.0",
-                        "Cookie": self.webCookie
-                    }
-                }
-
-                try {
-                    let data = await Request(options)
-                    return resolve(self.ParseFarmingData(data));
-                } catch (error) {
-                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
-                }
-            })();
-        })
-    }
-
-    ParseFarmingData(data) {
-        const $ = cheerio.load(data, { decodeEntities: false });
-
-        let farmingData = [];
-
-        $(".badge_row").each(function () {
-            // check for remaining cards
-            let progress = $(this).find(".progress_info_bold").text();
-            if (!progress) {
-                return;
-            }
-
-            progress = Number(progress.replace(/[^0-9\.]+/g, ""));
-            if (progress === 0) {
-                return;
-            }
-
-            // Get play time
-            let playTime = $(this).find(".badge_title_stats_playtime").text();
-            if (!playTime) {
-                return;
-            }
-            playTime = Number(playTime.replace(/[^0-9\.]+/g, ""));
-
-
-            // Get game title
-            $(this).find(".badge_view_details").remove();
-            let gameTitle = $(this).find(".badge_title").text();
-            if (!gameTitle) {
-                return;
-            }
-            gameTitle = gameTitle.replace(/&nbsp;/g, '')
-            gameTitle = gameTitle.trim();
-
-            // Get appID
-            let link = $(this).find(".badge_row_overlay").attr("href")
-            link = link.substring(link.indexOf("gamecards"), link.length);
-            let appId = Number(link.replace(/[^0-9\.]+/g, ""));
-
-            let obj = {
-                title: gameTitle,
-                appId: appId.toString(),
-                playTime: playTime,
-                cardsRemaining: progress
-            }
-
-            farmingData.push(obj)
-        })
-        return farmingData;
-    }
-
-
-    /************************************************************************
-    *  				Get account's steam inventory                           *
-    * returns obj                                                           * 
-    ************************************************************************/
-    async GetIventory() {
-        if (!this.webCookie) {
-            return Promise.reject()
-        }
-
-        if (!this.loggedIn) {
-            return Promise.reject()
-        }
-
-        let self = this;
-        return new Promise(async (resolve, reject) => {
-            (async function attempt(retries) {
-                if (!retries) {
-                    retries = 0;
-                }
-
-                retries++;
-
-                // too many tries, get a new proxy
-                if (retries == 3) {
-                    return reject();
-                }
-
-                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
-                let agent = new SocksProxyAgent(proxy);
-
-                let options = {
-                    url: `https://steamcommunity.com/profiles/${self.account.steamid}/inventory/json/753/6`,
-                    method: 'GET',
-                    agent: agent,
-                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
-                    headers: {
-                        "User-Agent": "Valve/Steam HTTP Client 1.0",
-                        "Cookie": self.webCookie
-                    }
-                }
-
-                try {
-                    let inventory = await Request(options)
-                    inventory = JSON.parse(inventory);
-                    if (!inventory.success) {
-                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
-                    }
-
-                    if (inventory.rgDescriptions.length == 0) {
-                        return resolve(null);
-                    }
-
-                    return resolve(inventory.rgDescriptions);
-                } catch (error) {
-                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
-                }
-            })();
-        })
-    }
-
-    /************************************************************************
-     * 					        LOGIN TO STEAM					            *
-     ************************************************************************/
+    
+    /**
+     * Attempts steam login, must be connected to steam first.
+     */
     login() {
         let self = this;
 
@@ -673,8 +86,7 @@ class Client extends EventEmitter {
 
                 // generate web cookie
                 try {
-                    await self.GenerateWebCookie(res.webapi_authenticate_user_nonce);
-
+                    self.webCookie = await self.GenerateWebCookie(res.webapi_authenticate_user_nonce);
                     if (this.socketId) {
                         io.to(`${this.socketId}`).emit("login-log-msg", "Received web cookie.");
                     }
@@ -879,13 +291,14 @@ class Client extends EventEmitter {
         this.client.LogOn(loginOption);
     }
 
-    /************************************************************************
-     * 					  ESTABLISH CONNECTION WITH STEAM					*
-     ************************************************************************/
+    /**
+     * Establishes steam connection
+     * @param {*} options connection options
+     */
     async connect(options) {
         let self = this;
 
-        // Get a SteamCM
+        // Get a SteamCM, use previous proxy if options.userPrevious is set
         if (!options || !options.usePrevious) {
             this.steamcm = await GetSteamCM();
             this.proxy = await GetProxy();
@@ -911,6 +324,7 @@ class Client extends EventEmitter {
         // SUCCESSFUL CONNECTION
         self.client.once('connected', () => {
             if (this.socketId && !this.loginMessageSent) {
+                // don't send more "successful connection" messages after the first one
                 this.loginMessageSent = true;
                 io.to(`${this.socketId}`).emit("login-log-msg", "Connected to Steam, attemping login.");
             }
@@ -939,10 +353,12 @@ class Client extends EventEmitter {
             // bad proxy
             self.RenewConnection(err);
         }
-
     }
 
-    // Reconnect due to bad proxy.
+    /**
+     * Reconnecto to steam
+     * @param {*} err error that triggered reconnection
+     */
     RenewConnection(err) {
         this.Disconnect();
 
@@ -958,11 +374,616 @@ class Client extends EventEmitter {
         setTimeout(() => this.connect(), timeout * 1000);
     }
 
+    /**
+     * Disconnect from steam
+     */
     Disconnect() {
         this.loggedIn = false;
         this.webCookie = false;
         this.client.Disconnect();
     }
+
+
+        /**
+     * Change avatar
+     * @param {*} binaryImg 
+     * @param {*} filename
+     * @returns promise with avatar url
+     */
+    async changeAvatar(binaryImg, filename) {
+        if (!this.loggedIn) {
+            return Promise.reject("Account is not logged in.")
+        }
+
+        if (!this.webCookie) {
+            return Promise.reject("Account doesn't have a webcookie.")
+        }
+
+        // convert binary image data to buffer 
+        let buffer = new Buffer.from(binaryImg, "binary");
+
+        // set the correct contenttype
+        let ext = filename.substring(7);
+        if (ext === "jpg") {
+            var contentType = "image/jpeg"
+        } else {
+            var contentType = `image/${ext}`
+        }
+
+        let self = this;
+        return new Promise(async (resolve, reject) => {
+            (async function attempt(retries) {
+                if (!retries) {
+                    retries = 0;
+                }
+
+                retries++;
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: "https://steamcommunity.com/actions/FileUploader",
+                    method: 'POST',
+                    agent: agent,
+                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
+                    json: true,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    },
+                    formData: {
+                        "MAX_FILE_SIZE": buffer.length,
+                        "type": "player_avatar_image",
+                        "sId": self.account.steamid,
+                        "sessionid": self.sessionId,
+                        "doSub": 1,
+                        "json": 1,
+                        "avatar": {
+                            "value": buffer,
+                            "options": {
+                                "filename": filename,
+                                "contentType": contentType
+                            }
+                        }
+                    }
+                }
+
+                try {
+                    let res = await Request(options)
+                    if (res.success) {
+                        return resolve(res.images.full)
+                    } else {
+                        if (retries > 3) {
+                            return reject("Could not upload avatar, try again.")
+                        }
+                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                    }
+                } catch (error) {
+                    if (retries > 3) {
+                        return reject("Could not upload avatar, try again.")
+                    }
+                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                }
+            })();
+        })
+    }
+
+    /**
+     * Clear previous aliases
+     */
+    async clearAliases() {
+        if (!this.loggedIn) {
+            return Promise.reject("Account is not logged in.")
+        }
+
+        if (!this.webCookie) {
+            return Promise.reject("Account doesn't have a webcookie.")
+        }
+
+        let self = this;
+        return new Promise(async (resolve, reject) => {
+            (async function attempt(retries) {
+                if (!retries) {
+                    retries = 0;
+                }
+
+                retries++;
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://steamcommunity.com/profiles/${self.account.steamid}/ajaxclearaliashistory/`,
+                    method: 'POST',
+                    agent: agent,
+                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
+                    json: true,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    },
+                    formData: { "sessionid": self.sessionId }
+                }
+
+                try {
+                    let res = await Request(options)
+                    if (res.success === 1) {
+                        return resolve()
+                    } else {
+                        if (retries > 3) {
+                            return reject("Could not clear previous aliases, try again.")
+                        }
+                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                    }
+                } catch (error) {
+                    if (retries > 3) {
+                        return reject("Too many retries, could not clear aliases.")
+                    }
+                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                }
+            })();
+        })
+    }
+
+    /**
+     * Change privacy settings
+     * @param {*} formData containing privacy settings
+     */
+    async changePrivacy(formData) {
+        if (!this.loggedIn) {
+            return Promise.reject("Account is not logged in.")
+        }
+
+        if (!this.webCookie) {
+            return Promise.reject("Account doesn't have a webcookie.")
+        }
+
+        if (!formData) {
+            return Promise.reject("formData not passed.")
+        }
+
+        let self = this;
+        return new Promise(async (resolve, reject) => {
+            (async function attempt(retries) {
+                if (!retries) {
+                    retries = 0;
+                }
+
+                retries++;
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://steamcommunity.com/profiles/${self.account.steamid}/ajaxsetprivacy/`,
+                    method: 'POST',
+                    agent: agent,
+                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
+                    json: true,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    },
+                    formData: {
+                        "sessionid": self.sessionId,
+                        'Privacy': JSON.stringify(formData.Privacy),
+                        "eCommentPermission": formData.eCommentPermission
+                    }
+                }
+
+                try {
+                    let res = await Request(options)
+                    if (res.success === 1) {
+                        return resolve()
+                    } else {
+                        if (retries > 3) {
+                            return reject("Could not set privacy settings, try again.")
+                        }
+                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                    }
+                } catch (error) {
+                    if (retries > 3) {
+                        return reject("Could not set privacy settings, try again.")
+                    }
+                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                }
+            })();
+        })
+    }
+
+    /**
+     * Activate free game
+     * @param {*} packageId packageId containing the free game
+     * @returns Promise with game activated
+     */
+    activateFreeGame(packageId) {
+        if (!this.loggedIn) {
+            return Promise.reject("Account is not logged in.")
+        }
+
+        if (!this.webCookie) {
+            return Promise.reject("Account doesn't have a webcookie.")
+        }
+
+        if (!packageId) {
+            return Promise.reject("packageId not passed.")
+        }
+
+        let self = this;
+        return new Promise(async (resolve, reject) => {
+            (async function attempt(retries) {
+                if (!retries) {
+                    retries = 0;
+                }
+
+                retries++;
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://store.steampowered.com/checkout/addfreelicense/`,
+                    method: 'POST',
+                    agent: agent,
+                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
+                    json: true,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    },
+                    formData: {
+                        "snr": "1_5_9__403",
+                        "action": "add_to_cart",
+                        "sessionid": self.sessionId,
+                        "subid": packageId
+                    }
+                }
+
+                try {
+                    let res = await Request(options)
+                    const $ = cheerio.load(res);
+                    // game activated
+                    if ($("title").text() === "Purchase") {
+                        self.client.GetPkgInfo([packageId], appIds => {
+                            console.log(appIds)
+                            self.client.GetAppInfo(appIds, games => {
+                                return resolve(games);
+                            })
+                        })
+                    } else {
+                        return reject("Count not activate this game, check you entered the correct package ID.")
+                    }
+                } catch (error) {
+                    if (retries > 3) {
+                        return reject("Could not activate free game, try again.")
+                    }
+                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                }
+            })();
+        })
+    }
+    
+    /**
+     * Sets account to play games or to stop playing games if empty array
+     * @param {*} games games array to play
+     * @returns account status: "In-game" or "Online"
+     */
+    playGames(games) {
+        if (!this.loggedIn) {
+            return;
+        }
+        this.client.playGames(games);
+
+        if (games.length > 0) {
+            return "In-game"
+        } else {
+            return "Online"
+        }
+    }
+
+    /**
+     * Activate F2P games
+     * @param {*} appIds array of appIDs to activate
+     * @returns Promise with activated games
+     */
+    activateF2pGames(appIds) {
+        if (!this.loggedIn) {
+            return;
+        }
+
+        return new Promise((resolve, reject) => {
+            // register the event first
+            this.client.once('activated-f2p-games', games => {
+                if (!games) {
+                    reject("Could not activate game(s).")
+                } else {
+                    resolve(games)
+                }
+            })
+            this.client.activateF2pGames(appIds)
+        })
+    }
+    
+    /**
+     * Redeem a cdkey
+     * @param {*} cdkey
+     * @returns activated game
+     */
+    redeemKey(cdkey) {
+        if (!this.loggedIn) {
+            return;
+        }
+
+        return new Promise((resolve, reject) => {
+            // register the event first
+            this.client.once('redeem-key', games => {
+                if (Array.isArray(games)) {
+                    resolve(games)
+                } else {
+                    reject(games)
+                }
+            })
+            this.client.redeemKey(cdkey)
+        })
+    }
+    
+    /**
+     * Change account status
+     * @param {*} state Offline: 0, Online: 1, Busy: 3, Away: 3, Snooze: 4,
+     * LookingToTrade: 5, LookingToPlay: 6, Invisible: 7
+     * @param {*} name Optional, persona name
+     */
+    setPersona(state, name) {
+        if (!this.loggedIn) {
+            return;
+        }
+        // Save status if account loses connection
+        this.account.forcedStatus = state;
+        if (state == "Online") {
+            state = 1;
+        } else if (state == "Busy") {
+            state = 2;
+        } else if (state == "Away") {
+            state = 3;
+        } else if (state == "Invisible") {
+            state = 7
+        }
+
+        this.client.setPersona(state, name)
+    }
+    
+    /**
+     * Generate a web cookie from nonce
+     * @param {*} nonce given by steam after authentication
+     * @returns web cookie
+     */
+    async GenerateWebCookie(nonce) {
+        if (!this.loggedIn) {
+            return Promise.reject()
+        }
+
+        let self = this;
+        return new Promise(async (resolve, reject) => {
+            (async function attempt(retries) {
+                if (!retries) {
+                    retries = 0;
+                }
+                retries++;
+                // too many tries, get a new proxy
+                if (retries == 3) {
+                    return reject();
+                }
+
+                let sessionKey = SteamCrypto.generateSessionKey();
+                let encryptedNonce = SteamCrypto.symmetricEncryptWithHmacIv(nonce, sessionKey.plain);
+
+                let data = {
+                    steamid: self.account.steamid,
+                    sessionkey: sessionKey.encrypted,
+                    encrypted_loginkey: encryptedNonce
+                };
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://api.steampowered.com/ISteamUserAuth/AuthenticateUser/v1`,
+                    method: 'POST',
+                    agent: agent,
+                    formData: data,
+                    json: true,
+                    timeout: self.STEAMCOMMUNITY_TIMEOUT
+                }
+
+                try {
+                    let data = await Request(options);
+                    if (!data.authenticateuser) {
+                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                    } else {
+                        let sessionId = Crypto.randomBytes(12).toString('hex')
+                        self.sessionId = sessionId;
+                        let steamLogin = data.authenticateuser.token
+                        let steamLoginSecure = data.authenticateuser.tokensecure
+                        let cookie = `sessionid=${sessionId}; steamLogin=${steamLogin}; steamLoginSecure=${steamLoginSecure};`
+                        return resolve(cookie);
+                    }
+                } catch (error) {
+                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                }
+
+            })();
+        })
+    }
+    
+    /**
+     * Get card farming data 
+     * @returns Promise with array containing items { title, appId, playTime, cardsRemaining }
+     */
+    async GetFarmingData() {
+        if (!this.webCookie) {
+            return Promise.reject()
+        }
+
+        if (!this.loggedIn) {
+            return Promise.reject()
+        }
+
+        let self = this;
+        return new Promise(async (resolve, reject) => {
+            (async function attempt(retries) {
+                if (!retries) {
+                    retries = 0;
+                }
+
+                retries++;
+
+                // too many tries, get a new proxy
+                if (retries == 3) {
+                    return reject();
+                }
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://steamcommunity.com/profiles/${self.account.steamid}/badges`,
+                    method: 'GET',
+                    agent: agent,
+                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    }
+                }
+
+                try {
+                    let data = await Request(options)
+                    return resolve(self.ParseFarmingData(data));
+                } catch (error) {
+                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                }
+            })();
+        })
+    }
+
+    /**
+     * Helper function for GetFarmingData()
+     * @param {*} data raw html card farming data
+     * @returns array containing items { title, appId, playTime, cardsRemaining }
+     */
+    ParseFarmingData(data) {
+        const $ = cheerio.load(data, { decodeEntities: false });
+
+        let farmingData = [];
+
+        $(".badge_row").each(function () {
+            // check for remaining cards
+            let progress = $(this).find(".progress_info_bold").text();
+            if (!progress) {
+                return;
+            }
+
+            progress = Number(progress.replace(/[^0-9\.]+/g, ""));
+            if (progress === 0) {
+                return;
+            }
+
+            // Get play time
+            let playTime = $(this).find(".badge_title_stats_playtime").text();
+            if (!playTime) {
+                return;
+            }
+            playTime = Number(playTime.replace(/[^0-9\.]+/g, ""));
+
+
+            // Get game title
+            $(this).find(".badge_view_details").remove();
+            let gameTitle = $(this).find(".badge_title").text();
+            if (!gameTitle) {
+                return;
+            }
+            gameTitle = gameTitle.replace(/&nbsp;/g, '')
+            gameTitle = gameTitle.trim();
+
+            // Get appID
+            let link = $(this).find(".badge_row_overlay").attr("href")
+            link = link.substring(link.indexOf("gamecards"), link.length);
+            let appId = Number(link.replace(/[^0-9\.]+/g, ""));
+
+            let obj = {
+                title: gameTitle,
+                appId: appId.toString(),
+                playTime: playTime,
+                cardsRemaining: progress
+            }
+
+            farmingData.push(obj)
+        })
+        return farmingData;
+    }
+
+    /**
+     * Get Inventory data
+     * @returns Promise with array inventory data
+     */
+    async GetIventory() {
+        if (!this.webCookie) {
+            return Promise.reject()
+        }
+
+        if (!this.loggedIn) {
+            return Promise.reject()
+        }
+
+        let self = this;
+        return new Promise(async (resolve, reject) => {
+            (async function attempt(retries) {
+                if (!retries) {
+                    retries = 0;
+                }
+
+                retries++;
+
+                // too many tries, get a new proxy
+                if (retries == 3) {
+                    return reject();
+                }
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://steamcommunity.com/profiles/${self.account.steamid}/inventory/json/753/6`,
+                    method: 'GET',
+                    agent: agent,
+                    timeout: self.STEAMCOMMUNITY_TIMEOUT,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    }
+                }
+
+                try {
+                    let inventory = await Request(options)
+                    inventory = JSON.parse(inventory);
+                    if (!inventory.success) {
+                        setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                    }
+
+                    if (inventory.rgDescriptions.length == 0) {
+                        return resolve(null);
+                    }
+
+                    return resolve(inventory.rgDescriptions);
+                } catch (error) {
+                    setTimeout(() => attempt(retries), self.STEAMCOMMUNITY_RETRY_DELAY);
+                }
+            })();
+        })
+    }
+
+
 }
 
 module.exports = Client;
