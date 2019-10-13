@@ -41,7 +41,7 @@ class Client extends EventEmitter {
         }
         setTimeout(() => this.connect(), timeout * 1000);
     }
-    
+
     /**
      * Attempts steam login, must be connected to steam first.
      */
