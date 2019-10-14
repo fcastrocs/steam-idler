@@ -10,6 +10,8 @@ const Mailer = require("../mailer")
 const Invite = require("../models/invite")
 const Security = require("../util/security")
 const Users = require("../models/user");
+const Accounts = require("../models/steam-accounts");
+const AccountHandler = require("../app").accountHandler
 
 router.get(`/admin`, isLoggedIn, (req, res) => {
     if (!req.session.admin) {
@@ -28,11 +30,31 @@ router.get(`/admin`, isLoggedIn, (req, res) => {
     });
 });
 
-// user list
+/**
+ * Responds with array of users { _id, username, accountsCount, loggedAccountsCount}
+ */
 router.get("/admin/userlist", [isLoggedIn, isAdmin], async(req,res)=>{
     try{
-        let userlist = await Users.find({}, "_id username").exec();
-        res.send(userlist);
+        let usersList = await Users.find({}, "_id username").exec();
+        let users = []
+        for(let i = 0; i < usersList.length; i++){
+            let user = {};
+            user._id = usersList[i]._id;
+            user.username = usersList[i].username;
+            // get account count
+            let count = await Accounts.countDocuments({userId: usersList[i]._id}).exec();
+            user.accountsCount = count;
+            user.loggedAccountsCount = 0;
+            let loggedInAccounts = AccountHandler.userAccounts[usersList[i]._id];
+            if(loggedInAccounts){
+                user.loggedAccountsCount = Object.keys(loggedInAccounts).length;
+            }
+            users.push(user);
+            // responde on that iteration
+            if(i == usersList.length - 1){
+                res.send(users);
+            }
+        }
     }catch(err){
         console.log(err);
         res.status(500).send("Could not get userlist")

@@ -42,17 +42,18 @@ $(() => {
     // user list
     $.get('/admin/userlist', userlist => {
         let usersHtml = "";
-
+        console.log(userlist)
         userlist.forEach(user => {
-            console.log(user);
-            usersHtml += ` <div class="user-item" data-id="${user._id}">
-            <span class="user-name">${user.username}</span>
+            usersHtml += `<div class="user-item" data-id="${user._id}">
+            <span class="user-item-username">${user.username}</span>
+            <span class="user-item-accounts">${user.accountsCount}</span>
+            <span class="user-item-loggedAccounts">${user.loggedAccountsCount}</span>
             <button type="button" class="btn btn-primary">Ban</button>
             <button type="button" class="btn btn-primary">Delete</button>
-            </div><div`
+            </div>`
         });
 
-        $("#user-list").html(usersHtml);
+        $("#user-list").append(usersHtml);
     })
 
 })

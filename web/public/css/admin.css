@@ -35,17 +35,47 @@
     width: 100%;
 }
 
+#user-list-header{
+    width: 100%;
+    padding: 5px;
+    background: rgba(9, 9, 56, 0.644);
+}
+
+#user-list-header > span{
+    text-align: center;
+    display: inline-block;
+}
+
+#user-list-header-username{
+    width: 110px;
+}
+
+#user-list-header-accounts{
+    width: 70px;
+}
+
 .user-item{
-    margin: 5px;;
     padding: 5px;
     background: rgba(26, 26, 187, 0.151);
     border-radius: 5px;
 }
 
-.user-name{
+.user-item-username{
+    text-align: center;
     display: inline-block;
-    width: 80px;
-    font-size: 13px;
+    width: 110px;
+}
+
+.user-item-accounts{
+    text-align: center;
+    display: inline-block;
+    width: 70px;
+}
+
+.user-item-loggedAccounts{
+    text-align: center;
+    display: inline-block;
+    width: 93px;
 }
 
 .row-name{
