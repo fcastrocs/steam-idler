@@ -77,7 +77,6 @@ class Client extends EventEmitter {
 
         // LOGIN RESPONSE
         this.client.once('logOnResponse', async (res) => {
-            console.log(res);
             let code = res.eresult
             let errMsg = ""
 
