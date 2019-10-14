@@ -308,16 +308,17 @@ class Client extends EventEmitter {
             // proxy list is empty, fetch more proxies.
             if(!this.proxy){
                 // havent started fetching a new list
-                if(!this.fetchingProxies){
-                    this.fetchingProxies = true;
+                if(process.env.fetchingProxies === "false"){
+                    console.log("Steam is down, getting a new proxy list in 14 mins");
+                    process.env.fetchingProxies = "true";
                     setTimeout(async () => {
                         await GetAndSaveProxies();
-                        self.fetchingProxies = false;
-                    }, 14 * 60 * 1000);
+                        process.env.fetchingProxies = "false";
+                    }, 1 * 60 * 1000);
                     return;
                 }else{
-                    // wait until proxy list is renewed
-                    setTimeout(() => self.connect(), 15 * 60 * 1000);
+                    console.log(`Steam is down, waiting 15 mins until reconnect > ${this.account.user}`);
+                    setTimeout(() => self.connect(), 2 * 60 * 1000);
                     return;
                 }
             }

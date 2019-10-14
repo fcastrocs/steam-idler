@@ -14,6 +14,10 @@ const AccountHandler = require("./account-handler");
 const SteamAccount = require('./models/steam-accounts')
 const ApiLimiter = require('./models/api-limiter')
 
+// Declare process variables
+// used when steam goes down.
+process.env.fetchingProxies = "false";
+
 // SSL Certificate
 const privateKey = fs.readFileSync(`${__dirname}/ssl/private.key`, 'utf8');
 const certificate = fs.readFileSync(`${__dirname}/ssl/certificate.crt`, 'utf8');
