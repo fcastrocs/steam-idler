@@ -30,3 +30,25 @@
     display: block !important;
     width: 100%;
 }
+
+#user-list{
+    width: 100%;
+}
+
+.user-item{
+    margin: 5px;;
+    padding: 5px;
+    background: rgba(26, 26, 187, 0.151);
+    border-radius: 5px;
+}
+
+.user-name{
+    display: inline-block;
+    width: 80px;
+    font-size: 13px;
+}
+
+.row-name{
+    font-weight: bolder;
+    font-size: 14px;
+}

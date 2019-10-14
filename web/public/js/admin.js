@@ -39,4 +39,20 @@ $(() => {
         })
     });
 
+    // user list
+    $.get('/admin/userlist', userlist => {
+        let usersHtml = "";
+
+        userlist.forEach(user => {
+            console.log(user);
+            usersHtml += ` <div class="user-item" data-id="${user._id}">
+            <span class="user-name">${user.username}</span>
+            <button type="button" class="btn btn-primary">Ban</button>
+            <button type="button" class="btn btn-primary">Delete</button>
+            </div><div`
+        });
+
+        $("#user-list").html(usersHtml);
+    })
+
 })

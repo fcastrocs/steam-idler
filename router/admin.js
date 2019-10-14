@@ -9,12 +9,12 @@ const SteamCM = require('../models/steamcm')
 const Mailer = require("../mailer")
 const Invite = require("../models/invite")
 const Security = require("../util/security")
+const Users = require("../models/user");
 
 router.get(`/admin`, isLoggedIn, (req, res) => {
     if (!req.session.admin) {
         return res.redirect("/");
     }
-
     Proxy.countDocuments({}, (err, proxyCount) => {
         SteamCM.countDocuments({}, (err, steamcmsCount) => {
             res.render('admin', {
@@ -26,8 +26,18 @@ router.get(`/admin`, isLoggedIn, (req, res) => {
             })
         });
     });
-
 });
+
+// user list
+router.get("/admin/userlist", [isLoggedIn, isAdmin], async(req,res)=>{
+    try{
+        let userlist = await Users.find({}, "_id username").exec();
+        res.send(userlist);
+    }catch(err){
+        console.log(err);
+        res.status(500).send("Could not get userlist")
+    }
+})
 
 // Renew proxies
 router.post(`/admin/renewproxies`, [isLoggedIn, isAdmin], async (req, res) => {
