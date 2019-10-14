@@ -10,7 +10,6 @@ const mongoose = require('mongoose')
 const MongoStore = require('connect-mongo')(session);
 const helmet = require('helmet')
 const GetAndSaveProxies = require('./util/proxy').GetAndSaveProxies;
-const GetAndSaveSteamCMs = require('./util/steamcm').GetAndSaveSteamCMs;
 const AccountHandler = require("./account-handler");
 const SteamAccount = require('./models/steam-accounts')
 const ApiLimiter = require('./models/api-limiter')
@@ -52,6 +51,7 @@ module.exports.accountHandler = accountHandler;
         process.exit();
     }
 
+    // clean up database
     try {
         let res = await cleanup();
         console.log(res)
@@ -60,13 +60,14 @@ module.exports.accountHandler = accountHandler;
         process.exit();
     }
 
-    // Fetch proxies now, then every 40 minutes
+    // Fetch proxies now, then every 40 minutes 
     try {
         let count = await fetchProxies();
         console.log(` - ${count} proxies fetched`)
     } catch (error) {
         console.log(error);
     }
+    
     setInterval(async () => {
         try {
             let count = await fetchProxies();
@@ -82,15 +83,6 @@ module.exports.accountHandler = accountHandler;
     } catch (error) {
         console.log(error);
     }
-
-    // Fetch Steam CM servers
-    // try {
-    //     let count = await GetAndSaveSteamCMs();
-    //     console.log(`${count} Steam CMs saved to database.`)
-    // } catch (error) {
-    //     console.log(error)
-    //     return;
-    // }
 
     // Initialize express.js
     initExpress();

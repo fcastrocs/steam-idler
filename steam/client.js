@@ -5,6 +5,7 @@ const EventEmitter = require('events').EventEmitter;
 const GetProxy = require('../util/proxy').GetProxy;
 const GetSteamCM = require('../util/steamcm').GetSteamCM
 const RemoveProxy = require("../util/proxy").RemoveProxy
+const GetAndSaveProxies = require('../util/proxy').GetAndSaveProxies;
 const Crypto = require('crypto');
 const SteamTotp = require('steam-totp');
 const Request = require("request-promise-native")
@@ -17,6 +18,7 @@ class Client extends EventEmitter {
     constructor(loginOptions, socketId) {
         super();
 
+        this.fetchingProxies = false;
         this.socketId = socketId
 
         // copy login options obj
@@ -75,6 +77,7 @@ class Client extends EventEmitter {
 
         // LOGIN RESPONSE
         this.client.once('logOnResponse', async (res) => {
+            console.log(res);
             let code = res.eresult
             let errMsg = ""
 
@@ -298,10 +301,27 @@ class Client extends EventEmitter {
     async connect(options) {
         let self = this;
 
-        // Get a SteamCM, use previous proxy if options.userPrevious is set
+        // Get a SteamCM, use previous proxy if options.usePrevious is set
         if (!options || !options.usePrevious) {
             this.steamcm = await GetSteamCM();
             this.proxy = await GetProxy();
+
+            // proxy list is empty, fetch more proxies.
+            if(!this.proxy){
+                // havent started fetching a new list
+                if(!this.fetchingProxies){
+                    this.fetchingProxies = true;
+                    setTimeout(async () => {
+                        await GetAndSaveProxies();
+                        self.fetchingProxies = false;
+                    }, 14 * 60 * 1000);
+                    return;
+                }else{
+                    // wait until proxy list is renewed
+                    setTimeout(() => self.connect(), 15 * 60 * 1000);
+                    return;
+                }
+            }
         }
 
         // connection options

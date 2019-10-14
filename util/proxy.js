@@ -64,19 +64,25 @@ async function GetAndSaveProxies() {
     })
 }
 
+async function GetProxyCount(){
+    return new Promise(resolve =>[
+        Proxy.countDocuments((err, count) =>{
+            return resolve(count);
+        })
+    ])
+}
+
+
 // Returns a random proxy from database
 let GetProxy = async () => {
-    return new Promise((resolve, reject) => {
-        Proxy.countDocuments((err, count) => {
-            if (count == 0) {
-                return reject(false)
-            }
-            let rand = Math.floor(Math.random() * count);
-            Proxy.findOne().skip(rand).exec((err, proxy) => {
-                return resolve(proxy);
-            })
-        })
-    })
+    let count = await GetProxyCount();
+
+    if (count == 0) {
+        return false;
+    }
+
+    let rand = Math.floor(Math.random() * count);
+    return await Proxy.findOne().skip(rand).exec();
 }
 
 let RemoveProxy = async (proxy) => {
