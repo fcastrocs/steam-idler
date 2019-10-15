@@ -314,11 +314,14 @@ class Client extends EventEmitter {
                     setTimeout(async () => {
                         await GetAndSaveProxies();
                         process.env.fetchingProxies = "false";
-                    }, 1 * 60 * 1000);
+                    }, 14 * 60 * 1000);
                     return;
                 }else{
-                    console.log(`Steam is down, waiting 15 mins until reconnect > ${this.account.user}`);
-                    setTimeout(() => self.connect(), 2 * 60 * 1000);
+                    // reconnect in between 15 to 20 mins
+                    let mins = (Math.random() * (20.0 - 15.0) + 15.0).toFixed(2);
+                    timeout = Math.floor(mins * 60 * 1000);
+                    console.log(`Steam is down, waiting ${mins} mins until reconnect > ${this.account.user}`);
+                    setTimeout(() => self.connect(), timeout);
                     return;
                 }
             }
