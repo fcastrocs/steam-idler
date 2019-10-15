@@ -57,8 +57,8 @@ router.post('/register', async function (req, res) {
         return res.status(400).send("You are already logged in.")
     }
 
-    if (!req.body.username || !req.body.password || !req.body.email ||
-        !req.body.invitecode || !req.body.tradeurl || !req.body.password2) {
+    if (!req.body.username || !req.body.password || !req.body.email || 
+        !req.body.invitecode || !req.body.tradeurl) {
         return res.status(400).send("Bad register request.")
     }
 
@@ -67,10 +67,6 @@ router.post('/register', async function (req, res) {
     let invite = await query.exec();
     if (!invite) {
         return res.status(400).send("Invalid invite code.")
-    }
-
-    if (req.body.password2 !== req.body.password) {
-        return res.status(400).send("Passwords do not math.")
     }
 
     // trim spaces and make it lower case.
