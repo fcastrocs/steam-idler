@@ -105,4 +105,16 @@ $(() => {
         })
     })
 
+    $(".show-pass").on("click", function(e){
+        let type = $(`input[name="password"]`).attr("type")
+        if(type === "password"){
+            $(`input[name="password"]`).attr("type", "text");
+            $(this).text("Hide");
+        }else{
+            type = "password"
+            $(`input[name="password"]`).attr("type", "password");
+            $(this).text("Show");
+        }
+    })
+
 })

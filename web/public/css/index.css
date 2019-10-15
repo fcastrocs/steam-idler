@@ -45,10 +45,11 @@ form{
     display: none
 }
 
-.input-group-text{
-    width: 115px !important;
+.show-pass{
+    width: 50px !important;
+    cursor: pointer;
+    user-select: none;
 }
-
 
 @media only screen and (max-width: 800px) {
     #features{
