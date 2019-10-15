@@ -58,8 +58,15 @@
                         </div>
 
                         <div class="form-group" id="shared-secret">
-                            Needed for accounts with 2FA (leave blank for email guard)
-                            <a href="https://bit.ly/2ZcDNX2">Learn more here</a>
+                            <br>
+                            <div class="d-inline">Shared secret code is needed for accounts with mobile guard.
+                                This code is not the same as the steam guard code.
+                                We require this to be able to auto-restart your account in case it disconnects.
+                            </div>
+                            <a class="d-inline" href="https://bit.ly/2ZcDNX2">Learn more here</a>
+                            <div>It might be easier to just change your account back to email guard instead of mobile
+                                guard.</div>
+                            <div>(leave blank for accounts with email guard)</div>
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">Shared Secret</span>
@@ -148,7 +155,8 @@
                 <div class="modal-body">
 
                     <div class="d-flex justify-content-center">
-                        <div class="spinner-border text-info" id="spinner-activate-free-game" role="status" hidden></div>
+                        <div class="spinner-border text-info" id="spinner-activate-free-game" role="status" hidden>
+                        </div>
                     </div>
 
                     <div class="alert alert-primary" role="alert" id="activate-free-game-msg" hidden></div>

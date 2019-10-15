@@ -9,8 +9,9 @@ body{
     position: absolute;
     z-index: 2;
     top: 50px;
-    height: calc(100% - 80px);
     width: 100%;
+    height: calc(100% - 80px);
+    overflow: auto;
 }
 
 #overlay{
