@@ -379,6 +379,7 @@ class Client extends EventEmitter {
         // Remove the proxy
         RemoveProxy(this.proxy);
         console.log(`Reconnecting: ${err} > user: ${this.account.user} | proxy IP: ${this.proxy.ip}`);
+        this.connect();
     }
 
     /**
