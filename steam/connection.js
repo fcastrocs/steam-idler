@@ -31,7 +31,7 @@ class Connection extends EventEmitter {
         self.socket.once("error", () => { });
 
         self.socket.once('timeout', err => {
-          if(self.disconnectHandled){
+          if(self.disconnectHandled || self.disconnected){
             return;
           }
           self.disconnectHandled = true;
@@ -41,7 +41,7 @@ class Connection extends EventEmitter {
         });
 
         self.socket.once("close", () => {
-          if(self.disconnectHandled){
+          if(self.disconnectHandled || self.disconnected){
             return;
           }
           self.disconnectHandled = true;
@@ -124,6 +124,7 @@ class Connection extends EventEmitter {
 
   // Destroy the connection and remove listeners
   DestroyConnection() {
+    this.disconnected = true;
     if (this.socket) {
       this.socket.removeAllListeners();
       this.socket.destroy();
