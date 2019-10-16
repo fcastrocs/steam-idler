@@ -10,6 +10,8 @@ class Connection extends EventEmitter {
 
     this.MAGIC = 'VT01';
     this.options = options;
+
+    this.disconnectHandled = false;
   }
 
   Connect() {
@@ -24,18 +26,27 @@ class Connection extends EventEmitter {
 
         //Socket timeout from inactivity
         self.socket.setTimeout(self.options.timeout);
-        // This will take care of any other errors
+
+        // handle this error, so app doesnt crash
+        self.socket.once("error", () => { });
+
         self.socket.once('timeout', err => {
-          self.emit("error", "socket timeout")
+          if(self.disconnectHandled){
+            return;
+          }
+          self.disconnectHandled = true;
+
+          self.DestroyConnection();
+          self.emit("error", "socket timeout");
         });
 
-        // // Any errors with the connection
-        self.socket.once("error", err => {
-          console.log('CONNECTION ERROR: ' + err)
-        })
-
-        //socket had a transmission error
         self.socket.once("close", () => {
+          if(self.disconnectHandled){
+            return;
+          }
+          self.disconnectHandled = true;
+
+          self.DestroyConnection();
           self.emit("error", "socket closed");
         });
 
@@ -64,9 +75,10 @@ class Connection extends EventEmitter {
     buf.write(this.MAGIC, 4);
     data.copy(buf, 8);
 
-    if (this.socket) {
+    if (this.socket && !this.socket.destroyed) {
       this.socket.write(buf);
     }
+
   };
 
   // Read packet from steam
@@ -112,7 +124,6 @@ class Connection extends EventEmitter {
 
   // Destroy the connection and remove listeners
   DestroyConnection() {
-    this.removeAllListeners();
     if (this.socket) {
       this.socket.removeAllListeners();
       this.socket.destroy();

@@ -25,23 +25,17 @@ class Client extends EventEmitter {
         this.account = {}
         Object.assign(this.account, loginOptions);
 
+        // Steam website 
         this.STEAMCOMMUNITY_TIMEOUT = 4500
         this.STEAMCOMMUNITY_RETRY_DELAY = 1000
-        this.CONNECTION_TIMEOUT = 5 // in seconds
-        this.CONNECT_DELAY = 30  // maximum delay in seconds
-        this.RECONNECT_DELAY = 15
 
-        // set proper login delay
-        if (this.account.noLoginDelay) {
-            var timeout = 0
-        } else {
-            var timeout = Math.floor(Math.random() * this.CONNECT_DELAY)
-        }
+        this.CONNECTION_TIMEOUT = 5 // in seconds
 
         if (this.socketId) {
             io.to(`${this.socketId}`).emit("login-log-msg", "Connecting to Steam.");
         }
-        setTimeout(() => this.connect(), timeout * 1000);
+
+        this.connect();
     }
 
     /**
@@ -157,8 +151,6 @@ class Client extends EventEmitter {
                     io.to(`${this.socketId}`).emit("login-log-msg", "Successful login.");
                 }
 
-                // After login, account should have a reconnect delay
-                self.account.noLoginDelay = false;
                 // After login, don't send more messages
                 this.socketId = null;
 
@@ -232,7 +224,6 @@ class Client extends EventEmitter {
                 io.to(`${this.socketId}`).emit("login-log-msg", errMsg);
             }
 
-            self.loggedIn = false;
             console.log(`${errMsg} > user: ${self.account.user}`)
             self.emit("loginError", errMsg);
             self.Disconnect();
@@ -306,9 +297,9 @@ class Client extends EventEmitter {
             this.proxy = await GetProxy();
 
             // proxy list is empty, fetch more proxies.
-            if(!this.proxy){
+            if (!this.proxy) {
                 // havent started fetching a new list
-                if(process.env.fetchingProxies === "false"){
+                if (process.env.fetchingProxies === "false") {
                     console.log("Steam is down, getting a new proxy list in 14 mins");
                     process.env.fetchingProxies = "true";
                     setTimeout(async () => {
@@ -316,7 +307,7 @@ class Client extends EventEmitter {
                         process.env.fetchingProxies = "false";
                     }, 14 * 60 * 1000);
                     return;
-                }else{
+                } else {
                     // reconnect in between 15 to 20 mins
                     let mins = (Math.random() * (20.0 - 15.0) + 15.0).toFixed(2);
                     timeout = Math.floor(mins * 60 * 1000);
@@ -356,16 +347,17 @@ class Client extends EventEmitter {
 
         // CONNECTION LOST
         self.client.once('error', err => {
+            // notify connection has been lost
+            if(self.loggedIn){
+                self.loggedIn = false;
+                self.emit("connection-lost");
+            }
+
             // wait for email guard, don't reconnect;
             if (this.dontReconnect) {
                 return;
             }
 
-            // notify connection has been lost
-            if (self.loggedIn) {
-                self.reconnecting = true;
-                self.emit("connection-lost");
-            }
             self.RenewConnection(err);
         })
 
@@ -373,7 +365,6 @@ class Client extends EventEmitter {
         try {
             await self.client.Connect();
         } catch (err) {
-            // bad proxy
             self.RenewConnection(err);
         }
     }
@@ -383,18 +374,11 @@ class Client extends EventEmitter {
      * @param {*} err error that triggered reconnection
      */
     RenewConnection(err) {
+        this.reconnecting = true;
         this.Disconnect();
-
         // Remove the proxy
         RemoveProxy(this.proxy);
-
-        if (this.account.noLoginDelay) {
-            var timeout = 0 // only do 1 second
-        } else {
-            var timeout = Math.floor(Math.random() * this.RECONNECT_DELAY)
-        }
-        console.log(`Reconnecting in ${timeout} sec: ${err} > user: ${this.account.user} | proxy IP: ${this.proxy.ip}`)
-        setTimeout(() => this.connect(), timeout * 1000);
+        console.log(`Reconnecting: ${err} > user: ${this.account.user} | proxy IP: ${this.proxy.ip}`);
     }
 
     /**
@@ -407,12 +391,12 @@ class Client extends EventEmitter {
     }
 
 
-        /**
-     * Change avatar
-     * @param {*} binaryImg 
-     * @param {*} filename
-     * @returns promise with avatar url
-     */
+    /**
+ * Change avatar
+ * @param {*} binaryImg 
+ * @param {*} filename
+ * @returns promise with avatar url
+ */
     async changeAvatar(binaryImg, filename) {
         if (!this.loggedIn) {
             return Promise.reject("Account is not logged in.")
@@ -686,7 +670,7 @@ class Client extends EventEmitter {
             })();
         })
     }
-    
+
     /**
      * Sets account to play games or to stop playing games if empty array
      * @param {*} games games array to play
@@ -727,7 +711,7 @@ class Client extends EventEmitter {
             this.client.activateF2pGames(appIds)
         })
     }
-    
+
     /**
      * Redeem a cdkey
      * @param {*} cdkey
@@ -750,7 +734,7 @@ class Client extends EventEmitter {
             this.client.redeemKey(cdkey)
         })
     }
-    
+
     /**
      * Change account status
      * @param {*} state Offline: 0, Online: 1, Busy: 3, Away: 3, Snooze: 4,
@@ -775,7 +759,7 @@ class Client extends EventEmitter {
 
         this.client.setPersona(state, name)
     }
-    
+
     /**
      * Generate a web cookie from nonce
      * @param {*} nonce given by steam after authentication
@@ -838,7 +822,7 @@ class Client extends EventEmitter {
             })();
         })
     }
-    
+
     /**
      * Get card farming data 
      * @returns Promise with array containing items { title, appId, playTime, cardsRemaining }

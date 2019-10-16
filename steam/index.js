@@ -498,9 +498,9 @@ class SteamClient extends EventEmitter {
 	};
 
 	Disconnect() {
-		clearInterval(this._heartBeatFunc)
-		this.removeAllListeners();
+		clearInterval(this._heartBeatFunc);
 		this._connection.DestroyConnection();
+		this.removeAllListeners();
 	}
 
 	GetProductInfo(apps, packages, callback) {
