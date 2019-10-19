@@ -9,13 +9,68 @@
 
 <!-- container -->
 <div id="body">
-    <div id="no-accounts-box" hidden>
-        <h2>No steam accounts associated with your account.</h2>
-        <button type="button" id="big-add-btn" class="btn header-btn" data-toggle="modal" data-target="#add-acc-modal">
-            Add Account
-        </button>
+    <div class="console" hidden></div>
+
+    <div id="dashboard-subheader">
+        <div id="accounts-stats">Accounts: 0 | Online: 0 | Offline: 0</div>
+
+        <div id="dashboard-subheader-btns">
+            <button type="button" class="header-btn" data-toggle="modal" data-target="#add-acc-modal">Add
+                Account
+            </button>
+
+            <div class="spinner-border text-primary" id="all-acc-actions-spinner" role="status" hidden>
+                <span class="sr-only">Loading...</span>
+            </div>
+
+            <div class="dropdown" id="all-acc-actions-dropdown-box">
+                <button class="header-btn dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true"
+                    aria-expanded="false">Actions</button>
+                <div class="dropdown-menu">
+                    <div id="dropdown-notice">Actions applied to all your accounts</div>
+                    <a href="#" id="all-login-btn">Login</a>
+                    <a href="#" id="all-logout-btn">Logout</a>
+                    <a href="#" id="all-status-btn">Status</a>
+                    <a href="#" id="all-activate-free-game-btn">Activate Free Game</a>
+                    <a href="#" id="all-activate-f2p-game-btn">Activate F2P Game</a>
+                    <a href="#" id="all-stopidle-btn">Stop Idling</a>
+                    <a href="#" id="all-startfarm-btn">Farm All Cards</a>
+                    <a href="#" id="all-stopfarm-btn">Stop Farming</a>
+                </div>
+            </div>
+
+            <div class="dropdown" id="filter-dropdown-box">
+                <button class="header-btn dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true"
+                    aria-expanded="false">
+                    Filters
+                </button>
+                <div class="dropdown-menu">
+                    <a href="#" id="show-all-filter">All</a>
+                    <a href="#" id="show-online-filter">Online</a>
+                    <a href="#" id="show-idling-filter">In-Game</a>
+                    <a href="#" id="show-notingame-filter">Not In-Game</a>
+                    <a href="#" id="show-farming-filter">Farming</a>
+                    <a href="#" id="show-farmable-filter">Farmable</a>
+                    <a href="#" id="show-offline-filter">Offline</a>
+                    <a href="#" id="show-reconnecting-filter">Reconnecting</a>
+                    <a href="#" id="show-bad-filter">Bad</a>
+                </div>
+            </div>
+            <div id="current-filter-txt">Showing All</div>
+        </div>
     </div>
 
+    <div id="accounts-box-header">
+        <span class="avatar-item"></span>
+        <span class="nick-item">Nick</span>
+        <span class="username-item">Username</span>
+        <span class="status-item" title="Status seen by friends">Status</span>
+        <span class="idling-item" title="Games currently idling">Idling</span>
+        <span class="uptimehrs-item" title="Time since last reconnect">Uptime Hrs</span>
+        <span class="idlinghrs-item" title="Total hours idled">Idling Hrs</span>
+        <span class="farming-item">Farming</span>
+        <span class="icons-item"></span>
+    </div>
     <div id="accounts-box"></div>
 
     <!-- Add account Modal -->
@@ -99,7 +154,6 @@
             </div>
         </div>
     </div>
-
 
     <!-- ACTIVATE F2P GAME MODAL -->
     <div class="modal fade" id="activate-f2p-game" tabindex="-1" role="dialog" aria-hidden="true">

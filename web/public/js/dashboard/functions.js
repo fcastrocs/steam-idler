@@ -1,17 +1,47 @@
 
 // builds account div
 function buildAccount(account) {
-    let buttons = ""
-    let farmingInfo = "" // farming modal info
-    let farmingStatus = "off"
-    let gamesDiv = "" // game images
-    let inventory = "";
-    let cardsLeft = 0
+    // modals
+    let farmingModal = "" // farming modal info
+    let gamesModal = "" // game images
+    let inventoryModal = "";
 
+    // buttons
+    let iconBtns = "";
+    let settingsBtnMenu = ""
+
+    let farmingStatus = "off"
+
+    // ACCOUNT IS ONLINE
     if (account.status === "Online" || account.status === "In-game") {
+
+        // set buttons that will appear when account is online or in-game
+        iconBtns = `<img class="icon icon-img acc-idle-game-btn" src="/static/images/game-controller.svg" title="Idle Games">
+                <img class="icon icon-img acc-farming-btn" src="/static/images/farming.svg" title="Farm Cards">
+                <img class="icon icon-img acc-inventory-btn" src="/static/images/inventory.svg" title="Inventory">`
+
+        settingsBtnMenu = `<a href="#" class="acc-set-status-btn">Change status</a>
+                        <a href="#" class="change-avatar-btn">Change avatar</a>
+                        <a href="#" class="change-nick">Change nick</a>
+                        <a href="#" class="change-privacy-btn">Change privacy</a>
+                        <a href="#" class="clear-aliases-btn">Clear previous aliases</a>
+                        <a href="#" class="activate-free-game">Activate free game</a>
+                        <a href="#" class="activate-f2p-game">Activate F2P game</a>
+                        <a href="#" class="redeem-key">Redeem CDKEY</a>
+                        <hr>
+                        <a href="#" class="acc-logout-btn">Logout</a>
+                        <a href="#" class="acc-delete-btn text-danger">Delete</a>`
+
+        // uptime timer
+        lastReconnectTaskIds[account._id] = setInterval(() => {
+            $(`div[data-id="${account._id}"]`).find(".uptimehrs-item").text(time(account.lastConnect, "hrs"))
+        }, 3000)
+
         // BUILD GAMES MODAL
         accounts_cache[account._id].selectedGames = [];
         for (let i in account.games) {
+            let select = ""
+
             // create image div
             let steamurl = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps"
             let gameImgUrl = `${steamurl}/${account.games[i].appId}/${account.games[i].logo}.jpg`
@@ -24,48 +54,58 @@ function buildAccount(account) {
                 index = account.gamesPlaying.findIndex(x => x.game_id === account.games[i].appId)
             }
 
-            let select = ""
             if (index > -1) {
                 accounts_cache[account._id].selectedGames.push(account.games[i].appId);
                 select = "selected"
             } else { // not found
                 select = "unselected"
             }
-
-            gamesDiv += `<img class="game-img ${select}" data-gameId="${account.games[i].appId}" src="${gameImgUrl}" data-toggle="tooltip" data-placement="top" title="${account.games[i].name}">`
+            gamesModal += `<img class="game-img ${select}" data-gameId="${account.games[i].appId}" src="${gameImgUrl}" data-toggle="tooltip" data-placement="top" title="${account.games[i].name}">`
         }
 
-        // BUILD FARMING MODAL
+        // start farming countdown if farming
+        if (account.isFarming) {
+            farmingStatus = '<span class="text-success">on</span>'
+
+            farmingTaskIds[account._id] = setInterval(() => {
+                let diff = account.nextFarmingCheck - Date.now();
+                if (diff < 1) {
+                    $(`.account[data-id="${account._id}"]`).find(".next-farming-check").text("updating...");
+                    clearInterval(farmingTaskIds[account._id])
+                    return;
+                }
+                let farmingCheck = `${time(account.nextFarmingCheck, "mins")}`
+                $(`.account[data-id="${account._id}"]`).find(".next-farming-check").text(farmingCheck + " mins");
+            }, 5000)
+        }
+
+        // build farming modal
         if (account.farmingData.length == 0) {
-            var disableFarmingBtn = "disabled"
+            farmingModal = "No cards to farm."
         } else {
+            let cardsLeft = 0;
             account.farmingData.forEach((game) => {
                 cardsLeft += game.cardsRemaining;
-                farmingInfo += `<div class="game-farming-info">
+                farmingModal += `<div class="game-farming-info">
                                     <div class="game-title" data-id="${game.appId}">${game.title}</div>
                                     <div class="play-time">Play time: ${game.playTime}</div>
                                     <div class="cards-remaining">Cards Remaining: ${game.cardsRemaining}</div>
                                 </div>`
             })
+
+            farmingModal = `<div class="farming-info">
+                                <div>
+                                    <span>Next farming check: </span>
+                                    <span class="next-farming-check">∞</span>
+                                </div>
+                                <div>Games left to farm: ${account.farmingData.length}</div>
+                                <div>Cards left: ${cardsLeft}</div>
+                           </div> ${farmingModal}`
         }
 
-        // START THE FARMING COUNTDOWN IF FARMING
-        if (account.isFarming) {
-            farmingTaskIds[account._id] = setInterval(() => {
-                let diff = account.nextFarmingCheck - Date.now();
-                if (diff < 1) {
-                    $(`div[data-id="${account._id}"]`).find(".farming-mode").text("updating")
-                    clearInterval(farmingTaskIds[account._id])
-                    return;
-                }
-                farmingStatus = `${time(account.nextFarmingCheck)}`
-                $(`div[data-id="${account._id}"]`).find(".farming-mode").text(farmingStatus)
-            }, 1000)
-        }
-
-        // BUILD INVENTORY MODAL
+        // build inventory modal
         if (!account.inventory) {
-            var disableInventoryBtn = "disabled"
+            inventoryModal = "Inventory is empty"
         }
         else {
             for (let i in account.inventory) {
@@ -73,190 +113,125 @@ function buildAccount(account) {
                     continue;
                 }
                 let url = `https://steamcommunity-a.akamaihd.net/economy/image/${account.inventory[i].icon_url}/96fx96f`
-                inventory += `<img src="${url}" data-toggle="tooltip" data-placement="top" title="${account.inventory[i].market_name}">`
+                inventoryModal += `<img src="${url}" data-toggle="tooltip" data-placement="top" title="${account.inventory[i].market_name}">`
             }
         }
 
-        lastReconnectTaskIds[account._id] = setInterval(() => {
-            $(`div[data-id="${account._id}"]`).find(".last-connect").text(time(account.lastConnect))
-        }, 1000);
-
-        //set buttons
-        buttons = `
-        <button type="button" class="btn btn-primary btn-sm acc-logout-btn">
-            Logout
-        </button>
-        <button type="button" class="btn btn-primary btn-sm acc-set-status-btn">
-            Status
-        </button>
-        <button type="button" class="btn btn-primary btn-sm acc-idle-game-btn">
-            Idle Games
-        </button>
-        <button type="button" class="btn btn-primary btn-sm acc-farming-btn" ${disableFarmingBtn || ""}>
-            Farming
-        </button>
-        <button type="button" class="btn btn-primary btn-sm acc-inventory-btn" ${disableInventoryBtn || ""}>
-            Inventory
-        </button>
-        <button type="button" class="btn btn-primary btn-sm btn-danger acc-delete-acc-btn">
-            Delete
-        </button>`
-
-        // Set up info
-        var info =
-            `<div class="info">
-             <div class="farming-info">
-                 <div>
-                     <span>Farming: </span>
-                     <span class="farming-mode info-value">${farmingStatus}</span>
-                 </div>
-                 <div>
-                     <span>Games left to farm: </span>
-                     <span class="games-left info-value">${account.farmingData.length}</span>
-                 </div>
-                 <div>
-                     <span>Cards left: </span>
-                     <span class="cards-left info-value">${cardsLeft}</span>
-                 </div>
-             </div>
-             <div class="connection-info">
-                 <div>
-                     <span>Last reconnect: </span>
-                     <span class="last-connect info-value">∞</span>
-                 </div>
-                 <div>
-                     <span>Reconnects last hr: </span>
-                     <span class="last-hr-reconnects info-value">${account.lastHourReconnects}</span>
-                 </div>
-             </div>
-         </div>`;
-
-        var dropdownMenu = `
-         <div class="dropdown">
-            <button data-toggle="dropdown" class="acc-dropdown-btn" aria-haspopup="true"
-                aria-expanded="false">⯆</button>
-            <div class="dropdown-menu acc-dropdown-menu">
-                <a href="#" class="filter-btn change-avatar-btn">Change avatar</a>
-                <a href="#" class="filter-btn change-nick">Change nick</a>
-                <a href="#" class="filter-btn change-privacy-btn">Change privacy</a>
-                <a href="#" class="filter-btn clear-aliases-btn">Clear previous aliases</a>
-                <a href="#" class="filter-btn activate-free-game">Activate free game</a>
-                <a href="#" class="filter-btn activate-f2p-game">Activate F2P game</a>
-                <a href="#" class="filter-btn redeem-key">Redeem CDKEY</a>
-            </div>
-        </div>`
-
-    } else if (account.status === "Offline") {
+        //${account.lastHourReconnects}
+    }
+    // ACCOUNT IS OFFLINE
+    else if (account.status === "Offline") {
         account.forcedStatus = "Offline"
-        buttons = `
-              <button type="button" class="btn btn-primary btn-sm acc-login-btn">
-                Login
-              </button>
-              <button type="button" class="btn btn-primary btn-sm btn-danger acc-delete-acc-btn">
-                Delete
-              </button>`
-    } else if (account.status === "Reconnecting") {
+
+        settingsBtnMenu = `<a href="#" class="filter-btn acc-login-btn">Login</a>
+            <a href="#" class="acc-delete-btn text-danger">Delete</a>`
+    }
+    // ACCOUNT IS RECONNECTING
+    else if (account.status === "Reconnecting") {
         account.forcedStatus = "Reconnecting"
     }
-    else { // bad account
+    // ACCOUNT IS BAD
+    else {
         account.forcedStatus = "Bad"
-        buttons = `
-        <button type="button" class="btn btn-primary btn-sm acc-delete-acc-btn">
-            Delete Acc
-        </button>`
+        settingsBtnMenu = `<a href="#" class="filter-btn acc-login-btn">Login</a>
+            <a href="#" class="acc-delete-btn text-danger">Delete</a>`
     }
 
-    let acc = `
-        <div class="account account-${account.forcedStatus}" data-id="${account._id}">
+    let acc = `<div class="account account-${account.forcedStatus}" data-id="${account._id}">
 
-            <div class="persona-name">${account.persona_name}</div>
+                    <span class="avatar-item">
+                        <a href="https://steamcommunity.com/profiles/${account.steamid}" target="_blank">
+                            <img class="avatar avatar-${account.status}" src="${account.avatar}">
+                        </a>
+                    </span>
 
-            <div class="avatar-box">
-                 ${dropdownMenu || ""}
-                <a href="https://steamcommunity.com/profiles/${account.steamid}" target="_blank">
-                    <img class="avatar avatar-${account.status}" src="${account.avatar}">
-                </a>
-            </div>
-            
-            <div class="status status-${account.forcedStatus}">${account.forcedStatus}</div>
-
-            
-            ${info || ""}
-    
-            <div class="buttons-box">
-                <div class="console" hidden></div>
-                <div class="acc-buttons">${buttons}</div>
-            </div>
-
-            <div class="modal fade idle-modal" tabindex="-1" role="dialog" aria-hidden="true">
-                <div class="modal-dialog games-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Pick Games To Idle</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body game-body">
-                            <div class="games-box">
-                                ${gamesDiv}
-                            </div>
-                            <div class="modal-buttons">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <button type="button" class="btn btn-danger stop-idle-btn">Stop Idle</button>
-                                <button type="button" class="btn btn-primary start-idle-btn">Start Idle</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    <span id="account-info">
+                        <span class="nick-item nick-${account.status}">${account.persona_name}</span>
+                        <span class="username-item">${account.user}</span>
+                        <span class="status-item status-${account.forcedStatus}">${account.forcedStatus}</span>
+                        <span class="idling-item">${account.gamesPlaying.length} / 32</span>
+                        <span class="uptimehrs-item" data-toggle="tooltip">∞</span>
+                        <span class="idlinghrs-item">∞</span>
+                        <span class="farming-item">${farmingStatus}</span>
+                        <span class="icons-item">
+                            ${iconBtns}
+                            <span class="dropdown">
+                                <img class="icon icon-img" data-toggle="dropdown" class="acc-dropdown-btn" src="/static/images/settings.svg" title="Settings">
+                                <div class="dropdown-menu">
+                                    ${settingsBtnMenu}
+                                </div>
+                            </span>
+                        </span>
+                    </span>
 
 
-            <div class="modal fade farming-modal" tabindex="-1" role="dialog" aria-hidden="true">
-                <div class="modal-dialog farming-dialog" role="document">
-                    <div class="modal-content farming-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Farming Info</h5>
-                        </div>
-                        <div class="modal-body farming-body">
-                            <div class="farming-info">
-                                ${farmingInfo}
-                                <div class="modal-buttons">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                    <button type="button" class="btn btn-danger stop-farming-btn">Stop</button>
-                                    <button type="button" class="btn btn-primary modal-submit start-farming-btn">Start</button>
+                    <div class="modal fade idle-modal" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog games-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Pick Games To Idle</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body game-body">
+                                    <div class="games-box">
+                                        ${gamesModal}
+                                    </div>
+                                    <div class="modal-buttons">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                        <button type="button" class="btn btn-danger stop-idle-btn">Stop Idle</button>
+                                        <button type="button" class="btn btn-primary start-idle-btn">Start Idle</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="modal fade inventory-modal" tabindex="-1" role="dialog" aria-hidden="true">
-                <div class="modal-dialog inventory-dialog" role="document">
-                    <div class="modal-content iventory-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Iventory</h5>
-                        </div>
-                        <div class="modal-body inventory-body">
-                            <div class="d-flex justify-content-center">
-                                <div class="spinner-border text-info inventory-modal-spinner" role="status" hidden></div>
-                            </div>
-                            <div class="alert alert-danger iventory-errMsg" role="alert" hidden></div>
-                            <div class="iventory-info">
-                                ${inventory}
+                    <div class="modal fade farming-modal" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog farming-dialog" role="document">
+                            <div class="modal-content farming-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Farming Info</h5>
+                                </div>
+                                <div class="modal-body farming-body">
+                                    <div class="farming-info">
+                                        ${farmingModal}
+                                        <div class="modal-buttons">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                            <button type="button" class="btn btn-danger stop-farming-btn">Stop</button>
+                                            <button type="button" class="btn btn-primary modal-submit start-farming-btn">Start</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-        </div>`
+                    <div class="modal fade inventory-modal" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog inventory-dialog" role="document">
+                            <div class="modal-content iventory-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Inventory</h5>
+                                </div>
+                                <div class="modal-body inventory-body">
+                                    <div class="d-flex justify-content-center">
+                                        <div class="spinner-border text-info inventory-modal-spinner" role="status" hidden></div>
+                                    </div>
+                                    <div class="alert alert-danger iventory-errMsg" role="alert" hidden></div>
+                                    <div class="iventory-info">
+                                        ${inventoryModal}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`
     return acc;
 }
 
 // Returns format 00:00:00
-function time(time) {
+/*function time(time) {
     // convert to seconds
     let delta = Math.abs((Date.now() - time) / 1000)
     let days = Math.floor(delta / 86400)
@@ -270,9 +245,22 @@ function time(time) {
     minutes = "0" + minutes
     seconds = "0" + seconds
     return hours.substr(-2) + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+}*/
+
+
+function time(time, mode) {
+    // convert to seconds
+    let delta = Math.abs((Date.now() - time) / 1000)
+
+    if(mode === "hrs"){
+        let hours = delta / 3600
+        return hours.toFixed(3);
+    }
+    else if (mode === "mins"){
+        let minutes = delta / 60;
+        return minutes.toFixed(2);
+    }
 }
-
-
 
 // Replaces status of existing account in dashboard
 // if force == true, then force update
@@ -326,12 +314,12 @@ function updateAccountStatus(account) {
 // shows games activated in modal
 function displayGames(games) {
     // Show activated games in modal
-    let gamesDiv = ""
+    let gamesModal = ""
     for (let j in games) {
         let url = `https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/${games[j].appId}/${games[j].logo}.jpg`
-        gamesDiv += `<img class="game-img" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
+        gamesModal += `<img class="game-img" data-gameId="${games[j].appId}" src="${url}" data-toggle="tooltip" data-placement="top" title="${games[j].name}">`
     }
-    $(".activated-game-body").html(gamesDiv)
+    $(".activated-game-body").html(gamesModal)
     $(".activated-games").attr("hidden", false).show(0);
 }
 
@@ -361,7 +349,7 @@ function FetchAllAccounts() {
             headers: { "cache-control": "no-cache" },
             cache: false,
             success: accounts => resolve(accounts),
-            
+
         })
     })
 }

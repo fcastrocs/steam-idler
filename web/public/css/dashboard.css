@@ -1,157 +1,149 @@
 #body{
+    background: rgba(40, 45, 51)
+}
+
+/* HEADER */
+#dashboard-header{
+    margin-left: auto
+}
+
+#header-username{
+    text-transform: uppercase;
+    margin-right: 2.5px;
+}
+
+#settings-icon{
+    transition: transform .8s ease-in-out;
+} 
+
+#settings-icon:hover{
+    transform: rotate(360deg);
+}
+/* END HEADER */
+
+/* SUBHEADER */
+#dashboard-subheader{
     display: flex;
+    flex-direction: row;
+    width: 930px;
+    align-items: center;
+    height: 35px;
+}
+
+#dashboard-subheader-btns{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-left: auto;
+}
+
+#current-filter-txt{
+    margin-left: 10px;
+}
+
+#all-acc-actions-spinner{
+    margin: 0 2.5px;
+}
+/* END SUBHEADER */
+
+#accounts-box-header{
+    margin-top: 10px;
+    width: 930px;
+    height: 40px;
+    font-weight: bolder;
+    font-size: 16px;
+    border-radius: 5px 5px 0 0;
+    border-bottom: solid 1px rgb(88, 98, 114);
+}
+
+#accounts-box-header, .account{
+    display: flex;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
-    flex-direction: row;
-    flex-wrap: wrap;
 }
 
 #accounts-box{
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-evenly;
-    padding-bottom: 400px;
+    padding-top: 10px;
+    margin-top: 85px;
+    width: 930px;
+    position: fixed;
+    max-height: calc(100% - 190px);
+    font-size: 14px;
+    background: linear-gradient(180deg, rgb(56, 63, 71) 0%, rgb(40, 45, 51) 70%);
+    border-bottom: solid 1px rgb(88, 98, 114);
+    padding-bottom: 0;
+    overflow: scroll;
+    overflow-x: hidden;
 }
 
 .account{
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    width: 270px;
-    height: auto;
-    margin: 10px;
-    border-radius: 5px;
-    font-size: 12px;
+    padding: 5px;
 }
 
-.persona-name{
-    width: 100%;
-    background: rgba(0, 0, 0, 0.3);
+#account-info{
+    display: flex;
+}
+
+.avatar-item{
+    width: 90px;
+}
+
+.nick-item, .username-item{
+    width: 140px;
+    overflow: hidden;
+    margin-right: 10px;
+    text-overflow: ellipsis;
+}
+
+.status-item, .idling-item, .uptimehrs-item, .idlinghrs-item, .farming-item{
     text-align: center;
-    font-size: 14px;
+    margin-right: 10px;
 }
 
-
-.avatar-box{
-    background: blue;
-    margin: 5px 0;
+.status-item{
+    width: 80px;
 }
 
-.acc-dropdown-btn{
-    position: absolute;
-    background: none;
-    margin-left: -40px;
-    border: rgb(0, 137, 250) solid 1px;
-    border-radius: 2px;
-    color: rgb(0, 137, 250);
+.idling-item{
+    width: 50px;
 }
 
-.acc-dropdown-menu{
-    font-size: 12px;
-    background:  rgba(0, 89, 141, 0.95) !important;
+.uptimehrs-item{
+    width: 80px;
+}
+
+.idlinghrs-item{
+    width: 68px;
+}
+
+.farming-item{
+    width: 60px;
+}
+
+.icons-item{
+    width: 130px;
 }
 
 .avatar{
-    height: 155px;
-    width: 155px;
-}
-
-.status{
-    font-weight: bolder;
-    padding: 5px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 2.5px;
-}
-
-.info{
-    text-align: center;
-    width: 100%;
-    margin-bottom: 5px;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-}
-
-.info-value{
-    color: rgb(204, 204, 204);
-}
-
-.buttons-box{
-    margin-top: auto;
-    background: rgba(0, 0, 0, 0.3);
     height: 80px;
-    width: 100%;
-    bottom: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    width: 80px;
 }
 
-.console{
-    margin-top: auto;
-    background: rgba(0, 0, 0, 0.5);
-    height: 100px;
-    width: 100%;
-    bottom: 0;
-    font-family: Consolas,monaco,monospace;
-    font-size: 12px;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    padding: 2px;
-    white-space: pre-line
-}
-
-.console p{
-    margin-left: 15px;
-    margin-top: 0px;
-    margin-bottom: 0px;
-    text-indent: -15px;
-}
-
-.account-Bad{
-    background: linear-gradient(0deg, rgba(148, 0, 0, 0.6) 0%, rgba(54, 0, 0, 0.6) 100%);
-    border: solid 3px rgb(134, 0, 0)
-}
-
-.account-bad:hover{
-    border: solid 3px rgb(177, 0, 0);
-    box-shadow: 0px 0px 8px 2px rgba(177, 0, 0, 0.75);
+.icon{ /* account button icons */
+    margin: 2px;
 }
 
 .account-Offline{
-    background: linear-gradient(0deg, rgba(179, 179, 179, 0.5) 0%, rgba(75, 75, 75, 0.5) 100%);
-    border: solid 3px rgb(192,192,192)
+    background: rgba(128, 128, 128, 0.2);
 }
 
-.account-Offline:hover{
-    border: solid 3px rgb(216, 216, 216);
-    box-shadow: 0px 0px 8px 2px rgba(216, 216, 216, 0.75);
+.account-Bad, .account-Reconnecting{
+    background: rgba(255, 0, 0, 0.2);
 }
-
-.account-Online, .account-Away, .account-Busy, .account-Invisible{
-    background: linear-gradient(0deg, rgba(0, 116, 194, 0.6) 0%, rgba(0, 62, 104, 0.6) 100%);
-    border: solid 3px rgb(0, 132, 255)
-}
-
-.account-Online:hover, .account-Away:hover, .account-Busy:hover, .account-Invisible:hover{
-    border: solid 3px rgb(85, 173, 255);
-    box-shadow: 0px 0px 8px 2px rgba(85, 173, 255, 0.75);
-}
-
-.account-Reconnecting{
-    background: linear-gradient(0deg, rgba(179, 179, 179, 0.5) 0%, rgba(75, 75, 75, 0.5) 100%);
-    border: solid 3px rgb(134, 0, 0)
-}
-
-.account-Reconnecting:hover{
-    border: solid 3px rgb(177, 0, 0);
-    box-shadow: 0px 0px 8px 2px rgba(177, 0, 0, 0.75);
-}
-
 
 .status-Away{
-    color: rgb(255, 255, 0);
+    color: rgb(255, 255, 161);
 }
 
 .status-Busy{
@@ -162,51 +154,55 @@
     color: rgb(192,192,192)
 }
 
-.status-Online{
-    color: #57cbde;
+.status-Online, .nick-Online{
+    color: #57ccde;
 }
 
 .status-Bad, .status-Reconnecting{
-    color: #ff0000;
+    color: rgb(255, 0, 0)
 }
 
-.nick:hover{
-    cursor: pointer;
-    color: white;
+.nick-In-game{
+    color: rgb(143,185,59);
 }
 
 .avatar-Online{
-    border: solid 3px rgb(83,164,196);
+    border: solid 2px rgb(83,164,196);
 }
 
 .avatar-In-game{
-    border: solid 3px rgb(143,185,59);
+    border: solid 2px rgb(143,185,59);
 }
 
-.avatar-Offline, .avatar-Reconnecting{
-    border: solid 3px rgb(106,106,106)
+.avatar-Offline{
+    border: solid 2px rgb(106,106,106)
 }
 
-.avatar-bad{
-    border: solid 3px rgb(255, 0, 0)
+.avatar-Bad, .avatar-Reconnecting{
+    border: solid 2px rgb(255, 0, 0)
 }
 
-.acc-buttons{
-    display: flex;
-    flex-flow: row;
-    flex-wrap: wrap;
-    justify-content: space-evenly;
-    align-items: center;
+.console{
+    background: rgba(0, 0, 0, 0.829);
+    height: 150px;
+    width: 340px;
+    font-family: Consolas,monaco,monospace;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding: 10px;
+    white-space: pre-line;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    border: solid 1px rgb(88, 98, 114);
 }
 
-.btn-sm{
-    font-size: 14px;
-    margin: 2px;
-    width: 100px;
-    height: 20px;
-    line-height: 0px;
+.console p{
+    margin-left: 15px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    text-indent: -15px;
 }
-
 
 /* SET STATUS MODAL */
 #set-status-content{
@@ -257,7 +253,6 @@ input[name="emailGuard"] {
     padding: 5px;
 }
 
-
 ::-webkit-scrollbar {
     width: 0px;
     background: transparent; /* make scrollbar transparent */
@@ -300,20 +295,6 @@ input[name="emailGuard"] {
 /* END IDLE MODAL */
 
 
-
-
-/* NO ACCOUNTS IN DASHBOARD */
-#big-add-btn{
-    display: block;
-    width: 100%;
-    margin: 20px;
-    height: 500px;
-    font-size: 50px;
-}
-/* END NO ACCOUNTS IN DASHBOARD */
-
-
-
 .game-farming-info{
     border: solid 1px rgb(74, 106, 167);
     background: rgb(27, 46, 80);
@@ -336,84 +317,90 @@ input[name="emailGuard"] {
 
 
 
-
-/* HEADER  */
-#dashboard-header{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    width: 100%;
-}
-
-#dashboard-header-btns{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
-
-#header-userbox{
-    margin-left: 100px;
-}
-
-#header-username{
-    text-transform: uppercase;
-    margin-right: 2.5px;
-}
-
-#settings-icon{
-    transition: transform .8s ease-in-out;
-} 
-
-#settings-icon:hover{
-    transform: rotate(360deg);
-}
-
-.dropdown-menu{
-    background: linear-gradient(0deg, rgb(0, 51, 80) 0%, rgb(0, 89, 141) 100%);
-    padding: 5px;
-    color: white;
-    border: solid 1px rgb(0, 153, 255);
-    margin-top: 7px;
-}
-
-#dropdown-notice{
-    text-align: center;
-    background-color: rgb(1, 62, 97);
-    margin: -5px;
-    border-bottom: solid 1px rgb(0, 153, 255);
-    margin-bottom: 5px;
-}
-
-#current-filter-txt{
-    margin-left: 10px;
-}
-
-#all-acc-actions-spinner{
-    margin: 0 2.5px;
-}
-/* END HEADER */
-
-
-
 @media only screen and (max-width: 800px) {
-    #header{
-        padding-top: 2px;
+    #dashboard-subheader{
+        width: 100%;
         flex-direction: column;
-        font-size: 8px;
     }
 
-    #dashboard-header{
-        justify-content: space-around;
-    }
-
-    #header-userbox{
+    #dashboard-subheader-btns{
         margin-left: 0;
     }
 
-    #current-filter-txt{
-        margin-left: 2.5px;
+    #accounts-box-header{
+        display: none;
     }
+
+    #accounts-box{
+        margin-top: 60px;
+        max-height: calc(100% - 160px);
+        border-top: solid 1px rgb(88, 98, 114);
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .account{
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        justify-content: flex-start;
+        padding-left: 20px;
+    }
+
+    .avatar-item{
+        width: auto;
+    }
+
+    .avatar{
+        width: 150px;
+        height: 150px;
+        margin-right: 20px;
+    }
+
+    #account-info{
+        flex-direction: column;
+    }
+
+    .nick-item, .username-item{
+        width: 140px;
+        overflow: hidden;
+        margin-right: 10px;
+        text-overflow: ellipsis;
+    }
+    
+    .nick-item, .username-item, .status-item, .idling-item, .uptimehrs-item, .idlinghrs-item, .farming-item{
+        text-align: left;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        
+    }
+    
+    .idling-item{
+        display: none;
+    }
+
+    .status-item:before{
+        content: "Status: "
+    }
+    
+    .uptimehrs-item:before{
+        content: "Uptime Hrs: "
+    }
+    
+    .idlinghrs-item:before{
+        content: "Hours Idled: "
+    }
+    
+    .farming-item:before{
+        content: "Farming: "
+    }
+
+
+
+
+
 
 
     .modal{

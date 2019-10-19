@@ -254,7 +254,7 @@ module.exports.filterSensitiveAcc = function (account) {
         fileredAcc[key] = account[key];
     }
 
-    delete fileredAcc.user
+    //delete fileredAcc.user
     delete fileredAcc.pass
     delete fileredAcc.shared_secret
     delete fileredAcc.sentry

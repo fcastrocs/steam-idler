@@ -144,8 +144,8 @@ $(() => {
         // hide buttons
         self.find(".acc-buttons").hide();
         // show console box
-        consoleBox = self.find(".console");
-        consoleBox.prop("hidden", false).html("")
+        consoleBox = $(".console");
+        consoleBox.prop("hidden", false).show().html("")
 
         socket.removeAllListeners();
 
@@ -154,13 +154,17 @@ $(() => {
         ********************************/
         socket.on("login-log-msg", msg => {
             let newMsg = `<p>• ${msg}</p>${consoleBox.html()}`
-            consoleBox.html(newMsg).prop("hidden", false);
+            consoleBox.html(newMsg);
         })
 
         socket.on("logged-in", doc => {
+            // update online and offline variables
+            g_online++;
+            g_offline--;
             apiLimit = false;
             socket.removeAllListeners();
             updateAccountStatus(doc);
+            consoleBox.delay(2000).hide(1000);
         })
 
         // send request
@@ -185,6 +189,9 @@ $(() => {
         self.find(".acc-spinner").prop("hidden", false);
 
         $.post('/steamaccount/logout', { accountId: accountId }, (doc) => {
+            // update online and offline variables
+            g_offline++;
+            g_online--;
             //clear intervals
             clearInterval(farmingTaskIds[accountId])
             clearInterval(lastReconnectTaskIds[accountId])
@@ -198,7 +205,7 @@ $(() => {
     /*************************************************** 
     *               STEAM - DELETE ACC                 *
     ***************************************************/
-    $(document).on('click', ".acc-delete-acc-btn", function () {
+    $(document).on('click', ".acc-delete-btn", function () {
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id");
 

@@ -1,26 +1,7 @@
 body{
-    font-family: "Motiva Sans", Sans-serif;
-    color:#EFEFEF;
+    font-family: 'Roboto', sans-serif;
     font-size: 12px;
-    height: 100%;
-}
-
-#body{
-    position: absolute;
-    z-index: 2;
-    top: 50px;
-    width: 100%;
-    height: calc(100% - 80px);
-    overflow: auto;
-}
-
-#overlay{
-    position: fixed;
-    z-index: 1;
-    top: 0;
-    min-height: 100vh;
-    width: 100%;
-    background-color: rgba(0, 0, 0, 0.274);
+    color: rgb(219, 219, 219);
 }
 
 #background-image{
@@ -36,52 +17,88 @@ body{
     width: 100%;
 }
 
+#body{
+    position: absolute;
+    z-index: 2;
+    top: 50px;
+    width: 100%;
+    height: calc(100% - 80px);
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 10px;
+}
+
+#overlay{
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    min-height: 100vh;
+    width: 100%;
+    background-color: rgba(6, 43, 99, 0.103);
+}
+
 /* HEADER */
 #header{
     position: fixed;
     z-index: 3;
     top: 0;
+    border-bottom: solid 1px rgb(88, 98, 114);
 }
 
 #header, #footer{
     height: 50px;
     width: 100%;
-    background-color: rgba(19, 65, 102, 0.8);
+    background-color: rgb(33, 37, 43);
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
     padding: 0 10px;
 }
 
+#footer{
+    border-top: solid 1px rgb(88, 98, 114);
+}
+
+#header-buttons{
+    margin-left: auto;
+}
+
 .header-btn{
-    background: linear-gradient(0deg, rgb(0, 30, 53) 0%,rgb(21, 90, 146) 100%);
-    color: rgb(163, 192, 255);
+    background: linear-gradient(0deg, rgb(78, 87, 104) 0%,rgb(59, 66, 83) 100%);
     margin: 0 2.5px;
-    border: solid 1px rgb(0, 153, 255);
+    color: rgb(219, 219, 219);
+    border: solid 1px rgb(88, 98, 114);
     border-radius: 3px;
-    height: 25px;
+    height: 30px;
+    width: 100px;
+    margin-left: auto;
 }
 
 .header-btn:hover{
-    background: linear-gradient(0deg, rgb(21, 90, 146) 0%,rgb(0, 30, 53) 100%);
-    color: white;
+    background: linear-gradient(0deg, rgb(69, 95, 126) 0%,rgb(79, 89, 114) 100%);
 }
 
 #logo{
     display: flex;
     flex-direction: row;
     align-items: center;
+    font-size: 18px;
 }
 
 #logo-txt{
     margin-right: 5px;
 }
+
 #logo-beta{
+    margin-top: 3px;
     font-size: 11px;
 }
-
 /* END HEADER */
 
+
+/* FOOTER */
 #footer{
     position: fixed;
     z-index: 3;
@@ -93,6 +110,8 @@ body{
     margin-left: auto;
 }
 
+/* END FOOTER */
+
 a{
     display:block;
     color: rgb(163, 192, 255); 
@@ -100,22 +119,20 @@ a{
 
 a:hover{
     text-decoration: none;
-    color: white;
+    color: rgb(126, 167, 255); 
 }
 
 h1, h2, h3, h4, h5, h6{
     margin: 0
 }
 
-form{
+hr{
     margin: 0;
+    background: white;
 }
 
-
 /* MODALS */
-
 .modal{
-    background-color: rgba(0, 0, 0, 0.8);
     top: 30px;
 }
 
@@ -124,10 +141,11 @@ form{
 }
 
 .modal-content{
-    background-color: rgba(62, 122, 172, 0.562);
+    background-color: rgb(54, 60, 71);
     border-radius: 5px;
-    border: solid 1px rgb(0, 153, 255);
+    border: solid 1px rgb(88, 98, 114);
     margin-bottom: 200px !important;
+    box-shadow: 0px 0px 12px 2px rgba(0,0,0,0.75);
 }
 
 .input-group-text{
@@ -139,11 +157,27 @@ form{
 
 .modal-buttons{
     float: right;
-    margin-top: 10px;
 }
 
 .modal-submit{
     width: 130px;
+}
+
+.dropdown-menu{
+    background-color: rgb(54, 60, 71);
+    padding: 5px;
+    color: white;
+    border: solid 1px rgb(88, 98, 114);
+    margin-top: 7px;
+    font-size: 12px;
+}
+
+#dropdown-notice{
+    text-align: center;
+    background-color: rgb(36, 40, 48);
+    margin: -5px;
+    border: solid 1px rgb(88, 98, 114);
+    margin-bottom: 5px;
 }
 
 @media only screen and (max-width: 800px) {

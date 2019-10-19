@@ -9,3 +9,8 @@ var socket = io();
 $.ajaxSetup({
     timeout: 10 * 60 * 1000
 });
+
+// accounts stats
+var g_online = 0
+var g_offline = 0
+var g_accountsLength = 0;
