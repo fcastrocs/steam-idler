@@ -65,6 +65,7 @@
 
 #accounts-box{
     padding-top: 10px;
+    padding-bottom: 10px !important;
     margin-top: 85px;
     width: 930px;
     position: fixed;
@@ -228,7 +229,6 @@
 /* END REDEEM CD-KEY MODAL */
 
 
-
 /* ADD ACCOUT MODAL */
 input[name="emailGuard"] { 
     text-align: center;
@@ -261,7 +261,6 @@ input[name="emailGuard"] {
 #email-guard-btn{
     margin-left: 20px;
 }
-
 /* END ADD ACCOUT MODAL */
 
 
@@ -295,6 +294,7 @@ input[name="emailGuard"] {
 /* END IDLE MODAL */
 
 
+/* FARMING MODAL */
 .game-farming-info{
     border: solid 1px rgb(74, 106, 167);
     background: rgb(27, 46, 80);
@@ -308,6 +308,8 @@ input[name="emailGuard"] {
     font-size: 18px;
     font-weight: bolder;
 }
+/* END FARMING MODAL */
+
 
 #change-avatar-spinner{
     display: flex;
@@ -315,7 +317,12 @@ input[name="emailGuard"] {
     align-items: center;
 }
 
-
+#alert-filters{
+    margin: 0;
+    background-color: rgb(54, 60, 71);
+    border: solid 1px rgb(88, 98, 114);
+    color: rgb(219, 219, 219);
+}
 
 @media only screen and (max-width: 800px) {
     #dashboard-subheader{
