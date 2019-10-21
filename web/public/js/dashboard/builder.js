@@ -18,7 +18,7 @@ $(async () => {
     })();
 
     // refresh accounts every minute
-    let interval = 1 * 60 * 1000
+    let interval = 0.5 * 60 * 1000
     setInterval(async () => {
         let online = 0;
         let offline = 0;

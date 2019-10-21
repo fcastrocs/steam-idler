@@ -49,7 +49,7 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
         // too much time has past, just set default interval
         if (remainingTime < 0) {
             doc.nextFarmingCheck = Date.now() + this.FARMING_RECHECK_INTERVAL
-        } else { // leave nextFarmingCheck as is + time lost for reconnect
+        } else { // leave nextFarmingCheck as is + time lost to reconnect the account
             doc.nextFarmingCheck += (3 * 60 * 1000) // 3 minutes extra
         }
     }

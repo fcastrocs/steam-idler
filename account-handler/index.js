@@ -35,7 +35,7 @@ module.exports = class AccountHandler {
 
         this.userAccounts = new Object();
 
-        this.FARMING_RECHECK_INTERVAL = 31 * 60 * 1000
+        this.FARMING_RECHECK_INTERVAL = 30 * 60 * 1000;
         this.FARMING_GETFARMINGDATA_RETRYTIME = 8000
         this.FARMING_RESTARTIDLING_DELAY = 5000
     }

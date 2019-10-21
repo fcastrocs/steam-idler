@@ -305,6 +305,7 @@ class Client extends EventEmitter {
                     setTimeout(async () => {
                         await GetAndSaveProxies();
                         process.env.fetchingProxies = "false";
+                        self.connect();
                     }, 14 * 60 * 1000);
                     return;
                 } else {
