@@ -44,27 +44,27 @@ module.exports = class AccountHandler {
      * Initializes all accounts in database that should be online/farming/idling
      */
     async init() {
-        return new Promise(async (resolve, reject) => {
-            let accounts = await this.getAllAccounts();
-            if (accounts.length == 0) {
-                return reject(" - no accounts to initialize");
-            }
+        let accounts = await this.getAllAccounts();
+        if (accounts.length == 0) {
+            return Promise.reject(" - no accounts to initialize");
+        }
 
-            let handlers = await this.getAllUserHandlers();
-            if (handlers.length == 0) {
-                return reject(" - no accounts to initialize");
-            }
+        let handlers = await this.getAllUserHandlers();
+        if (handlers.length == 0) {
+            return Promise.reject(" - no accounts to initialize");
+        }
 
-            console.log(` - initializing ${handlers.length} accounts`)
+        console.log(` - initializing ${handlers.length} accounts`)
 
-            // Bring online accounts
-            let promises = [];
-            for (let i in handlers) {
-                promises.push(this.loginAccount(handlers[i].userId, handlers[i].accountId, {
-                    skipOnlineCheck: true, // at this point no account is online
-                }))
-            }
+        // Bring online accounts
+        let promises = [];
+        for (let i in handlers) {
+            promises.push(this.loginAccount(handlers[i].userId, handlers[i].accountId, {
+                skipOnlineCheck: true, // at this point no account is online
+            }))
+        }
 
+        return new Promise(resolve => {
             allSettled(promises).then(() => resolve());
         })
     }

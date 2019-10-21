@@ -28,45 +28,44 @@ async function GetProxies() {
     } catch (error) {
         return Promise.reject("Could not fetch proxy list.")
     }
-};
+}
 
 // Gets proxy list and saves it to database
 async function GetAndSaveProxies() {
-    return new Promise(async function (resolve, reject) {
-        try {
-            let proxiesArr = await GetProxies();
+    try {
+        let proxiesArr = await GetProxies();
+        let proxies = []
+        //Save to database
+        for (let i = 0; i < proxiesArr.length; i++) {
+            let proxySplit = proxiesArr[i].split(":");
+            proxySplit[1] = parseInt(proxySplit[1]);//cast port to int
 
-            let proxies = []
-            //Save to database
-            for (let i = 0; i < proxiesArr.length; i++) {
-                let proxySplit = proxiesArr[i].split(":");
-                proxySplit[1] = parseInt(proxySplit[1]);//cast port to int
+            let proxy = new Proxy({
+                ip: proxySplit[0],
+                port: proxySplit[1]
+            });
+            proxies.push(proxy);
+        }
 
-                let proxy = new Proxy({
-                    ip: proxySplit[0],
-                    port: proxySplit[1]
-                });
-                proxies.push(proxy);
-            }
-            
-            await Proxy.deleteMany({}).exec();
+        await Proxy.deleteMany({}).exec();
 
+        return new Promise((resolve, reject) => {
             Proxy.insertMany(proxies, (err, docs) => {
                 if (err) {
                     return reject(" - could not store proxies to db")
                 }
                 return resolve(docs.length)
             })
+        })
+    } catch (error) {
+        return Promise.reject(error)
+    }
 
-        } catch (error) {
-            return reject(error)
-        }
-    })
 }
 
-async function GetProxyCount(){
-    return new Promise(resolve =>[
-        Proxy.countDocuments((err, count) =>{
+async function GetProxyCount() {
+    return new Promise(resolve => [
+        Proxy.countDocuments((err, count) => {
             return resolve(count);
         })
     ])
@@ -86,7 +85,7 @@ let GetProxy = async () => {
 }
 
 let RemoveProxy = async (proxy) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
         proxy.remove((err) => {
             if (err) {
                 console.log(err)

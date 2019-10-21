@@ -1,7 +1,8 @@
+/* eslint-disable require-atomic-updates */
 /************************************************************************
 * 					          STEAM FUNCTIONS					        *
 ************************************************************************/
-const Client = require('../steam/client');
+const Client = require('../steam/client/');
 const Security = require("../util/security");
 const SteamAccount = require('../models/steam-accounts')
 const mongoose = require('mongoose');
@@ -17,33 +18,32 @@ module.exports.addAccount = async function (userId, options) {
     let socketId = options.socketId;
     delete options.socketId;
 
-    return new Promise(async function (resolve, reject) {
-        // Find account in DB
-        let doc = await self.getAccount({ user: options.user });
-        if (doc) {
-            io.to(`${socketId}`).emit("add-acc-error-msg", "This account has already been added.");
-            return reject("Account already in DB.");
-        }
+    // Find account in DB
+    let doc = await self.getAccount({ user: options.user });
+    if (doc) {
+        io.to(`${socketId}`).emit("add-acc-error-msg", "This account has already been added.");
+        return Promise.reject("Account already in DB.");
+    }
 
-        try {
-            let doc = await self.loginAccount(userId, null, {
-                dontGetAccount: true,
-                skipOnlineCheck: true,
-                skipLoginOptions: true,
-                loginOptions: options,
-                noLoginDelay: true,
-                skipIdlingFarmingRestart: true,
-                newAccount: true,
-                noDelay: true, // set no delay for account login
-                socketId: socketId,
-            })
+    // try login
+    try {
+        doc = await self.loginAccount(userId, null, {
+            dontGetAccount: true,
+            skipOnlineCheck: true,
+            skipLoginOptions: true,
+            loginOptions: options,
+            noLoginDelay: true,
+            skipIdlingFarmingRestart: true,
+            newAccount: true,
+            noDelay: true, // set no delay for account login
+            socketId: socketId,
+        })
 
-            return resolve();
-        } catch (error) {
-            io.to(`${socketId}`).emit("add-acc-error-msg", error);
-            return reject(error)
-        }
-    })
+        return Promise.resolve();
+    } catch (error) {
+        io.to(`${socketId}`).emit("add-acc-error-msg", error);
+        return Promise.reject(error)
+    }
 }
 
 /**
@@ -53,116 +53,116 @@ module.exports.addAccount = async function (userId, options) {
  */
 module.exports.loginAccount = async function (userId, accountId, options) {
     let self = this;
-    return new Promise(async function (resolve, reject) {
+    let doc = null;
+    let loginOptions = null
 
-        // account doc passed, no need to fetch it from db
-        if (options && options.account) {
-            var doc = options.account
+    // account doc passed, no need to fetch it from db
+    if (options && options.account) {
+        doc = options.account
+    }
+
+    // don't fetch account document
+    if (!options || !options.dontGetAccount) {
+        doc = await self.getAccount({ userId: userId, accountId: accountId })
+        // account not found
+        if (!doc) {
+            return Promise.reject("Account not found.")
+        }
+    }
+
+    // don't check online status
+    if (!options || !options.skipOnlineCheck) {
+        let client = self.isAccountOnline(userId, accountId);
+        if (client) {
+            return Promise.reject("Account is already online.");
+        }
+    }
+
+    // don't setup login options
+    if (!options || !options.skipLoginOptions) {
+        loginOptions = self.setupLoginOptions(doc);
+    }
+
+    // login options passed
+    if (options && options.loginOptions) {
+        loginOptions = options.loginOptions
+    }
+
+    // Set no login delay
+    if (options && options.noLoginDelay) {
+        loginOptions.noLoginDelay = true;
+    }
+
+    if (options && options.newAccount) {
+        loginOptions.newAccount = true;
+    }
+
+    try {
+        // attempt login, loginOptions gets modified during the process.
+        let client = await self.steamConnect(loginOptions, options.socketId);
+
+        // new account, request came from addAccount
+        if (options && options.newAccount) {
+            // create new doc
+            doc = new SteamAccount({
+                _id: mongoose.Types.ObjectId(), // need an object Id before saving
+                userId: userId,
+                user: loginOptions.user,
+                pass: Security.encrypt(loginOptions.pass),
+                forcedStatus: "Online",
+                farmingData: loginOptions.farmingData,
+                inventory: loginOptions.inventory,
+                steamid: loginOptions.steamid,
+                games: loginOptions.games
+            })
+
+            // Only 2FA accs get shared secret
+            if (loginOptions.shared_secret) {
+                doc.shared_secret = Security.encrypt(loginOptions.shared_secret);
+            }
+            // 2FA accs don't get sentry
+            if (loginOptions.sentry) {
+                doc.sentry = loginOptions.sentry;
+            }
+        } else {
+            doc.games = self.addGames(loginOptions.games, doc.games);
         }
 
-        // don't fetch account document
-        if (!options || !options.dontGetAccount) {
-            var doc = await self.getAccount({ userId: userId, accountId: accountId })
-            // account not found
-            if (!doc) {
-                return reject("Account not found.")
-            }
+        doc.persona_name = loginOptions.persona_name;
+        doc.avatar = loginOptions.avatar;
+        doc.status = loginOptions.status || "Online"
+        doc.farmingData = loginOptions.farmingData;
+        doc.inventory = loginOptions.inventory;
+        doc.lastConnect = Date.now();
+
+        // clean up
+        loginOptions = null;
+
+        self.saveToHandler(userId, doc._id, client);
+
+        // Restart farming or idling
+        if (!options || !options.skipIdlingFarmingRestart) {
+            await self.farmingIdlingRestart(client, doc)
         }
 
-        // don't check online status
-        if (!options || !options.skipOnlineCheck) {
-            let client = self.isAccountOnline(userId, accountId);
-            if (client) {
-                return reject("Account is already online.");
-            }
+        // Save account
+        await self.saveAccount(doc);
+
+        doc = self.filterSensitiveAcc(doc)
+
+        if (options && options.socketId) {
+            io.to(`${options.socketId}`).emit("logged-in", doc);
         }
 
-        try {
-            // don't setup login options
-            if (!options || !options.skipLoginOptions) {
-                var loginOptions = self.setupLoginOptions(doc);
-            }
-
-            // login options passed
-            if (options && options.loginOptions) {
-                var loginOptions = options.loginOptions
-            }
-
-            // Set no login delay
-            if (options && options.noLoginDelay) {
-                loginOptions.noLoginDelay = true;
-            }
-
-            if (options && options.newAccount) {
-                loginOptions.newAccount = true;
-            }
-
-            // attempt login, loginOptions gets modified during the process.
-            let client = await self.steamConnect(loginOptions, options.socketId);
-
-            // new account, request came from addAccount
-            if (options && options.newAccount) {
-                // create new doc
-                var doc = new SteamAccount({
-                    _id: mongoose.Types.ObjectId(), // need an object Id before saving
-                    userId: userId,
-                    user: loginOptions.user,
-                    pass: Security.encrypt(loginOptions.pass),
-                    forcedStatus: "Online",
-                    farmingData: loginOptions.farmingData,
-                    inventory: loginOptions.inventory,
-                    steamid: loginOptions.steamid,
-                    games: loginOptions.games
-                })
-
-                // Only 2FA accs get shared secret
-                if (loginOptions.shared_secret) {
-                    doc.shared_secret = Security.encrypt(loginOptions.shared_secret);
-                }
-                // 2FA accs don't get sentry
-                if (loginOptions.sentry) {
-                    doc.sentry = loginOptions.sentry;
-                }
-            } else {
-                doc.games = self.addGames(loginOptions.games, doc.games);
-            }
-
-            doc.persona_name = loginOptions.persona_name;
-            doc.avatar = loginOptions.avatar;
-            doc.status = loginOptions.status || "Online"
-            doc.farmingData = loginOptions.farmingData;
-            doc.inventory = loginOptions.inventory;
-            doc.lastConnect = Date.now();
-
-            // clean up
-            loginOptions = null;
-
-            self.saveToHandler(userId, doc._id, client);
-
-            // Restart farming or idling
-            if (!options || !options.skipIdlingFarmingRestart) {
-                await self.farmingIdlingRestart(client, doc)
-            }
-
-            // Save account
-            await self.saveAccount(doc);
-
-            doc = self.filterSensitiveAcc(doc)
-
-            if (options && options.socketId) {
-                io.to(`${options.socketId}`).emit("logged-in", doc);
-            }
-
-            return resolve(doc)
-        } catch (error) {
-            //login error
-            if (doc) {
-                doc.status = error;
-                self.saveAccount(doc)
-            }
-            return reject(error);
+        return Promise.resolve(doc)
+    } catch (error) {
+        //login error
+        if (doc) {
+            doc.status = error;
+            self.saveAccount(doc)
         }
-    })
+        return Promise.reject(error);
+    }
 }
 
 /**
@@ -170,36 +170,35 @@ module.exports.loginAccount = async function (userId, accountId, options) {
  */
 module.exports.logoutAccount = async function (userId, accountId) {
     let self = this;
-    return new Promise(async function (resolve, reject) {
-        //Find account in DB
-        let doc = await self.getAccount({ userId: userId, accountId: accountId })
-        // account not found
-        if (!doc) {
-            return reject("Account not found.")
-        }
+    let doc = null;
+     //Find account in DB
+     doc = await self.getAccount({ userId: userId, accountId: accountId })
+     // account not found
+     if (!doc) {
+         return Promise.reject("Account not found.")
+     }
 
-        // check account is logged in
-        let client = self.isAccountOnline(userId, accountId);
-        if (!client) {
-            //force offline status
-            doc.status = "Offline";
-            doc = await self.saveAccount(doc);
-            doc = self.filterSensitiveAcc(doc);
-            return resolve(doc)
-        }
+     // check account is logged in
+     let client = self.isAccountOnline(userId, accountId);
+     if (!client) {
+         //force offline status
+         doc.status = "Offline";
+         doc = await self.saveAccount(doc);
+         doc = self.filterSensitiveAcc(doc);
+         return Promise.resolve(doc)
+     }
 
-        // stop farming process
-        clearInterval(client.farmingReCheckId);
+     // stop farming process
+     clearInterval(client.farmingReCheckId);
 
-        // Remove account from handler
-        self.removeFromHandler(userId, accountId);
+     // Remove account from handler
+     self.removeFromHandler(userId, accountId);
 
-        //finally update account status to offline
-        doc.status = "Offline";
-        doc = await self.saveAccount(doc)
-        doc = self.filterSensitiveAcc(doc);
-        return resolve(doc);
-    })
+     //finally update account status to offline
+     doc.status = "Offline";
+     doc = await self.saveAccount(doc)
+     doc = self.filterSensitiveAcc(doc);
+     return Promise.resolve(doc);
 }
 
 
@@ -231,6 +230,8 @@ module.exports.changeNick = async function (userId, accountId, name) {
  * Returns a promise with account
  */
 module.exports.playGames = async function (userId, accountId, games, options) {
+    let account = null;
+
     let client = this.isAccountOnline(userId, accountId);
     if (!client) {
         return Promise.reject("Account is not online.");
@@ -238,9 +239,9 @@ module.exports.playGames = async function (userId, accountId, games, options) {
 
     // Account passed
     if (options && options.account) {
-        var account = options.account
+        account = options.account
     } else { // fetch account
-        var account = await this.getAccount({ userId: userId, accountId: accountId })
+        account = await this.getAccount({ userId: userId, accountId: accountId })
         if (!account) {
             return Promise.reject("Account not found.")
         }
@@ -263,7 +264,7 @@ module.exports.playGames = async function (userId, accountId, games, options) {
 module.exports.steamConnect = async function (loginOptions, socketId) {
     let self = this;
     // Resolve promise once we get needed data
-    return new Promise(async function (resolve, reject) {
+    return new Promise(function (resolve, reject) {
         let event_count = 0
 
         // Create client
@@ -346,7 +347,7 @@ module.exports.steamConnect = async function (loginOptions, socketId) {
             }
 
             // old last connect
-            oldLastConnect = doc.lastConnect
+            let oldLastConnect = doc.lastConnect
             // update last connect time
             doc.lastConnect = Date.now();
 
@@ -400,6 +401,7 @@ module.exports.deleteAccount = async function (userId, accountId) {
 
 // Activate f2p game
 module.exports.activateF2pGames = async function (userId, accountId, appIds, options) {
+    let account = null;
     // check account is logged in
     let client = this.isAccountOnline(userId, accountId);
     if (!client) {
@@ -408,9 +410,9 @@ module.exports.activateF2pGames = async function (userId, accountId, appIds, opt
 
     // don't fetch account if passed
     if (options && options.account) {
-        var account = options.account
+        account = options.account
     } else {
-        var account = await this.getAccount({ userId: userId, accountId: accountId });
+        account = await this.getAccount({ userId: userId, accountId: accountId });
         if (!account) {
             return Promise.reject("Account not found.")
         }
@@ -429,6 +431,7 @@ module.exports.activateF2pGames = async function (userId, accountId, appIds, opt
 
 // Activate free game
 module.exports.activateFreeGame = async function (userId, accountId, packageId, options) {
+    let account = null;
     // check account is logged in
     let client = this.isAccountOnline(userId, accountId);
     if (!client) {
@@ -437,9 +440,9 @@ module.exports.activateFreeGame = async function (userId, accountId, packageId, 
 
     // don't fetch account if passed
     if (options && options.account) {
-        var account = options.account
+        account = options.account
     } else {
-        var account = await this.getAccount({ userId: userId, accountId: accountId });
+        account = await this.getAccount({ userId: userId, accountId: accountId });
         if (!account) {
             return Promise.reject("Account not found.")
         }
@@ -490,6 +493,7 @@ module.exports.redeemKey = async function (userId, accountId, cdkey) {
  * Returns a promise with account
  */
 module.exports.setStatus = async function (userId, accountId, status, options) {
+    let doc = null;
     // check account is logged in
     let client = this.isAccountOnline(userId, accountId);
     if (!client) {
@@ -498,7 +502,7 @@ module.exports.setStatus = async function (userId, accountId, status, options) {
 
     // Don't fetch account if it is passed
     if (!options || !options.account) {
-        var doc = await this.getAccount({ userId: userId, accountId: accountId });
+        doc = await this.getAccount({ userId: userId, accountId: accountId });
         if (!doc) {
             return Promise.reject("Account not found.")
         }
@@ -506,7 +510,7 @@ module.exports.setStatus = async function (userId, accountId, status, options) {
 
     // account doc is passed
     if (options && options.account) {
-        var doc = options.account;
+        doc = options.account;
     }
 
     // change account to status

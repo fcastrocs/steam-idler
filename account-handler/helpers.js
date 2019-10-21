@@ -136,7 +136,7 @@ module.exports.removeFromHandler = async function (userId, accountId) {
     }
 
     // remove from db handler
-    let handler = await SteamAccHandler.findOne({ userId: userId, accountId, accountId })
+    let handler = await SteamAccHandler.findOne({ userId: userId, accountId: accountId })
     // no handler found
     if (!handler) {
         return

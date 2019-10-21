@@ -1,4 +1,5 @@
-'use strict';
+/* eslint-disable require-atomic-updates */
+"use strict";
 
 const EventEmitter = require('events').EventEmitter;
 const SocksClient = require('socks').SocksClient;
@@ -7,61 +8,57 @@ const SteamCrypto = require('@doctormckay/steam-crypto');
 class Connection extends EventEmitter {
   constructor(options) {
     super();
-
-    this.MAGIC = 'VT01';
+    this.MAGIC = "VT01";
     this.options = options;
-
     this.disconnectHandled = false;
   }
 
-  Connect() {
+  async Connect() {
     let self = this;
+    self.options.command = "connect";
 
-    return new Promise(async (resolve, reject) => {
-      self.options.command = "connect";
+    try {
+      let info = await SocksClient.createConnection(self.options);
+      self.socket = info.socket;
 
-      try {
-        let info = await SocksClient.createConnection(self.options);
-        self.socket = info.socket;
+      this.registerListeners();
 
-        //Socket timeout from inactivity
-        self.socket.setTimeout(self.options.timeout);
+      return Promise.resolve("connected");
+    } catch (error) {
+      return Promise.reject("dead proxy");
+    }
+  }
 
-        // handle this error, so app doesnt crash
-        self.socket.once("error", () => { });
+  registerListeners() {
+    //Socket timeout from inactivity
+    this.socket.setTimeout(this.options.timeout);
 
-        self.socket.once('timeout', err => {
-          if(self.disconnectHandled || self.disconnected){
-            return;
-          }
-          self.disconnectHandled = true;
+    // handle this error, so app doesnt crash
+    this.socket.once("error", () => {});
 
-          self.DestroyConnection();
-          self.emit("error", "socket timeout");
-        });
-
-        self.socket.once("close", () => {
-          if(self.disconnectHandled || self.disconnected){
-            return;
-          }
-          self.disconnectHandled = true;
-
-          self.DestroyConnection();
-          self.emit("error", "socket closed");
-        });
-
-        self.socket.on('readable', err => {
-          self.ReadPacket();
-        });
-
-        return resolve("connected");
-
-      } catch (error) {
-        return reject("dead proxy");
+    this.socket.once("timeout", () => {
+      if (this.disconnectHandled || this.disconnected) {
+        return;
       }
+      this.disconnectHandled = true;
 
-    })
+      this.DestroyConnection();
+      this.emit("error", "socket timeout");
+    });
 
+    this.socket.once("close", () => {
+      if (this.disconnectHandled || this.disconnected) {
+        return;
+      }
+      this.disconnectHandled = true;
+
+      this.DestroyConnection();
+      this.emit("error", "socket closed");
+    });
+
+    this.socket.on("readable", () => {
+      this.ReadPacket();
+    });
   }
 
   // Sends data to steam
@@ -79,7 +76,7 @@ class Connection extends EventEmitter {
       this.socket.write(buf);
     }
 
-  };
+  }
 
   // Read packet from steam
   ReadPacket() {
@@ -120,7 +117,7 @@ class Connection extends EventEmitter {
     this.emit('packet', packet);
     // keep reading until there's nothing left
     this.ReadPacket();
-  };
+  }
 
   // Destroy the connection and remove listeners
   DestroyConnection() {

@@ -203,7 +203,7 @@ class SteamClient extends EventEmitter {
 	
 			this.emit('loginKey', newLoginKey.login_key);
 		}*/
-	};
+	}
 
 
 	setPersona(state, name) {
@@ -221,7 +221,7 @@ class SteamClient extends EventEmitter {
 			msg: this.EMsg.ClientGamesPlayed,
 			proto: {}
 		}, new this.Schema.CMsgClientGamesPlayed({games_played: games}).toBuffer());
-	};
+	}
 
 
 	activateF2pGames(appIds) {
@@ -251,7 +251,7 @@ class SteamClient extends EventEmitter {
 			msg: this.EMsg.ClientLogon,
 			proto: {}
 		}, new this.Schema.CMsgClientLogon(logOnDetails).toBuffer());
-	};
+	}
 
 	ClientUpdateMachineAuth(body, callback) {
 		let self = this;
@@ -305,7 +305,7 @@ class SteamClient extends EventEmitter {
 		//bug? this function returns twice with the same info.
 		//proceeded after the first return
 		let returnCount = 0
-		this.GetProductInfo(appids, [], function (apps, packages) {
+		this.GetProductInfo(appids, [], function (apps) {
 			returnCount++;
 			if (returnCount > 1) {
 				return;
@@ -394,7 +394,7 @@ class SteamClient extends EventEmitter {
 				this.ClientUpdateMachineAuth(body, callback)
 			}
 		}
-	};
+	}
 
 	_Send(header, body, callback) {
 		if (callback) {
@@ -420,7 +420,7 @@ class SteamClient extends EventEmitter {
 		}
 
 		this._connection.Send(Buffer.concat([header.toBuffer(), body]));
-	};
+	}
 
 	Send(header, body, callback) {
 		// ignore any target job ID
@@ -435,7 +435,7 @@ class SteamClient extends EventEmitter {
 		}
 
 		this._Send(header, body, callback);
-	};
+	}
 
 	Multi(data) {
 		var msgMulti = this.Schema.CMsgMulti.decode(data);
@@ -452,7 +452,7 @@ class SteamClient extends EventEmitter {
 			this.NetMsgReceived(payload.slice(4, 4 + subSize));
 			payload = payload.slice(4 + subSize);
 		}
-	};
+	}
 
 	ChannelEncryptResult(data) {
 		var encResult = this.Schema.MsgChannelEncryptResult.decode(data);
@@ -467,12 +467,12 @@ class SteamClient extends EventEmitter {
 
 		this.connected = true;
 		this.emit('connected');
-	};
+	}
 
 	ChannelEncryptRequest(data) {
 		var buffer = ByteBuffer.wrap(data, ByteBuffer.LITTLE_ENDIAN);
-		var protocol = buffer.readUint32();
-		var universe = buffer.readUint32();
+		buffer.readUint32(); // protocol
+		buffer.readUint32(); // universe
 		var nonce = null;
 
 		if (buffer.remaining() >= 16) {
@@ -495,7 +495,7 @@ class SteamClient extends EventEmitter {
 		body.flip();
 
 		this.Send({ msg: this.EMsg.ChannelEncryptResponse }, body.toBuffer());
-	};
+	}
 
 	Disconnect() {
 		clearInterval(this._heartBeatFunc);
@@ -639,7 +639,7 @@ class SteamClient extends EventEmitter {
 		}
 
 		this.Send(header, body, cb);
-	};
+	}
 
 	ProcessProto(proto) {
 		proto = proto.toRaw(false, true);
@@ -651,7 +651,7 @@ class SteamClient extends EventEmitter {
 					deleteNulls(proto[field]);
 		})(proto);
 		return proto;
-	};
+	}
 
 	SortNumeric(a, b) {
 		if (a < b) {

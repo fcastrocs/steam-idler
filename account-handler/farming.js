@@ -1,3 +1,4 @@
+/* eslint-disable require-atomic-updates */
 /************************************************************************
 * 					          FARMING FUNCTIONS					        *
 ************************************************************************/
@@ -109,9 +110,9 @@ module.exports.FarmingRecheck = async function (userId, accountId) {
  * Function does not fail.
  * Returns a promise
  */
-module.exports.getFarmingData = async function (client) {
+module.exports.getFarmingData = function (client) {
     let self = this;
-    return new Promise(async resolve => {
+    return new Promise(resolve => {
         (async function attempt() {
             try {
                 let farmingData = await client.GetFarmingData();

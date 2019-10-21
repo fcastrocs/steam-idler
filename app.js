@@ -71,7 +71,7 @@ module.exports.accountHandler = accountHandler;
     } catch (error) {
         console.log(error);
     }
-    
+
     setInterval(async () => {
         try {
             let count = await fetchProxies();
@@ -108,23 +108,23 @@ async function DBconnect() {
 }
 
 async function cleanup() {
-    return new Promise(async (resolve, reject) => {
-        try {
-            // clean up accounts
-            let change = {
-                status: "Offline",
-                lastHourReconnects: 0
-            }
-            await SteamAccount.updateMany({}, change).exec();
 
-            //clean up api limiter
-            await ApiLimiter.deleteMany({}).exec();
-            return resolve(" - db cleaned up");
-        } catch (error) {
-            console.log(error)
-            return reject(" - could not clean up db")
+    try {
+        // clean up accounts
+        let change = {
+            status: "Offline",
+            lastHourReconnects: 0
         }
-    })
+        await SteamAccount.updateMany({}, change).exec();
+
+        //clean up api limiter
+        await ApiLimiter.deleteMany({}).exec();
+        return Promise.resolve(" - db cleaned up");
+    } catch (error) {
+        console.log(error)
+        return Promise.reject(" - could not clean up db")
+    }
+
 }
 
 async function fetchProxies() {
@@ -174,7 +174,7 @@ function initExpress() {
     // Index Route
     app.get("/", (req, res) => {
         if (req.session.loggedIn) {
-            return res.redirect(`/dashboard/${req.session.username}`);;
+            return res.redirect(`/dashboard/${req.session.username}`);
         }
 
         let data = {
@@ -191,11 +191,11 @@ function initExpress() {
         else if (req.session.invite) {
             data["invitecode"] = req.session.invite.token
         }
-        else if (req.session.registerConfirm){
+        else if (req.session.registerConfirm) {
             data['loginMessage'] = req.session.registerConfirm.message
         }
 
-        req.session.destroy(()=>{
+        req.session.destroy(() => {
             res.render("index", data);
         })
 

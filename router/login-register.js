@@ -1,3 +1,4 @@
+/* eslint-disable require-atomic-updates */
 const router = require('express').Router();
 const User = require('../models/user');
 const Mailer = require("../mailer");
@@ -292,23 +293,21 @@ router.get('/invite/:token', async function (req, res) {
 
 // Creates or updates email confirmation token, sends email to user.
 async function createToken_sendConfirmation(doc, host) {
-    return new Promise(async (resolve, reject) => {
-        // remove any existing token
-        query = Token.findOneAndDelete({ userId: doc._id })
-        let token = await query.exec();
+    // remove any existing token
+    let query = Token.findOneAndDelete({ userId: doc._id })
+    let token = await query.exec();
 
-        // create new token
-        token = new Token({ userId: doc._id, token: Security.createToken() });
+    // create new token
+    token = new Token({ userId: doc._id, token: Security.createToken() });
 
-        try {
-            await token.save();
-            let url = `https://${host}/register/confirm/${token.token}`
-            await Mailer.sendEmailConfirm(url, doc.email);
-            return resolve()
-        } catch (error) {
-            return reject("Unexpected error occurred. Code: 3")
-        }
-    })
+    try {
+        await token.save();
+        let url = `https://${host}/register/confirm/${token.token}`
+        await Mailer.sendEmailConfirm(url, doc.email);
+        return Promise.resolve()
+    } catch (error) {
+        return Promise.reject("Unexpected error occurred. Code: 3")
+    }
 }
 
 

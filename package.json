@@ -1,6 +1,6 @@
 {
   "name": "steam-card-farmer",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "description": "",
   "main": "app.js",
   "scripts": {
@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@doctormckay/steam-crypto": "^1.2.0",
-    "@hapi/joi": "^15.1.0",
+    "@hapi/joi": "^15.1.1",
     "adm-zip": "^0.4.13",
     "binarykvparser": "^2.2.0",
     "body-parser": "^1.19.0",
@@ -20,18 +20,21 @@
     "connect-mongo": "^3.0.0",
     "express": "^4.17.1",
     "express-handlebars": "^3.1.0",
-    "express-session": "^1.16.2",
-    "helmet": "^3.20.0",
+    "express-session": "^1.17.0",
+    "helmet": "^3.21.1",
     "mailgun-js": "^0.22.0",
-    "mongoose": "^5.6.9",
+    "mongoose": "^5.7.5",
     "promise.allsettled": "^1.0.1",
     "protobufjs": "^5.0.3",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7",
-    "socket.io": "^2.2.0",
+    "socket.io": "^2.3.0",
     "socks": "^2.3.2",
     "socks-proxy-agent": "^4.0.2",
-    "steam-totp": "^2.1.0",
+    "steam-totp": "^2.1.1",
     "vdf": "0.0.2"
+  },
+  "devDependencies": {
+    "eslint": "^6.5.1"
   }
 }
