@@ -4,7 +4,7 @@ const Proxy = require('../models/proxy');
 // Returns proxy list from proxyscrape.com
 async function GetProxies() {
     //let url = `https://api.proxyscrape.com/?request=getproxies&proxytype=socks4&timeout=200&country=all`
-    let url = "https://api.proxyscrape.com/?request=getproxies&proxytype=socks4&timeout=500&country=UA"
+    let url = "https://api.proxyscrape.com/?request=getproxies&proxytype=socks4&timeout=1000&country=RU"
     let proxyList = null;
     try {
         let res = await request.get(url);
