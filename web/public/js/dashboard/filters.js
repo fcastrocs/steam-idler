@@ -199,7 +199,7 @@ $(() => {
         function filter() {
             let count = 0
             $(".account").each(function () {
-                let cardsleft = $(this).find(".cards-remaining").data("cards");
+                let cardsleft = $(this).find(".cards-left").data("cards");
                 if (cardsleft === "0" || !cardsleft) {
                     $(this).hide()
                 } else {

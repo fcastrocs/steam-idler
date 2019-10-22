@@ -89,7 +89,7 @@ function buildAccount(account) {
                 farmingModal += `<div class="game-farming-info">
                                     <div class="game-title" data-id="${game.appId}">${game.title}</div>
                                     <div class="play-time">Play time: ${game.playTime}</div>
-                                    <div class="cards-remaining" data-cards="${game.playTime}">Cards Remaining: ${game.cardsRemaining}</div>
+                                    <div class="cards-remaining">Cards Remaining: ${game.cardsRemaining}</div>
                                 </div>`
             })
 
@@ -99,7 +99,7 @@ function buildAccount(account) {
                                     <span class="next-farming-check">∞</span>
                                 </div>
                                 <div>Games left to farm: ${account.farmingData.length}</div>
-                                <div>Cards left: ${cardsLeft}</div>
+                                <div class="cards-left" data-cards="${cardsLeft}">Cards left: ${cardsLeft}</div>
                            </div> ${farmingModal}`
         }
 
