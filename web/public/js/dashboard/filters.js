@@ -175,8 +175,8 @@ $(() => {
         function filter() {
             let count = 0
             $(".account").each(function (index) {
-                let status = $(this).find(".farming-mode").text();
-                if (status === "off" || !status) {
+                let status = $(this).find(".farming-item").text();
+                if (status.includes("off")) {
                     $(this).hide()
                 } else {
                     count++;
