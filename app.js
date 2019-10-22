@@ -99,7 +99,8 @@ async function DBconnect() {
             useNewUrlParser: true,
             dbName: process.env.DATABASE,
             poolSize: 50,
-            autoIndex: true
+            autoIndex: true,
+            useUnifiedTopology: true
         })
         return Promise.resolve(' - connected to mongodb');
     } catch (error) {

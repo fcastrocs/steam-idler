@@ -1,5 +1,6 @@
 "use strict";
 const allSettled = require('promise.allsettled');
+const Accounts = require("../models/steam-accounts");
 
 module.exports = class AccountHandler {
     constructor() {
@@ -34,18 +35,14 @@ module.exports = class AccountHandler {
         }
 
         this.userAccounts = new Object();
-
-        this.FARMING_RECHECK_INTERVAL = 30 * 60 * 1000;
-        this.FARMING_GETFARMINGDATA_RETRYTIME = 8000
-        this.FARMING_RESTARTIDLING_DELAY = 5000
     }
 
     /**
      * Initializes all accounts in database that should be online/farming/idling
      */
     async init() {
-        let accounts = await this.getAllAccounts();
-        if (accounts.length == 0) {
+        let count = await Accounts.countDocuments().exec();
+        if (count == 0) {
             return Promise.reject(" - no accounts to initialize");
         }
 
@@ -59,9 +56,7 @@ module.exports = class AccountHandler {
         // Bring online accounts
         let promises = [];
         for (let i in handlers) {
-            promises.push(this.loginAccount(handlers[i].userId, handlers[i].accountId, {
-                skipOnlineCheck: true, // at this point no account is online
-            }))
+            promises.push(this.loginAccount(handlers[i].userId, handlers[i].accountId))
         }
 
         return new Promise(resolve => {

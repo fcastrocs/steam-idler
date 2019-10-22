@@ -50,7 +50,6 @@ Router.post('/steamaccount/login', [isLoggedIn, apiLimiter.checker], async funct
 
     try {
         let doc = await AccountHandler.loginAccount(req.session.userId, req.body.accountId, {
-            noLoginDelay: true,
             socketId: req.body.socketId
         })
         apiLimiter.remove(req.session.userId);
@@ -224,7 +223,9 @@ Router.post('/steamaccount/stopfarming', isLoggedIn, async function (req, res) {
     }
 
     try {
-        let result = await AccountHandler.stopFarming(req.session.userId, req.body.accountId);
+        let result = await AccountHandler.stopFarming({userId: req.session.userId, 
+            accountId: req.body.accountId,
+        });
         return res.send(result);
     } catch (error) {
         return res.status(400).send(error)

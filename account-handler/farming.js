@@ -1,7 +1,10 @@
 /* eslint-disable require-atomic-updates */
-/************************************************************************
-* 					          FARMING FUNCTIONS					        *
-************************************************************************/
+
+const Accounts = require("../models/steam-accounts");
+
+const FARMING_RECHECK_INTERVAL = 30 * 60 * 1000;
+const FARMING_GETFARMINGDATA_RETRYTIME = 8000
+const FARMING_RESTARTIDLING_DELAY = 5000
 
 /**
  * Starts farming process.
@@ -43,13 +46,13 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
 
     // set nextFarmingCheck
     if (doc.nextFarmingCheck == 0) {
-        doc.nextFarmingCheck = Date.now() + this.FARMING_RECHECK_INTERVAL
+        doc.nextFarmingCheck = Date.now() + FARMING_RECHECK_INTERVAL
     } else {
         // Figure out the correct interval
         let remainingTime = doc.nextFarmingCheck - Date.now()
         // too much time has past, just set default interval
         if (remainingTime < 0) {
-            doc.nextFarmingCheck = Date.now() + this.FARMING_RECHECK_INTERVAL
+            doc.nextFarmingCheck = Date.now() + FARMING_RECHECK_INTERVAL
         } else { // leave nextFarmingCheck as is + time lost to reconnect the account
             doc.nextFarmingCheck += (3 * 60 * 1000) // 3 minutes extra
         }
@@ -65,6 +68,13 @@ module.exports.startFarming = async function (userId, accountId, client, doc) {
 
 // Farming checker. How many cards have dropped after an interval
 module.exports.FarmingRecheck = async function (userId, accountId) {
+    // check account is online
+    let client = this.isAccountOnline(userId, accountId);
+    if (!client) {
+        console.log(`ERROR: FarmingRecheck: account is not online > : ${doc.user}`)
+        return;
+    }
+
     // Get account from Db
     let doc = await this.getAccount({ accountId: accountId })
     if (!doc) {
@@ -72,37 +82,33 @@ module.exports.FarmingRecheck = async function (userId, accountId) {
         return;
     }
 
-    // check account is online
-    let client = this.isAccountOnline(userId, accountId);
-    if (!client) {
-        console.log(`ERROR: FarmingRecheck: account is not online > : ${doc.user}`)
-        doc.isFarming = false;
-        this.saveAccount(doc);
-        return;
-    }
-
     // restart game idling 5 sec delay
     await this.restartIdling(doc.farmingGames, client)
 
     // Get farming data
-    doc.farmingData = await this.getFarmingData(client)
+    let farmingData = await this.getFarmingData(client)
 
     // done farming
-    if (doc.farmingData.length == 0) {
+    if (farmingData.length == 0) {
         //stop farming
-        this.stopFarming(null, null, client, doc)
+        await this.stopFarming({ userId: userId, accountId: accountId, doneFarming: true })
         return;
     }
 
     // Get 32 games to farm
-    doc.farmingGames = this.get32GameAppIds(doc.farmingData);
-    client.playGames(doc.farmingGames);
-    doc.nextFarmingCheck = Date.now() + this.FARMING_RECHECK_INTERVAL
-    this.saveAccount(doc);
+    let farmingGames = this.get32GameAppIds(doc.farmingData);
+    client.playGames(farmingGames);
+    let nextFarmingCheck = Date.now() + FARMING_RECHECK_INTERVAL;
+
+    await Accounts.updateOne({ _id: accountId, userId: userId }, {
+        farmingData: farmingData,
+        farmingGames: farmingGames,
+        nextFarmingCheck: nextFarmingCheck
+    }).exec();
 
     client.farmingReCheckId = setTimeout(() => {
         this.FarmingRecheck(userId, accountId);
-    }, this.FARMING_RECHECK_INTERVAL);
+    }, FARMING_RECHECK_INTERVAL);
 }
 
 /**
@@ -111,14 +117,13 @@ module.exports.FarmingRecheck = async function (userId, accountId) {
  * Returns a promise
  */
 module.exports.getFarmingData = function (client) {
-    let self = this;
     return new Promise(resolve => {
         (async function attempt() {
             try {
                 let farmingData = await client.GetFarmingData();
                 return resolve(farmingData);
             } catch (error) {
-                setTimeout(() => attempt(), self.FARMING_GETFARMINGDATA_RETRYTIME);
+                setTimeout(() => attempt(), FARMING_GETFARMINGDATA_RETRYTIME);
             }
         })();
     })
@@ -126,36 +131,39 @@ module.exports.getFarmingData = function (client) {
 
 /**
  * Stops farming processs
- * Saves account to database
  * Returns a promise
  */
-module.exports.stopFarming = async function (userId, accountId, client, doc) {
+module.exports.stopFarming = async function (options) {
+    let userId = options.userId;
+    let accountId = options.accountId;
+    let doneFarming = options.doneFarming;
+
+    // check account is online
+    let client = this.isAccountOnline(userId, accountId);
     if (!client) {
-        // check account is online
-        client = this.isAccountOnline(userId, accountId);
-        if (!client) {
-            return Promise.reject("Account is not online.");
-        }
-
-        // get account doc
-        doc = await this.getAccount({ userId: userId, accountId: accountId })
-        if (!doc) {
-            return Promise.reject("Account not found.");
-        }
-
-        if (!doc.isFarming) {
-            return Promise.reject("Account is not farming.");
-        }
+        return Promise.reject("Account is not online.");
     }
 
+    // get account doc
+    let doc = await this.getAccount({ userId: userId, accountId: accountId })
+    if (!doc) {
+        return Promise.reject("Account not found.");
+    }
+
+    if (!doc.isFarming) {
+        return Promise.reject("Account is not farming.");
+    }
+
+    // stop farming intervarl
     clearInterval(client.farmingReCheckId);
-    // Idle gamesPlaying instead 
-    doc.status = client.playGames(doc.gamesPlaying)
+
+    doc.status = client.playGames(doc.gamesPlaying);
     doc.nextFarmingCheck = 0;
     doc.farmingGames = [];
     doc.isFarming = false;
+    doc.farmingData = doneFarming ? [] : doc.farmingData
 
-    await this.saveAccount(doc);
+    doc = await this.saveAccount(doc);
     return Promise.resolve(this.filterSensitiveAcc(doc))
 }
 
@@ -164,13 +172,12 @@ module.exports.stopFarming = async function (userId, accountId, client, doc) {
  * Returns a promise
  */
 module.exports.restartIdling = async function (games, client) {
-    let self = this;
     return new Promise(resolve => {
         client.playGames([]);
         setTimeout(() => {
             client.playGames(games);
             return resolve();
-        }, self.FARMING_RESTARTIDLING_DELAY);
+        }, FARMING_RESTARTIDLING_DELAY);
     })
 }
 

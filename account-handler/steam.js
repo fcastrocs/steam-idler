@@ -27,18 +27,12 @@ module.exports.addAccount = async function (userId, options) {
 
     // try login
     try {
-        doc = await self.loginAccount(userId, null, {
-            dontGetAccount: true,
-            skipOnlineCheck: true,
-            skipLoginOptions: true,
-            loginOptions: options,
-            noLoginDelay: true,
-            skipIdlingFarmingRestart: true,
+        let loginOptions = {
             newAccount: true,
-            noDelay: true, // set no delay for account login
+            loginOptions: options,
             socketId: socketId,
-        })
-
+        }
+        doc = await self.loginAccount(userId, null, loginOptions);
         return Promise.resolve();
     } catch (error) {
         io.to(`${socketId}`).emit("add-acc-error-msg", error);
@@ -54,15 +48,14 @@ module.exports.addAccount = async function (userId, options) {
 module.exports.loginAccount = async function (userId, accountId, options) {
     let self = this;
     let doc = null;
-    let loginOptions = null
+    let loginOptions = {}
 
     // account doc passed, no need to fetch it from db
     if (options && options.account) {
         doc = options.account
     }
-
-    // don't fetch account document
-    if (!options || !options.dontGetAccount) {
+    // fetch account if no options passed or account not passed or not a new account
+    else if (!options || !options.account || !options.newAccount) {
         doc = await self.getAccount({ userId: userId, accountId: accountId })
         // account not found
         if (!doc) {
@@ -70,36 +63,35 @@ module.exports.loginAccount = async function (userId, accountId, options) {
         }
     }
 
-    // don't check online status
-    if (!options || !options.skipOnlineCheck) {
-        let client = self.isAccountOnline(userId, accountId);
-        if (client) {
+    // newaccount flag not passed
+    if (!options || !options.newAccount) {
+        // check if account is online
+        if (self.isAccountOnline(userId, accountId)) {
             return Promise.reject("Account is already online.");
         }
-    }
-
-    // don't setup login options
-    if (!options || !options.skipLoginOptions) {
+        // setup login options
         loginOptions = self.setupLoginOptions(doc);
-    }
 
-    // login options passed
-    if (options && options.loginOptions) {
+        // new account
+    } else if (options && options.newAccount) {
+        loginOptions.newAccount = true;
         loginOptions = options.loginOptions
     }
 
-    // Set no login delay
-    if (options && options.noLoginDelay) {
-        loginOptions.noLoginDelay = true;
-    }
-
-    if (options && options.newAccount) {
-        loginOptions.newAccount = true;
-    }
-
     try {
+        let socketId = null;
+        if(options && options.socketId){
+            socketId = options.socketId;
+        }
         // attempt login, loginOptions gets modified during the process.
-        let client = await self.steamConnect(loginOptions, options.socketId);
+        let client = await self.steamConnect(loginOptions, socketId);
+
+        // newaccount flag not passed
+        if (!options || !options.newAccount) {
+            doc.games = self.addGames(loginOptions.games, doc.games);
+        }
+
+        // prepare account to save to db
 
         // new account, request came from addAccount
         if (options && options.newAccount) {
@@ -124,8 +116,6 @@ module.exports.loginAccount = async function (userId, accountId, options) {
             if (loginOptions.sentry) {
                 doc.sentry = loginOptions.sentry;
             }
-        } else {
-            doc.games = self.addGames(loginOptions.games, doc.games);
         }
 
         doc.persona_name = loginOptions.persona_name;
@@ -138,16 +128,17 @@ module.exports.loginAccount = async function (userId, accountId, options) {
         // clean up
         loginOptions = null;
 
+        // save account to auto-restarter
         self.saveToHandler(userId, doc._id, client);
 
-        // Restart farming or idling
-        if (!options || !options.skipIdlingFarmingRestart) {
+        // Check if farming should restart if not a new account
+        if (!options || !options.newAccount) {
             await self.farmingIdlingRestart(client, doc)
         }
 
-        // Save account
+        // Finally save the account
         await self.saveAccount(doc);
-
+        // filter sensetive data before responding to user request
         doc = self.filterSensitiveAcc(doc)
 
         if (options && options.socketId) {
@@ -156,7 +147,7 @@ module.exports.loginAccount = async function (userId, accountId, options) {
 
         return Promise.resolve(doc)
     } catch (error) {
-        //login error
+        // if error occurred, update account status with the error
         if (doc) {
             doc.status = error;
             self.saveAccount(doc)
@@ -170,35 +161,34 @@ module.exports.loginAccount = async function (userId, accountId, options) {
  */
 module.exports.logoutAccount = async function (userId, accountId) {
     let self = this;
-    let doc = null;
-     //Find account in DB
-     doc = await self.getAccount({ userId: userId, accountId: accountId })
-     // account not found
-     if (!doc) {
-         return Promise.reject("Account not found.")
-     }
+    //Find account in DB
+    let doc = await self.getAccount({ userId: userId, accountId: accountId })
+    // account not found
+    if (!doc) {
+        return Promise.reject("Account not found.")
+    }
 
-     // check account is logged in
-     let client = self.isAccountOnline(userId, accountId);
-     if (!client) {
-         //force offline status
-         doc.status = "Offline";
-         doc = await self.saveAccount(doc);
-         doc = self.filterSensitiveAcc(doc);
-         return Promise.resolve(doc)
-     }
+    // check account is logged in
+    let client = self.isAccountOnline(userId, accountId);
+    if (!client) {
+        //force offline status
+        doc.status = "Offline";
+        doc = await self.saveAccount(doc);
+        doc = self.filterSensitiveAcc(doc);
+        return Promise.resolve(doc)
+    }
 
-     // stop farming process
-     clearInterval(client.farmingReCheckId);
+    // stop farming process
+    clearInterval(client.farmingReCheckId);
 
-     // Remove account from handler
-     self.removeFromHandler(userId, accountId);
+    // Remove account from handler
+    self.removeFromHandler(userId, accountId);
 
-     //finally update account status to offline
-     doc.status = "Offline";
-     doc = await self.saveAccount(doc)
-     doc = self.filterSensitiveAcc(doc);
-     return Promise.resolve(doc);
+    //finally update account status to offline
+    doc.status = "Offline";
+    doc = await self.saveAccount(doc)
+    doc = self.filterSensitiveAcc(doc);
+    return Promise.resolve(doc);
 }
 
 

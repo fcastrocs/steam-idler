@@ -44,7 +44,6 @@ Router.post('/steamaccounts/login', [isLoggedIn, apiLimiter.checker], async func
         let promises = [];
         for (let i in accounts) {
             promises.push(AccountHandler.loginAccount(req.session.userId, accounts[i]._id, {
-                dontGetAccount: true,
                 account: accounts[i],
                 socketId: req.body.socketId
             }))
