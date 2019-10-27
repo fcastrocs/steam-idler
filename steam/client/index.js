@@ -60,8 +60,7 @@ class Client extends EventEmitter {
 
         let timeout = 0;
         if(loginOptions.initializing){
-            console.log("here")
-            timeout = Math.floor(Math.random() * 20) * 1000;
+            timeout = Math.floor(Math.random() * 60) * 1000;
         }
         setTimeout(() => {
             this.connect();
