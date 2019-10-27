@@ -57,9 +57,15 @@ class Client extends EventEmitter {
             io.to(`${this.socketId}`).emit("login-log-msg", "Connecting to Steam.");
         }
 
+
+        let timeout = 0;
+        if(loginOptions.initializing){
+            console.log("here")
+            timeout = Math.floor(Math.random() * 20) * 1000;
+        }
         setTimeout(() => {
             this.connect();
-        }, 3000);
+        }, timeout);
     }
 
     /**
@@ -122,7 +128,7 @@ class Client extends EventEmitter {
             if (!this.proxy) {
                 // havent started fetching a new list
                 if (process.env.fetchingProxies === "false") {
-                    console.log("Steam is down, getting a new proxy list in 14 mins");
+                    console.error("Steam is down, getting a new proxy list in 14 mins");
                     process.env.fetchingProxies = "true";
                     setTimeout(async () => {
                         await GetAndSaveProxies();
@@ -134,7 +140,7 @@ class Client extends EventEmitter {
                     // reconnect in between 15 to 20 mins
                     let mins = (Math.random() * (20.0 - 15.0) + 15.0).toFixed(2);
                     let timeout = Math.floor(mins * 60 * 1000);
-                    console.log(`Steam is down, waiting ${mins} mins until reconnect > ${this.account.user}`);
+                    console.error(`Steam is down, waiting ${mins} mins until reconnect > ${this.account.user}`);
                     setTimeout(() => self.connect(), timeout);
                     return;
                 }

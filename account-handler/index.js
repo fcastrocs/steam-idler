@@ -56,7 +56,7 @@ module.exports = class AccountHandler {
         // Bring online accounts
         let promises = [];
         for (let i in handlers) {
-            promises.push(this.loginAccount(handlers[i].userId, handlers[i].accountId))
+            promises.push(this.loginAccount(handlers[i].userId, handlers[i].accountId, {initializing: true}))
         }
 
         return new Promise(resolve => {

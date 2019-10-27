@@ -79,6 +79,11 @@ module.exports.loginAccount = async function (userId, accountId, options) {
         loginOptions = options.loginOptions
     }
 
+    // request came from accounts initiolizer
+    if(options && options.initializing){
+        loginOptions.initializing = true;
+    }
+
     try {
         let socketId = null;
         if (options && options.socketId) {
