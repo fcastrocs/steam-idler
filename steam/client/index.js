@@ -57,7 +57,9 @@ class Client extends EventEmitter {
             io.to(`${this.socketId}`).emit("login-log-msg", "Connecting to Steam.");
         }
 
-        this.connect();
+        setTimeout(() => {
+            this.connect();
+        }, 3000);
     }
 
     /**
