@@ -4,6 +4,8 @@ $(async () => {
     (async function builder() {
         let accounts = await FetchAllAccounts();
         g_accountsLength = accounts.length;
+
+        let idledSeconds = 0;
         for (let i in accounts) {
             // save accounts in cache
             accounts_cache[accounts[i]._id] = accounts[i];
@@ -14,7 +16,12 @@ $(async () => {
             } else {
                 g_offline++;
             }
+
+            idledSeconds += accounts[i].idledSeconds;
         }
+
+        g_totalSecondsIdled = idledSeconds;
+
     })();
 
     // refresh accounts every minute
@@ -24,6 +31,8 @@ $(async () => {
         let offline = 0;
         let accounts = await FetchAllAccounts();
         g_accountsLength = accounts.length;
+        let idledSeconds = 0;
+
         for (let i in accounts) {
             // check if account should be updated
             updateAccountStatus(accounts[i])
@@ -32,7 +41,10 @@ $(async () => {
             } else {
                 offline++
             }
+            idledSeconds += accounts[i].idledSeconds;
         }
+
+        g_totalSecondsIdled = idledSeconds;
         g_online = online;
         g_offline = offline;
 
@@ -40,9 +52,9 @@ $(async () => {
 
     //refresh accounts stats
     setInterval(() => {
-        $("#accounts-stats").text(`Accounts: ${g_accountsLength}
+        $("#accounts-stats").html(`<div>Accounts: ${g_accountsLength}
         \t|\tOnline: ${g_online}
-        \t|\tOffline: ${g_offline}`);
+        \t|\tOffline: ${g_offline}</div><div>Total Hours Idled: ${time(g_totalSecondsIdled, "hrs", true)}</div>`);
     }, 2000);
 
 })

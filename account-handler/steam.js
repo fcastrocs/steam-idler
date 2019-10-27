@@ -7,6 +7,7 @@ const Security = require("../util/security");
 const SteamAccount = require('../models/steam-accounts')
 const mongoose = require('mongoose');
 const io = require("../app").io;
+const Accounts = require("../models/steam-accounts");
 
 /**
  * Login to steam
@@ -80,7 +81,7 @@ module.exports.loginAccount = async function (userId, accountId, options) {
 
     try {
         let socketId = null;
-        if(options && options.socketId){
+        if (options && options.socketId) {
             socketId = options.socketId;
         }
         // attempt login, loginOptions gets modified during the process.
@@ -128,6 +129,9 @@ module.exports.loginAccount = async function (userId, accountId, options) {
         // clean up
         loginOptions = null;
 
+        // save accountId in the client
+        client.accountId = doc._id;
+
         // save account to auto-restarter
         self.saveToHandler(userId, doc._id, client);
 
@@ -135,6 +139,9 @@ module.exports.loginAccount = async function (userId, accountId, options) {
         if (!options || !options.newAccount) {
             await self.farmingIdlingRestart(client, doc)
         }
+
+        // start total hours idled increaser timer
+        self.startIdledHrsTimer(client);
 
         // Finally save the account
         await self.saveAccount(doc);
@@ -156,6 +163,17 @@ module.exports.loginAccount = async function (userId, accountId, options) {
     }
 }
 
+module.exports.startIdledHrsTimer = function (client) {
+    let id = setInterval(() => {
+        Accounts.updateOne({ _id: client.accountId }, { $inc: { idledSeconds: 30 } }).exec();
+    }, 30 * 1000);
+    client.idledHrsTimerId = id;
+}
+
+module.exports.stopIdledHrsTimer = function (timerId) {
+    clearInterval(timerId);
+}
+
 /**
  * Logout account from steam
  */
@@ -168,7 +186,7 @@ module.exports.logoutAccount = async function (userId, accountId) {
         return Promise.reject("Account not found.")
     }
 
-    // check account is logged in
+    // check account is logged in, else force logoff
     let client = self.isAccountOnline(userId, accountId);
     if (!client) {
         //force offline status
@@ -177,6 +195,9 @@ module.exports.logoutAccount = async function (userId, accountId) {
         doc = self.filterSensitiveAcc(doc);
         return Promise.resolve(doc)
     }
+
+    // stop total hours idled increaser timer
+    this.stopIdledHrsTimer(client.idledHrsTimerId);
 
     // stop farming process
     clearInterval(client.farmingReCheckId);
@@ -317,10 +338,12 @@ module.exports.steamConnect = async function (loginOptions, socketId) {
 
         // connection has been lost after being logged in
         client.on("connection-lost", async () => {
-            let doc = await self.getAccount({ user: client.account.user });
+            let doc = await self.getAccount({ accountId: client.accountId });
             if (!doc) {
                 return;
             }
+
+            self.stopIdledHrsTimer(client.idledHrsTimerId);
 
             // stop farming interval if it exists
             clearInterval(client.farmingReCheckId);
@@ -331,7 +354,7 @@ module.exports.steamConnect = async function (loginOptions, socketId) {
         // connection has been regained after being logged in
         client.on("connection-gained", async () => {
             //find acc by user
-            let doc = await self.getAccount({ user: client.account.user });
+            let doc = await self.getAccount({ accountId: client.accountId });
             if (!doc) {
                 return;
             }
@@ -355,6 +378,9 @@ module.exports.steamConnect = async function (loginOptions, socketId) {
             }
             // Restart farming or idling
             await self.farmingIdlingRestart(client, doc)
+
+            self.startIdledHrsTimer(client);
+
             // save account
             self.saveAccount(doc);
         })
@@ -368,23 +394,8 @@ module.exports.steamConnect = async function (loginOptions, socketId) {
  * Returns a promise
  */
 module.exports.deleteAccount = async function (userId, accountId) {
-    //Find account in DB
-    let doc = await this.getAccount({ userId: userId, accountId: accountId })
-    // account not found
-    if (!doc) {
-        return Promise.reject("Account not found.")
-    }
-
-    // try to remove account from handler
-    let client = this.isAccountOnline(userId, accountId);
-    if (client) {
-        this.removeFromHandler(userId, accountId);
-    }
-
-    // stop farming process
-    clearInterval(client.farmingReCheckId);
-
-    await doc.delete();
+    await this.logoutAccount(userId, accountId);
+    await Accounts.deleteOne({ _id: accountId, userId: userId }).exec();
     return Promise.resolve();
 }
 

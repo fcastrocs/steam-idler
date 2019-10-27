@@ -151,7 +151,7 @@ function buildAccount(account) {
                         <span class="status-item status-${account.forcedStatus}">${account.forcedStatus}</span>
                         <span class="idling-item">${account.gamesPlaying.length} / 32</span>
                         <span class="uptimehrs-item" data-toggle="tooltip">∞</span>
-                        <span class="idlinghrs-item">∞</span>
+                        <span class="idlinghrs-item">${time(account.idledSeconds, "hrs", true)}</span>
                         <span class="farming-item">${farmingStatus}</span>
                         <span class="icons-item">
                             ${iconBtns}
@@ -248,9 +248,12 @@ function buildAccount(account) {
 }*/
 
 
-function time(time, mode) {
+function time(time, mode, isSeconds) {
+    let delta = time;
     // convert to seconds
-    let delta = Math.abs((Date.now() - time) / 1000)
+    if(!isSeconds){
+        delta = Math.abs((Date.now() - time) / 1000)
+    }
 
     if(mode === "hrs"){
         let hours = delta / 3600

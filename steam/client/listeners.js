@@ -12,7 +12,7 @@ module.exports.loginListener = function () {
         // SUCCESSFUL LOGIN
         if (code == 1) {
             self.loggedIn = true;
-
+            self.reconnecting = false;
             self.account.steamid = res.client_supplied_steamid;
 
             // generate web cookie
@@ -62,12 +62,6 @@ module.exports.loginListener = function () {
                 return
             }
 
-            // notify connection has been gained after connection lost
-            if (self.reconnecting) {
-                self.reconnecting = false;
-                self.emit("connection-gained");
-            }
-
             // Set persona
             if (!self.account.forcedStatus) {
                 self.account.forcedStatus = "Online"
@@ -88,6 +82,10 @@ module.exports.loginListener = function () {
 
             // After login, don't send more messages
             this.socketId = null;
+
+            if(!self.account.newAccount && self.wasLoggedIn){
+                self.emit("connection-gained");
+            }
 
             // not a new account anymore, this will cause for code 88 retries
             self.account.newAccount = false;
@@ -240,8 +238,12 @@ module.exports.connectionListeners = function () {
     this.client.once('error', err => {
         // notify connection has been lost
         if (self.loggedIn) {
+            // this flag is only used to know when to send "connection-ganed"
+            self.wasLoggedIn = true;
             self.loggedIn = false;
-            self.emit("connection-lost");
+            if(!self.account.newAccount){
+                self.emit("connection-lost");
+            }
         }
 
         // wait for email guard, don't reconnect;

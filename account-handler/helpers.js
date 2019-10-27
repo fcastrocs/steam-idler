@@ -83,7 +83,7 @@ module.exports.setupLoginOptions = function (acc) {
         forcedStatus: acc.forcedStatus
     }
 
-    if(acc.sentry){
+    if (acc.sentry) {
         options.sentry = Security.decrypt_buffer(acc.sentry)
     }
 

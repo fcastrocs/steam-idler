@@ -21,7 +21,8 @@ let steamAcc = new Schema({
     inventory: {type: Object, default: null},
     lastConnect: {type: Number, default: 0},
     lastHourReconnects: {type: Number, default: 0},
-    privacySettings: {type: Object, default: null}
+    privacySettings: {type: Object, default: null},
+    idledSeconds: {type: Number, default: 0}
 });
 
 module.exports = mongoose.model('SteamAccount', steamAcc);
