@@ -1,38 +1,99 @@
-#info{
+#slider-wrap{
+    width: 90%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+#slider-nav{
+    display: flex;
+    flex-direction: row;
+    width: 200px;
+    justify-content: space-evenly;
+}
+
+.slider-btn{
+    height: 25px;
+    width: 25px;
+    background: linear-gradient(0deg, rgb(78, 87, 104) 0%,rgb(59, 66, 83) 100%);
+    border: solid 1px rgb(88, 98, 114);
+    border-radius: 50%;
+}
+
+.slider-btn:hover{
+    background: linear-gradient(0deg, rgb(69, 95, 126) 0%,rgb(79, 89, 114) 100%);
+}
+
+#slider{
+    height: 90%;
+    width: 100%;
+}
+
+.slide-title{
+    font-size: 20px;
+    font-weight: bolder;
+}
+
+#slides{
+    height: 100%;
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overflow-y:hidden;
+}
+
+#slides > div {
+    /* CURRENT way. */
+    scroll-snap-align: start;
+}
+
+.slider-item{
     width: 100%;
     display: flex;
     align-items: center;
+    justify-content: center;
     flex-direction: column;
+    flex-shrink: 0;
+    justify-content: space-evenly;
 }
 
-#motto{
+.title{
     font-weight: bolder;
 }
 
 #features{
-    width: 800px;
+    height: 100%;
+    width: 90%;
     display: flex;
     flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
 }
 
 .feature-col{
+    height: 100%;
     width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
 }
 
 .feature-item{
-    margin: 10px;
-    padding: 3px;
+    margin: 5px;
     text-align: center;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 20px;
     font-weight: bolder;
-    height: 75px;
-    background: linear-gradient(75deg,  rgba(19, 31, 46, 0.5), rgba(64, 117, 167, 0.5) 100%);
+    height: 100px;
+    background: linear-gradient(310deg,  rgba(19, 31, 46, 0.658), rgba(60, 137, 209, 0.685) 90%);
     border: solid 1px rgb(14, 66, 82);
     border-radius: 5px;
-    box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.8);
 }
 
 form{
@@ -52,19 +113,30 @@ form{
 }
 
 @media only screen and (max-width: 800px) {
-    #features{
+    form{
         width: 100%;
-        margin-top: 0;
+    }
+
+    #slider-wrap{
+        width: 100%;
+    }
+
+    .slide-title{
+        font-size: 16px !important;
+    }
+
+    .feature-col{
+        height: 95%;
+        width: 90%;
     }
 
     .feature-item{
         font-size: 13px;
-        height: 90px;
-        margin-top: 10px;
     }
 
-    form{
-        width: 100%;
+    #slider-3-img{
+        max-width:100%;
+        max-height:100%;
     }
 
   }

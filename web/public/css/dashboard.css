@@ -25,7 +25,7 @@
 #dashboard-subheader{
     display: flex;
     flex-direction: row;
-    width: 930px;
+    width: 940px;
     align-items: center;
     height: 35px;
 }
@@ -48,7 +48,7 @@
 
 #accounts-box-header{
     margin-top: 10px;
-    width: 930px;
+    width: 940px;
     height: 40px;
     font-weight: bolder;
     font-size: 16px;
@@ -65,9 +65,8 @@
 
 #accounts-box{
     padding-top: 10px;
-    padding-bottom: 10px !important;
     margin-top: 85px;
-    width: 930px;
+    width: 940px;
     position: fixed;
     max-height: calc(100% - 190px);
     font-size: 14px;
@@ -253,10 +252,6 @@ input[name="emailGuard"] {
     padding: 5px;
 }
 
-::-webkit-scrollbar {
-    width: 0px;
-    background: transparent; /* make scrollbar transparent */
-}
 
 #email-guard-btn{
     margin-left: 20px;
@@ -269,8 +264,10 @@ input[name="emailGuard"] {
     margin: 5px;
 }
 
+
 .games-dialog{
-    min-width: 50%;
+    max-width: 100% !important;
+    width: 900px !important;
 }
 
 .games-box{
@@ -278,7 +275,6 @@ input[name="emailGuard"] {
     justify-content: space-evenly;
     flex-direction: row;
     flex-wrap: wrap;
-    width: 100%;
 }
 
 .unselected{
@@ -362,10 +358,10 @@ input[name="emailGuard"] {
     .avatar{
         width: 150px;
         height: 150px;
-        margin-right: 20px;
     }
 
     #account-info{
+        margin-left: 20px;
         flex-direction: column;
     }
 
@@ -404,16 +400,17 @@ input[name="emailGuard"] {
         content: "Farming: "
     }
 
-
-
-
-
-
-
     .modal{
         width: 100%;
         min-width: 100%;
         max-width: 100%;
+        width: 90% !important;
+        margin: 0 auto;
+    }
+
+    .games-dialog, .farming-content , .iventory-content{
+        width: 90% !important;
+        margin: 0 auto;
     }
 
     .modal-content{

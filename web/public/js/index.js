@@ -2,39 +2,39 @@ $(() => {
 
     // show register form if request comes from invite link
     if ($(`input[name="invitecode"]`).val()) {
-        $('#info').hide();
+        $('#slider-wrap').hide();
         $("#register-form").show();
     }
 
     //show change password form if request comes from recovery link
     if ($(`input[name="recoverUsername"]`).val()) {
-        $('#info').hide();
+        $('#slider-wrap').hide();
         $("#changepass-form").show();
     }
 
     //show login form if there is a login message, such as from register/confirm
     if ($("#login-message").text() !== "") {
-        $('#info').hide();
+        $('#slider-wrap').hide();
         $("#login-form").show();
     }
 
     // Show login form
     $('#login-btn').click(() => {
-        $('#info').hide()
+        $('#slider-wrap').hide()
         $("form").css("display", "none")
         $("#login-form").fadeIn(500)
     });
 
     // Show register form
     $('#register-btn').click(() => {
-        $('#info').hide()
+        $('#slider-wrap').hide()
         $("form").css("display", "none")
         $("#register-form").fadeIn(500)
     });
 
     // Show recover form
     $('#recover-btn').click(() => {
-        $('#info').hide()
+        $('#slider-wrap').hide()
         $("form").css("display", "none")
         $("#recover-form").fadeIn(500)
     });
