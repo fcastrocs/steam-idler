@@ -1,16 +1,16 @@
 $(() => {
     // fetch stats
-    $.get("/api/idledhours", hours =>{
+    $.get("/api/idledhours", hours => {
         $("#idled-hours").text(formatNumber(hours));
     })
 
-    $.get("/api/steamaccscount", count =>{
+    $.get("/api/steamaccscount", count => {
         $("#accounts-count").text(formatNumber(count));
     })
 
     function formatNumber(num) {
         return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
-      }
+    }
 
     // show register form if request comes from invite link
     if ($(`input[name="invitecode"]`).val()) {
@@ -89,7 +89,7 @@ $(() => {
         // Clear danger alert
         $(this).find(".alert-danger").prop("hidden", true).text("")
         let data = $(this).serialize();
-        $.post('/recovery', data, (res)=>{
+        $.post('/recovery', data, (res) => {
             // recovery email sent
             $(this).find(".alert-success").prop("hidden", false).text(res)
             $("#recover-form-box").hide(0)
@@ -104,7 +104,7 @@ $(() => {
         $(this).find(".alert-danger").attr("hidden", true).html("");
         let data = $("#changepass-form").serialize();
         console.log(data)
-        $.post('/recovery/changepass', data, res =>{
+        $.post('/recovery/changepass', data, res => {
             $(this).hide();
             // Reset recover form
             $(this).trigger("reset").hide();
@@ -117,12 +117,12 @@ $(() => {
         })
     })
 
-    $(".show-pass").on("click", function(e){
+    $(".show-pass").on("click", function (e) {
         let type = $(`input[name="password"]`).attr("type")
-        if(type === "password"){
+        if (type === "password") {
             $(`input[name="password"]`).attr("type", "text");
             $(this).text("Hide");
-        }else{
+        } else {
             type = "password"
             $(`input[name="password"]`).attr("type", "password");
             $(this).text("Show");

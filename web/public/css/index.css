@@ -102,6 +102,11 @@
     margin-bottom: 20px;
 }
 
+#idled-hours, #accounts-count{
+    background: rgba(0, 153, 255, 0.226);
+    padding: 0 5px;
+}
+
 form{
     width: 450px;
     padding: 20px;
