@@ -1,4 +1,16 @@
 $(() => {
+    // fetch stats
+    $.get("/api/idledhours", hours =>{
+        $("#idled-hours").text(formatNumber(hours));
+    })
+
+    $.get("/api/steamaccscount", count =>{
+        $("#accounts-count").text(formatNumber(count));
+    })
+
+    function formatNumber(num) {
+        return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+      }
 
     // show register form if request comes from invite link
     if ($(`input[name="invitecode"]`).val()) {

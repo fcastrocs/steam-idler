@@ -208,6 +208,7 @@ function initExpress() {
     app.use('/', require('./router/admin'))
     app.use('/', require('./router/steamaccount'))
     app.use('/', require('./router/steamaccounts'))
+    app.use('/', require('./router/api'))
 
     // Redirect to index page undefined routes
     app.get('*', function (req, res) {

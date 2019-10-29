@@ -88,12 +88,18 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bolder;
     height: 100px;
     background: linear-gradient(310deg,  rgba(19, 31, 46, 0.658), rgba(60, 137, 209, 0.685) 90%);
     border: solid 1px rgb(14, 66, 82);
     border-radius: 5px;
+    flex-direction: column;
+}
+
+.stats-item{
+    width: 500px;
+    margin-bottom: 20px;
 }
 
 form{
