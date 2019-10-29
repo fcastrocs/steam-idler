@@ -135,6 +135,9 @@ form{
     .slide-title{
         font-size: 16px !important;
     }
+	.stats-item{
+		width: 90%;
+	}
 
     .feature-col{
         height: 95%;
