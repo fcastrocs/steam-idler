@@ -269,7 +269,7 @@ class SteamClient extends EventEmitter {
  	* 					  RETURNS ARRAY OF APPIDS							*
  	************************************************************************/
 	GetPkgInfo(pkgIds, callback) {
-		if (pkgIds.length < 1) {
+		if (pkgIds == null || pkgIds.length < 1) {
 			callback(null);
 			return;
 		}
@@ -297,7 +297,7 @@ class SteamClient extends EventEmitter {
  	* 			  RETURNS ARRAY APP INFO [{appid, name, logo}]				*
  	************************************************************************/
 	GetAppInfo(appids, callback) {
-		if (appids.length < 1) {
+		if (appids == null || appids.length < 1) {
 			callback(null);
 			return;
 		}

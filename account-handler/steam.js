@@ -358,6 +358,11 @@ module.exports.steamConnect = async function (loginOptions, socketId) {
 
         // connection has been regained after being logged in
         client.on("connection-gained", async () => {
+            if(!client.accountId){
+                console.error("client does not have accountId property.")
+                return;
+            }
+            
             //find acc by user
             let doc = await self.getAccount({ accountId: client.accountId });
             if (!doc) {
