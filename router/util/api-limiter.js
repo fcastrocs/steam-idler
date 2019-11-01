@@ -29,10 +29,15 @@ module.exports.checker = async (req, res, next) => {
     }
 }
 
+/**
+ * Remove API limiter
+ */
 module.exports.remove = userId => {
-    ApiLimiter.findOneAndDelete({ userId: userId }, (err) => {
-        if (err) {
-            console.log(err);
+    setTimeout(async () => {
+        try{
+            await ApiLimiter.findOneAndDelete({ userId: userId }).exec();
+        }catch(err){
+            console.error(err);
         }
-    })
+    }, 1000);
 }

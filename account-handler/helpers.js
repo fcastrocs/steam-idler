@@ -5,6 +5,29 @@ const SteamAccount = require('../models/steam-accounts')
 const Security = require("../util/security");
 const SteamAccHandler = require('../models/steam-account-handler')
 
+
+/**
+ * Returns all accounts
+ * userId (optinal) 
+ * options (optional) dontFilter - whether to filter sensitive info or not
+ * Returns all accounts or all accounts for a user
+ */
+module.exports.getAllAccounts = async function (userId, options) {
+    let query = {}
+    if (userId) {
+        // Don't filter account fields
+        if (options && options.dontFilter) {
+            query = SteamAccount.find({ userId: userId })
+        } else { // filter accounts
+            query = SteamAccount.find({ userId: userId }).select(["-pass", "-shared_secret", "-sentry"])
+        }
+    } else {
+        query = SteamAccount.find({})
+    }
+    return await query.exec();
+}
+
+
 /**
  * Restarts farming or idling process
  * Returns a promise with account
@@ -198,26 +221,6 @@ module.exports.getAccount = async function (options) {
         throw "Bad options in getAccount()";
     }
 
-    return await query.exec();
-}
-
-/**
- * Returns all accounts
- * userId (optinal) 
- * Returns all accounts or all accounts for a user
- */
-module.exports.getAllAccounts = async function (userId, options) {
-    let query = {}
-    if (userId) {
-        // Don't filter account fields
-        if (options && options.dontFilter) {
-            query = SteamAccount.find({ userId: userId })
-        } else {
-            query = SteamAccount.find({ userId: userId }).select(["-pass", "-shared_secret", "-sentry"])
-        }
-    } else {
-        query = SteamAccount.find({})
-    }
     return await query.exec();
 }
 

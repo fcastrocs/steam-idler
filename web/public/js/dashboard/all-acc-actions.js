@@ -84,7 +84,7 @@ $(() => {
             return
         }
 
-        $.post('/steamaccounts/stopgames', () => {
+        $.post('/steamaccounts/stopidling', () => {
             location.reload();
         }).fail((xhr, status, err) => {
             alert(xhr.responseText);
@@ -121,7 +121,7 @@ $(() => {
         $("#activate-f2p-game-msg").text("").prop("hidden", true)
         $("#activate-f2p-game-errMsg").text("").prop("hidden", true)
 
-        $.post('/steamaccounts/activatefreetoplaygames', { appIds: appIds }, res => {
+        $.post('/steamaccounts/activatefreegames', { appIds: appIds, freeToPlay: true }, res => {
             $("#activate-f2p-game-msg").prop("hidden", false).text(res.msg + "\nReloading in 3 secs.")
             $("#spinner-activate-f2p-game").prop("hidden", true)
             displayGames(res.games);
@@ -167,7 +167,7 @@ $(() => {
         $("#activate-free-game-msg").text("").prop("hidden", true)
         $("#activate-free-game-errMsg").text("").prop("hidden", true)
 
-        $.post('/steamaccounts/activatefreegame', { appIds: appIds }, res => {
+        $.post('/steamaccounts/activatefreegames', { packageId: packageId, freePromo: true }, res => {
             $("#activate-free-game-msg").prop("hidden", false).text(res.msg + "\nReloading in 3 secs.")
             $("#spinner-activate-free-game").prop("hidden", true)
             displayGames(res.games);

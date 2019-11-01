@@ -440,8 +440,8 @@ module.exports.activateF2pGames = async function (userId, accountId, appIds, opt
     }
 }
 
-// Activate free game
-module.exports.activateFreeGame = async function (userId, accountId, packageId, options) {
+// Activate free promo game
+module.exports.activateFreePromoGame = async function (userId, accountId, packageId, options) {
     let account = null;
     // check account is logged in
     let client = this.isAccountOnline(userId, accountId);
@@ -455,7 +455,7 @@ module.exports.activateFreeGame = async function (userId, accountId, packageId, 
     } else {
         account = await this.getAccount({ userId: userId, accountId: accountId });
         if (!account) {
-            return Promise.reject("Account not found.")
+            return Promise.reject("Account is not found.")
         }
     }
 

@@ -4,11 +4,11 @@ const apiLimiter = require('./util/api-limiter');
 const AccountHandler = require("../app").accountHandler
 const allSettled = require('promise.allsettled');
 
-// Remove API limit before sending response
+// Middleware to remove API limit before sending response
 Router.use("/steamaccounts/*", function (req, res, next) {
     let send = res.send;
     res.send = function (body) {
-        // This will prevent this from being called twice, as res.send is called twice
+        // This will prevent res.send() from executing twice, because res.send is called twice
         if (typeof (body) === 'string' && !res.dontRemoveApiLimit) {
             apiLimiter.remove(req.session.userId);
         }
@@ -23,11 +23,14 @@ Router.get('/steamaccounts', isLoggedIn, async (req, res) => {
         let result = await AccountHandler.getAllAccounts(req.session.userId)
         return res.send(result);
     } catch (error) {
-        console.log(error)
-        return res.status(500).send("Could not fetch all user accounts.")
+        console.error(error)
+        return res.status(500).send("Could not fetch user accounts.")
     }
 })
 
+/**
+ * Login all accounts
+ */
 Router.post('/steamaccounts/login', [isLoggedIn, apiLimiter.checker], async function (req, res) {
     try {
         let accounts = await AccountHandler.getAllAccounts(req.session.userId, { dontFilter: true })
@@ -36,7 +39,6 @@ Router.post('/steamaccounts/login', [isLoggedIn, apiLimiter.checker], async func
         }
 
         if (!req.body.socketId) {
-            apiLimiter.remove(req.session.userId);
             return res.status(400).send("socket ID needed.")
         }
 
@@ -58,18 +60,21 @@ Router.post('/steamaccounts/login', [isLoggedIn, apiLimiter.checker], async func
             })
 
             if (fulfilled == 0) {
-                return res.status(400).send("It appears all your accounts are already online.")
+                return res.status(400).send("All your accounts are already online.")
             } else {
                 return res.send(`${fulfilled} accounts were logged in.`)
             }
         })
 
     } catch (res) {
-        console.log(res);
+        console.error(res);
         return res.status(500).send("Could not login your accounts.")
     }
 })
 
+/**
+ * Logout all accounts
+ */
 Router.post('/steamaccounts/logout', [isLoggedIn, apiLimiter.checker], async function (req, res) {
     try {
         let accounts = await AccountHandler.getAllAccounts(req.session.userId, { dontFilter: true })
@@ -88,19 +93,23 @@ Router.post('/steamaccounts/logout', [isLoggedIn, apiLimiter.checker], async fun
         })
 
     } catch (res) {
-        console.log(res);
+        console.error(res);
         return res.status(500).send("Could not logout your accounts.")
     }
 })
 
+/**
+ * Set status to all accounts
+ */
 Router.post('/steamaccounts/setstatus', [isLoggedIn, apiLimiter.checker], async function (req, res) {
-    if (!req.body.status) {
-        return res.status(400).send("status param needed.")
+    let status = req.body.status;
+
+    if (!status) {
+        return res.status(400).send("status parameter needed.")
     }
 
-    let status = req.body.status;
     if (status != "Online" && status != "Invisible" && status != "Away" && status != "Snooze" && status != "Busy") {
-        return res.status(400).send("Invalid status param.")
+        return res.status(400).send("Invalid status parameter.")
     }
 
     try {
@@ -119,12 +128,15 @@ Router.post('/steamaccounts/setstatus', [isLoggedIn, apiLimiter.checker], async 
             return res.send("status set");
         })
     } catch (error) {
-        console.log(error)
+        console.error(error)
         return res.status(500).send("Could not set status for your accounts.")
     }
 })
 
-Router.post('/steamaccounts/stopgames', [isLoggedIn, apiLimiter.checker], async function (req, res) {
+/**
+ * Stop idling
+ */
+Router.post('/steamaccounts/stopidling', [isLoggedIn, apiLimiter.checker], async function (req, res) {
     try {
         // get all user accounts
         let accounts = await AccountHandler.getAllAccounts(req.session.userId, { dontFilter: true })
@@ -141,25 +153,45 @@ Router.post('/steamaccounts/stopgames', [isLoggedIn, apiLimiter.checker], async 
             return res.send("Accounts stopped idling.");
         })
     } catch (error) {
-        console.log(error)
+        console.error(error)
         return res.status(500).send("Could not stop your accounts from idling.")
     }
 })
 
 
-// Activate f2p game
-Router.post('/steamaccounts/activatefreetoplaygames', [isLoggedIn, apiLimiter.checker], async (req, res) => {
-    try {
+/**
+ * Activate f2p or free promo game
+ */
+Router.post('/steamaccounts/activatefreegames', [isLoggedIn, apiLimiter.checker], async (req, res) => {
+    if (!req.body.freeToPlay && !req.body.freePromo) {
+        return res.status(400).send("Need to specify p2p or promoGame.")
+    }
+
+    // if f2p
+    if (req.body.freeToPlay) {
         if (!req.body.appIds) {
-            return res.status(400).send("appIds param needed")
+            return res.status(400).send("appIds parameter needed.")
         }
 
         // validation
-        let appIds = req.body.appIds.split(",").map(Number).filter(item => !isNaN(item))
+        var appIds = req.body.appIds.split(",").map(Number).filter(item => !isNaN(item))
         if (appIds.length < 1) {
-            return res.status(400).send("Invalid input, enter valid appIds.")
+            return res.status(400).send("Invalid input, enter valid app Ids.")
+        }
+    } else { // free promo game
+        if (!req.body.packageId) {
+            return res.status(400).send("packageId parameter needed.")
         }
 
+        // validation
+        var packageId = parseInt(req.body.packageId);
+        if (Number.isNaN(packageId)) {
+            return res.status(400).send("Invalid input, enter a valid package Id.")
+        }
+    }
+
+
+    try {
         // get all user accounts
         let accounts = await AccountHandler.getAllAccounts(req.session.userId, { dontFilter: true })
         if (accounts.length == 0) {
@@ -168,7 +200,12 @@ Router.post('/steamaccounts/activatefreetoplaygames', [isLoggedIn, apiLimiter.ch
 
         let promises = []
         for (let i in accounts) {
-            promises.push(AccountHandler.activateFreeGame(req.session.userId, accounts[i]._id, appIds, { account: accounts[i] }))
+            if (req.body.freeToPlay) {
+                promises.push(AccountHandler.activateF2pGames(req.session.userId, accounts[i]._id, appIds, { account: accounts[i] }))
+
+            } else {
+                promises.push(AccountHandler.activateFreePromoGame(req.session.userId, accounts[i]._id, packageId, { account: accounts[i] }))
+            }
         }
 
         let resolved = 0
@@ -182,14 +219,14 @@ Router.post('/steamaccounts/activatefreetoplaygames', [isLoggedIn, apiLimiter.ch
             })
 
             if (resolved == 0) {
-                return res.status(400).send("Game activation failed in all accounts.")
+                return res.status(400).send("Game(s) activation failed, check you've entered the correct info.")
             } else {
-                return res.send({ games: games, msg: `Game activated in ${resolved} accounts.` })
+                return res.send({ games: games, msg: `Game(s) activated in ${resolved} accounts.` })
             }
         })
     } catch (error) {
-        console.log(error)
-        return res.status(500).send("Could not activate games to your accounts.")
+        console.error(error)
+        return res.status(500).send("Could not activate game(s) to your accounts.")
     }
 })
 
