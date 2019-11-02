@@ -16,11 +16,17 @@ module.exports = async function (req, res, next) {
         return res.status(500).send(err);
     }
 
+    // define custom send() to remove the limiter
     let send = res.send;
-    res.send = function (body) {
-        // This will prevent res.send() from executing twice, because res.send is called twice
-        if (typeof (body) === 'string' && !res.dontRemoveApiLimit) {
-            remove(req.session.userId);
+    res.send = async function (body) {
+        console.log(typeof (body))
+        if (typeof (body) === 'string') {
+            console.log('here')
+            try {
+                await remove(req.session.userId);
+            } catch (err) {
+                console.error(err);
+            }
         }
         send.call(this, body);
     }
@@ -56,12 +62,12 @@ async function create(userId) {
 /**
  * Remove API limiter
  */
-function remove(userId) {
-    setTimeout(async () => {
-        try {
-            await ApiLimiter.findOneAndDelete({ userId: userId }).exec();
-        } catch (err) {
-            console.error(err);
-        }
-    }, 1000);
+async function remove(userId) {
+    try {
+        await ApiLimiter.findOneAndDelete({ userId: userId }).exec();
+        return Promise.resolve();
+    } catch (err) {
+        console.error(err);
+        return Promise.reject("Could not remove API limiter.");
+    }
 }

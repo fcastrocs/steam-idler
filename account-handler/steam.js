@@ -34,7 +34,7 @@ module.exports.addAccount = async function (userId, options) {
             socketId: socketId,
         }
         doc = await self.loginAccount(userId, null, loginOptions);
-        return Promise.resolve();
+        return Promise.resolve("Account added successfully.");
     } catch (error) {
         io.to(`${socketId}`).emit("add-acc-error-msg", error);
         return Promise.reject(error)
