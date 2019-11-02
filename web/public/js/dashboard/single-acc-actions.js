@@ -452,7 +452,7 @@ $(() => {
         let accountId = $("#activate-f2p-game-submit").attr("data-id");
         let appIds = $("input[name='appId']").val();
 
-        $.post('/steamaccount/activatefreetoplaygames', { accountId: accountId, appIds: appIds }, games => {
+        $.post('/steamaccount/activatefreegames', { accountId: accountId, appIds: appIds, freeToPlay: true }, games => {
             displayGames(games);
             $("#activate-f2p-game-msg").prop("hidden", false).text("Game(s) activated." + " Reloading in 3 secs.")
             $("#spinner-activate-f2p-game").hide();
@@ -465,9 +465,9 @@ $(() => {
     })
 
 
-     /**************************************************** 
-    *           STEAM - ACTIVATE FREE GAME              *
-    * **************************************************/
+    /**************************************************** 
+   *           STEAM - ACTIVATE FREE GAME              *
+   * **************************************************/
     // Open modal
     $(document).on('click', ".activate-free-game", function (e) {
         e.preventDefault();
@@ -498,7 +498,7 @@ $(() => {
         let accountId = $("#activate-free-game-submit").attr("data-id");
         let packageId = $("input[name='packageId']").val();
 
-        $.post('/steamaccount/activatefreegame', { accountId: accountId, packageId: packageId }, games => {
+        $.post('/steamaccount/activatefreegames', { accountId: accountId, packageId: packageId, freePromo: true }, games => {
             displayGames(games);
             $("#activate-free-game-msg").prop("hidden", false).text("Game(s) activated." + " Reloading in 3 secs.")
             $("#spinner-activate-free-game").hide();

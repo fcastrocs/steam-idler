@@ -435,7 +435,6 @@ module.exports.activateF2pGames = async function (userId, accountId, appIds, opt
         await this.saveAccount(account)
         return Promise.resolve(games)
     } catch (error) {
-        console.log(error)
         return Promise.reject(error)
     }
 }
@@ -465,7 +464,6 @@ module.exports.activateFreePromoGame = async function (userId, accountId, packag
         await this.saveAccount(account)
         return Promise.resolve(games)
     } catch (error) {
-        console.log(error)
         return Promise.reject(error)
     }
 }
@@ -494,7 +492,6 @@ module.exports.redeemKey = async function (userId, accountId, cdkey) {
         await this.saveAccount(acc);
         return Promise.resolve(games);
     } catch (error) {
-        console.log(error)
         return Promise.reject(error)
     }
 }

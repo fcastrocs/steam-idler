@@ -1,24 +1,15 @@
 const Router = require('express').Router();
-const isLoggedIn = require('./util/isLoggedIn')
 const apiLimiter = require('./util/api-limiter');
 const AccountHandler = require("../app").accountHandler
 const allSettled = require('promise.allsettled');
 
-// Middleware to remove API limit before sending response
-Router.use("/steamaccounts/*", function (req, res, next) {
-    let send = res.send;
-    res.send = function (body) {
-        // This will prevent res.send() from executing twice, because res.send is called twice
-        if (typeof (body) === 'string' && !res.dontRemoveApiLimit) {
-            apiLimiter.remove(req.session.userId);
-        }
-        send.call(this, body);
-    }
-    next();
-})
+/**
+ * Middleware to remove API limit before sending response
+ */
+Router.use("/steamaccount/*", apiLimiter);
 
 // Returns all accounts for this user
-Router.get('/steamaccounts', isLoggedIn, async (req, res) => {
+Router.get('/steamaccounts', async (req, res) => {
     try {
         let result = await AccountHandler.getAllAccounts(req.session.userId)
         return res.send(result);
@@ -31,7 +22,7 @@ Router.get('/steamaccounts', isLoggedIn, async (req, res) => {
 /**
  * Login all accounts
  */
-Router.post('/steamaccounts/login', [isLoggedIn, apiLimiter.checker], async function (req, res) {
+Router.post('/steamaccounts/login', async function (req, res) {
     try {
         let accounts = await AccountHandler.getAllAccounts(req.session.userId, { dontFilter: true })
         if (accounts.length == 0) {
@@ -75,7 +66,7 @@ Router.post('/steamaccounts/login', [isLoggedIn, apiLimiter.checker], async func
 /**
  * Logout all accounts
  */
-Router.post('/steamaccounts/logout', [isLoggedIn, apiLimiter.checker], async function (req, res) {
+Router.post('/steamaccounts/logout', async function (req, res) {
     try {
         let accounts = await AccountHandler.getAllAccounts(req.session.userId, { dontFilter: true })
         if (accounts.length == 0) {
@@ -101,7 +92,7 @@ Router.post('/steamaccounts/logout', [isLoggedIn, apiLimiter.checker], async fun
 /**
  * Set status to all accounts
  */
-Router.post('/steamaccounts/setstatus', [isLoggedIn, apiLimiter.checker], async function (req, res) {
+Router.post('/steamaccounts/setstatus', async function (req, res) {
     let status = req.body.status;
 
     if (!status) {
@@ -136,7 +127,7 @@ Router.post('/steamaccounts/setstatus', [isLoggedIn, apiLimiter.checker], async 
 /**
  * Stop idling
  */
-Router.post('/steamaccounts/stopidling', [isLoggedIn, apiLimiter.checker], async function (req, res) {
+Router.post('/steamaccounts/stopidling', async function (req, res) {
     try {
         // get all user accounts
         let accounts = await AccountHandler.getAllAccounts(req.session.userId, { dontFilter: true })
@@ -162,7 +153,7 @@ Router.post('/steamaccounts/stopidling', [isLoggedIn, apiLimiter.checker], async
 /**
  * Activate f2p or free promo game
  */
-Router.post('/steamaccounts/activatefreegames', [isLoggedIn, apiLimiter.checker], async (req, res) => {
+Router.post('/steamaccounts/activatefreegames', async (req, res) => {
     if (!req.body.freeToPlay && !req.body.freePromo) {
         return res.status(400).send("Need to specify p2p or promoGame.")
     }

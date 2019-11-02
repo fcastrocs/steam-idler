@@ -1,18 +1,19 @@
 const Router = require('express').Router();
-const isLoggedIn = require('./util/isLoggedIn')
 const apiLimiter = require('./util/api-limiter');
 const AccountHandler = require("../app").accountHandler
 
+/**
+ * Middleware to remove API limit before sending response
+ */
+Router.use("/steamaccount/*", apiLimiter);
 
 // Add a new steam account
-Router.post("/steamaccount/add", [isLoggedIn, apiLimiter.checker], async (req, res) => {
+Router.post("/steamaccount/add", async (req, res) => {
     if (!req.body.user || !req.body.pass) {
-        apiLimiter.remove(req.session.userId);
-        return res.status(400).send("User/pass needed.")
+        return res.status(400).send("User/pass parameters needed.")
     }
 
     if (!req.body.socketId) {
-        apiLimiter.remove(req.session.userId);
         return res.status(400).send("socket ID needed.")
     }
 
@@ -26,25 +27,21 @@ Router.post("/steamaccount/add", [isLoggedIn, apiLimiter.checker], async (req, r
 
     try {
         let result = await AccountHandler.addAccount(req.session.userId, options)
-        apiLimiter.remove(req.session.userId);
         return res.send(result);
     } catch (error) {
-        apiLimiter.remove(req.session.userId);
-        console.log(error)
+        console.error(error)
         return res.status(400).send(error)
     }
 })
 
 
 // connects a steam account to steam
-Router.post('/steamaccount/login', [isLoggedIn, apiLimiter.checker], async function (req, res) {
+Router.post('/steamaccount/login', async function (req, res) {
     if (!req.body.accountId) {
-        apiLimiter.remove(req.session.userId);
-        return res.status(400).send("accountId needed")
+        return res.status(400).send("accountId parameter needed.")
     }
 
     if (!req.body.socketId) {
-        apiLimiter.remove(req.session.userId);
         return res.status(400).send("socket ID needed.")
     }
 
@@ -52,42 +49,41 @@ Router.post('/steamaccount/login', [isLoggedIn, apiLimiter.checker], async funct
         let doc = await AccountHandler.loginAccount(req.session.userId, req.body.accountId, {
             socketId: req.body.socketId
         })
-        apiLimiter.remove(req.session.userId);
+
         return res.send(doc);
     } catch (error) {
-        apiLimiter.remove(req.session.userId);
-        console.log(error)
+        console.error(error)
         return res.status(400).send(error)
     }
 })
 
 
 // connects a steam account to steam
-Router.post('/steamaccount/logout', isLoggedIn, async function (req, res) {
+Router.post('/steamaccount/logout', async function (req, res) {
     if (!req.body.accountId) {
-        return res.status(400).send("accountId needed")
+        return res.status(400).send("accountId parameter needed")
     }
 
     try {
         let result = await AccountHandler.logoutAccount(req.session.userId, req.body.accountId)
         return res.send(result);
     } catch (error) {
-        console.log(error)
+        console.error(error)
         return res.status(400).send(error)
     }
 })
 
 // 
-Router.post('/steamaccount/playgames', isLoggedIn, async function (req, res) {
+Router.post('/steamaccount/playgames', async function (req, res) {
     if (!req.body.games || !req.body.accountId || (req.body.games.length == 0)) {
-        return res.status(400).send("games/accountId needed")
+        return res.status(400).send("games/accountId parameters needed.")
     }
 
-    //do not allow more than 33 games
-    if (req.body.games.length > 33) {
-        return res.status(400).send("More than 33 games is not allowed.")
+    //do not allow more than 32 games
+    if (req.body.games.length > 32) {
+        return res.status(400).send("More than 32 games is not allowed.")
     }
-    
+
     // Format array so steam accepts it
     let games = req.body.games.map(gameId => { return { game_id: gameId } })
 
@@ -95,154 +91,121 @@ Router.post('/steamaccount/playgames', isLoggedIn, async function (req, res) {
         let result = await AccountHandler.playGames(req.session.userId, req.body.accountId, games)
         return res.send(result);
     } catch (error) {
-        console.log(error)
+        console.error(error)
         return res.status(400).send(error)
     }
 })
 
 
 // Stop playing games
-Router.post('/steamaccount/stopgames', isLoggedIn, async function (req, res) {
+Router.post('/steamaccount/stopgames', async function (req, res) {
     if (!req.body.accountId) {
-        return res.status(400).send("accountId needed")
+        return res.status(400).send("accountId parameter needed.")
     }
 
     try {
         let result = await AccountHandler.playGames(req.session.userId, req.body.accountId, [])
         return res.send(result);
     } catch (error) {
+        console.error(error);
         return res.status(400).send(error)
     }
 })
 
 // Change nickname
-Router.post('/steamaccount/changenick', isLoggedIn, async function (req, res) {
+Router.post('/steamaccount/changenick', async function (req, res) {
     if (!req.body.accountId || !req.body.nickname) {
-        return res.status(400).send("accountId/nickname needed")
+        return res.status(400).send("accountId/nickname parameters needed")
     }
 
     try {
         let result = await AccountHandler.changeNick(req.session.userId, req.body.accountId, req.body.nickname)
         return res.send(result);
     } catch (error) {
-        return res.status(400).send(error)
-    }
-})
-
-// Activate f2p game
-Router.post('/steamaccount/activatefreetoplaygames', isLoggedIn, async function (req, res) {
-    if (!req.body.accountId || !req.body.appIds) {
-        return res.status(400).send("accountId/appIds needed")
-    }
-
-    // validation
-    let appIds = req.body.appIds.split(",").map(Number).filter(item => !isNaN(item))
-    if (appIds.length < 1) {
-        return res.status(400).send("Invalid input, enter valid appIds")
-    }
-
-    try {
-        let result = await AccountHandler.activateF2pGames(req.session.userId, req.body.accountId, appIds)
-        return res.send(result);
-    } catch (error) {
-        return res.status(400).send(error)
-    }
-})
-
-// Activate free game
-Router.post('/steamaccount/activatefreegame', isLoggedIn, async function (req, res) {
-    if (!req.body.accountId || !req.body.packageId) {
-        return res.status(400).send("accountId/packageId needed")
-    }
-
-    // validation
-    let packageId = parseInt(req.body.packageId);
-    if(Number.isNaN(packageId)){
-        return res.status(400).send("Invalid input, enter a single numeric package ID")
-    }
-
-    try {
-        let result = await AccountHandler.activateFreeGame(req.session.userId, req.body.accountId, packageId)
-        return res.send(result);
-    } catch (error) {
+        console.error(error);
         return res.status(400).send(error)
     }
 })
 
 // Redeem key
-Router.post('/steamaccount/redeemkey', isLoggedIn, async function (req, res) {
+Router.post('/steamaccount/redeemkey', async function (req, res) {
     if (!req.body.accountId || !req.body.cdkey) {
-        return res.status(400).send("accountId/cdkey needed")
+        return res.status(400).send("accountId/cdkey parameters needed.")
     }
 
     try {
         let result = await AccountHandler.redeemKey(req.session.userId, req.body.accountId, req.body.cdkey)
         return res.send(result);
     } catch (error) {
+        console.error(error);
         return res.status(400).send(error)
     }
 })
 
 
 // Redeem key
-Router.post('/steamaccount/setstatus', isLoggedIn, async function (req, res) {
+Router.post('/steamaccount/setstatus', async function (req, res) {
     if (!req.body.accountId || !req.body.status) {
-        return res.status(400).send("accountId/status needed")
+        return res.status(400).send("accountId/status parameters needed.")
     }
 
     let status = req.body.status;
 
     if (status != "Online" && status != "Invisible" && status != "Away" && status != "Snooze" && status != "Busy") {
-        return res.status(400).send("Invalid status")
+        return res.status(400).send("Invalid status.")
     }
 
     try {
         let result = await AccountHandler.setStatus(req.session.userId, req.body.accountId, status);
         return res.send(result);
     } catch (error) {
+        console.error(error);
         return res.status(400).send(error)
     }
 })
 
-Router.post('/steamaccount/startfarming', isLoggedIn, async function (req, res) {
+Router.post('/steamaccount/startfarming', async function (req, res) {
     if (!req.body.accountId) {
-        return res.status(400).send("accountId needed")
+        return res.status(400).send("accountId parameter needed.")
     }
 
     try {
         let result = await AccountHandler.startFarming(req.session.userId, req.body.accountId);
         return res.send(result);
     } catch (error) {
+        console.error(error);
         return res.status(400).send(error)
     }
 })
 
-Router.post('/steamaccount/stopfarming', isLoggedIn, async function (req, res) {
+Router.post('/steamaccount/stopfarming', async function (req, res) {
     if (!req.body.accountId) {
-        return res.status(400).send("accountId needed")
+        return res.status(400).send("accountId parameter needed.")
     }
 
     try {
-        let result = await AccountHandler.stopFarming({userId: req.session.userId, 
+        let result = await AccountHandler.stopFarming({
+            userId: req.session.userId,
             accountId: req.body.accountId,
         });
         return res.send(result);
     } catch (error) {
+        console.error(error);
         return res.status(400).send(error)
     }
 })
 
-Router.post('/steamaccount/changeavatar', isLoggedIn, async function (req, res) {
+Router.post('/steamaccount/changeavatar', async function (req, res) {
     if (!req.body.accountId) {
-        return res.status(400).send("accountId needed")
+        return res.status(400).send("accountId parameter needed.")
     }
 
     if (!req.body.binaryImg) {
-        return res.status(400).send("binaryImg needed.")
+        return res.status(400).send("binaryImg parameter needed.")
     }
 
     if (!req.body.filename) {
-        return res.status(400).send("filename needed.")
+        return res.status(400).send("filename parameter needed.")
     }
 
     let accountId = req.body.accountId;
@@ -254,46 +217,47 @@ Router.post('/steamaccount/changeavatar', isLoggedIn, async function (req, res) 
         let result = await AccountHandler.changeAvatar(userId, accountId, binaryImg, filename);
         return res.send(result);
     } catch (error) {
+        console.error(error);
         return res.status(400).send(error)
     }
 })
 
-Router.post("/steamaccount/clearaliases", isLoggedIn, async function(req, res){
-    if(!req.body.accountId){
-        return res.status(400).send("accountId needed.");
+Router.post("/steamaccount/clearaliases", async function (req, res) {
+    if (!req.body.accountId) {
+        return res.status(400).send("accountId parameter needed.");
     }
 
     try {
         await AccountHandler.clearAliases(req.session.userId, req.body.accountId);
         return res.send()
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(400).send(error);
     }
 })
 
-Router.post("/steamaccount/changeprivacy", isLoggedIn, async function(req, res){
-    if(!req.body.accountId){
-        return res.status(400).send("accountId needed.");
+Router.post("/steamaccount/changeprivacy", async function (req, res) {
+    if (!req.body.accountId) {
+        return res.status(400).send("accountId parameter needed.");
     }
 
-    if(!req.body.formData){
-        return res.status(400).send("formData needed.");
+    if (!req.body.formData) {
+        return res.status(400).send("formData parameter needed.");
     }
 
     try {
         await AccountHandler.changePrivacy(req.session.userId, req.body.accountId, req.body.formData);
         return res.send()
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(400).send(error);
     }
 })
 
 // Removes a steam account
-Router.delete('/steamaccount', isLoggedIn, async function (req, res) {
+Router.delete('/steamaccount', async function (req, res) {
     if (!req.body.accountId) {
-        return res.status(400).send("Bad deleteacc request.")
+        return res.status(400).send("accountId parameter needed.")
     }
 
     try {
@@ -302,6 +266,54 @@ Router.delete('/steamaccount', isLoggedIn, async function (req, res) {
         // At this point, the account has been logged out and its handler's been destroyed
         return res.send(response)
     } catch (error) {
+        console.error(error);
+        return res.status(400).send(error)
+    }
+})
+
+Router.post('/steamaccount/activatefreegames', async (req, res) => {
+    if (!req.body.accountId) {
+        return res.status(400).send("accountId parameter needed.")
+    }
+
+    if (!req.body.freeToPlay && !req.body.freePromo) {
+        return res.status(400).send("Need to specify p2p or promoGame.")
+    }
+
+    // if f2p
+    if (req.body.freeToPlay) {
+        if (!req.body.appIds) {
+            return res.status(400).send("appIds parameter needed.")
+        }
+
+        // validation
+        var appIds = req.body.appIds.split(",").map(Number).filter(item => !isNaN(item))
+        if (appIds.length < 1) {
+            return res.status(400).send("Invalid input, enter valid app Ids.")
+        }
+    } else { // free promo game
+        if (!req.body.packageId) {
+            return res.status(400).send("packageId parameter needed.")
+        }
+
+        // validation
+        var packageId = parseInt(req.body.packageId);
+        if (Number.isNaN(packageId)) {
+            return res.status(400).send("Invalid input, enter a valid package Id.")
+        }
+    }
+
+    try {
+        let result;
+        if (req.body.freeToPlay) {
+            result = await AccountHandler.activateF2pGames(req.session.userId, req.body.accountId, appIds)
+        } else {
+            result = await AccountHandler.activateFreePromoGame(req.session.userId, req.body.accountId, packageId)
+        }
+
+        return res.send(result);
+    } catch (error) {
+        console.error(error);
         return res.status(400).send(error)
     }
 })
