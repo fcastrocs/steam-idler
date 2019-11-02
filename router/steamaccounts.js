@@ -6,7 +6,7 @@ const allSettled = require('promise.allsettled');
 /**
  * Middleware to remove API limit before sending response
  */
-Router.use("/steamaccount/*", apiLimiter);
+Router.use("/steamaccounts/*", apiLimiter);
 
 // Returns all accounts for this user
 Router.get('/steamaccounts', async (req, res) => {
