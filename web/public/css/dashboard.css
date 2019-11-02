@@ -248,8 +248,10 @@ input[name="emailGuard"] {
 }
 
 #add-acc-console{
+    position: relative;
     font-size: 14px;
     padding: 5px;
+    width: 100%;
 }
 
 

@@ -43,6 +43,9 @@ $(() => {
             $("#add-acc-warning-msg").prop("hidden", true);
             // show error msg
             $('#add-acc-error-msg').prop("hidden", false).text(msg)
+            // hide console
+            $('#add-acc-console').prop("hidden", true).text("");
+
 
             /********************************
             *          EMAIL GUARD          *

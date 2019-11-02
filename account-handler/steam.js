@@ -48,15 +48,13 @@ module.exports.addAccount = async function (userId, options) {
  */
 module.exports.loginAccount = async function (userId, accountId, options) {
     let self = this;
-    let doc = null;
     let loginOptions = {}
 
-    // account doc passed, no need to fetch it from db
-    if (options && options.account) {
-        doc = options.account
-    }
-    // fetch account if no options passed or account not passed or not a new account
-    else if (!options || !options.account || !options.newAccount) {
+    let newAccount = (options !== null ? options.newAccount : null);
+    let doc = (options !== null ? options.account : null)
+
+    // fetch account if not a new account or account not passed
+    if (!newAccount && !doc) {
         doc = await self.getAccount({ userId: userId, accountId: accountId })
         // account not found
         if (!doc) {
@@ -64,43 +62,45 @@ module.exports.loginAccount = async function (userId, accountId, options) {
         }
     }
 
-    // newaccount flag not passed
-    if (!options || !options.newAccount) {
+    // check if account is online if it's a new account
+    if (!newAccount) {
         // check if account is online
         if (self.isAccountOnline(userId, accountId)) {
             return Promise.reject("Account is already online.");
         }
-        // setup login options
+
+        // also setup login options
         loginOptions = self.setupLoginOptions(doc);
 
-        // new account
-    } else if (options && options.newAccount) {
+    } else { // new account, login options passed
         loginOptions.newAccount = true;
         loginOptions = options.loginOptions
     }
 
     // request came from accounts initiolizer
-    if(options && options.initializing){
+    if (options && options.initializing) {
         loginOptions.initializing = true;
     }
 
+    // setup socketId
+    let socketId = null;
+    if (options && options.socketId) {
+        socketId = options.socketId;
+    }
+
     try {
-        let socketId = null;
-        if (options && options.socketId) {
-            socketId = options.socketId;
-        }
         // attempt login, loginOptions gets modified during the process.
         let client = await self.steamConnect(loginOptions, socketId);
 
-        // newaccount flag not passed
-        if (!options || !options.newAccount) {
-            doc.games = self.addGames(loginOptions.games, doc.games);
-        }
+        // // add games to current list if not a new account
+        // if (!newAccount) {
+        //     doc.games = self.addGames(loginOptions.games, doc.games);
+        // }
 
-        // prepare account to save to db
+        // PREPARE TO SAVE TO DB
 
-        // new account, request came from addAccount
-        if (options && options.newAccount) {
+        // new account
+        if (newAccount) {
             // create new doc
             doc = new SteamAccount({
                 _id: mongoose.Types.ObjectId(), // need an object Id before saving
@@ -111,7 +111,6 @@ module.exports.loginAccount = async function (userId, accountId, options) {
                 farmingData: loginOptions.farmingData,
                 inventory: loginOptions.inventory,
                 steamid: loginOptions.steamid,
-                games: loginOptions.games
             })
 
             // Only 2FA accs get shared secret
@@ -124,6 +123,7 @@ module.exports.loginAccount = async function (userId, accountId, options) {
             }
         }
 
+        doc.games = loginOptions.games;
         doc.persona_name = loginOptions.persona_name;
         doc.avatar = loginOptions.avatar;
         doc.status = loginOptions.status || "Online"
@@ -141,7 +141,7 @@ module.exports.loginAccount = async function (userId, accountId, options) {
         self.saveToHandler(userId, doc._id, client);
 
         // Check if farming should restart if not a new account
-        if (!options || !options.newAccount) {
+        if (!newAccount) {
             await self.farmingIdlingRestart(client, doc)
         }
 
@@ -358,11 +358,11 @@ module.exports.steamConnect = async function (loginOptions, socketId) {
 
         // connection has been regained after being logged in
         client.on("connection-gained", async () => {
-            if(!client.accountId){
+            if (!client.accountId) {
                 console.error("client does not have accountId property.")
                 return;
             }
-            
+
             //find acc by user
             let doc = await self.getAccount({ accountId: client.accountId });
             if (!doc) {

@@ -95,7 +95,9 @@ module.exports.loginListener = function () {
         else if (code == 5) {
             errMsg = "Bad User/Pass."
         }
-
+        else if(code ==56){ //"PasswordUnset"
+            errMsg = "Check your login details."
+        }
         // EMAIL GUARD 
         else if (code == 63 || code == 65) {
             this.dontReconnect = true;
