@@ -19,9 +19,7 @@ module.exports = async function (req, res, next) {
     // define custom send() to remove the limiter
     let send = res.send;
     res.send = async function (body) {
-        console.log(typeof (body))
         if (typeof (body) === 'string') {
-            console.log('here')
             try {
                 await remove(req.session.userId);
             } catch (err) {
