@@ -6,6 +6,7 @@ module.exports.loginListener = function () {
     let self = this;
     // LOGIN RESPONSE
     this.client.once('logOnResponse', async (res) => {
+        console.log(res);
         let code = res.eresult
         let errMsg = ""
 

@@ -16,7 +16,7 @@ Router.post("/steamaccount/add", async (req, res) => {
     if (!req.body.socketId) {
         return res.status(400).send("socket ID needed.")
     }
-
+    
     // setup login options
     let options = {
         user: req.body.user.toLowerCase().trim(),

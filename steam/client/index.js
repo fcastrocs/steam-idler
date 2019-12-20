@@ -5,7 +5,7 @@ const Steam = require('../index')
 const EventEmitter = require('events').EventEmitter;
 const GetProxy = require('../../util/proxy').GetProxy;
 const GetSteamCM = require('../../util/steamcm').GetSteamCM
-const RemoveProxy = require("../../util/proxy").RemoveProxy
+//const RemoveProxy = require("../../util/proxy").RemoveProxy
 const GetAndSaveProxies = require('../../util/proxy').GetAndSaveProxies;
 const SteamTotp = require('steam-totp');
 const io = require("../../app").io;
@@ -182,7 +182,7 @@ class Client extends EventEmitter {
         this.reconnecting = true;
         this.Disconnect();
         // Remove the proxy
-        RemoveProxy(this.proxy);
+        //RemoveProxy(this.proxy);
         console.log(`Reconnecting: ${err} > user: ${this.account.user} | proxy IP: ${this.proxy.ip}`);
         this.connect();
     }
