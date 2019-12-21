@@ -268,7 +268,7 @@ module.exports.nominateGames = async function () {
             }
 
             try {
-                await Request(options);
+                return await Request(options);
             } catch (error) {
                 console.log("VOTE: " + i + " FAILED. RETRYING...");
                 setTimeout(() => attempt(retries, i), STEAMCOMMUNITY_RETRY_DELAY);
