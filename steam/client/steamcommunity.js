@@ -277,6 +277,7 @@ module.exports.nominateGames = async function () {
 
         for(; currentVote < votes.length; currentVote++){
             try{
+                console.log("CASTING VOTE: " + currentVote);
                 await attempt(0, currentVote);
             }catch(err){
                 console.log("COULD'T CAST VOTE " + currentVote);
