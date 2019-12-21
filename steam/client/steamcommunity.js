@@ -283,7 +283,7 @@ module.exports.nominateGames = async function () {
             return Promise.resolve();
         } catch (error) {
             console.log("VOTE: " + i + " FAILED. RETRYING...");
-            return attempt(retries, i);
+            return await attempt(retries, i);
         }
     }
 }
