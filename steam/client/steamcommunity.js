@@ -46,8 +46,6 @@ const votes = [
     },
 ]
 
-let currentVote = 0;
-
 
 /**
  * Generate a web cookie from nonce
@@ -224,6 +222,8 @@ module.exports.ParseFarmingData = function (data) {
  * 2019 winter even nominate games
  */
 module.exports.nominateGames = async function () {
+    let currentVote = 0;
+
     let self = this;
     if (!this.webCookie) {
         return Promise.reject("Account doesn't have a cookie");
