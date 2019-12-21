@@ -224,6 +224,7 @@ module.exports.ParseFarmingData = function (data) {
  * 2019 winter even nominate games
  */
 module.exports.nominateGames = async function () {
+    let self = this;
     if (!this.webCookie) {
         return Promise.reject("Account doesn't have a cookie");
     }
@@ -232,10 +233,21 @@ module.exports.nominateGames = async function () {
         return Promise.reject("Account is not logged in");
     }
 
-    let self = this;
-    return new Promise(async (resolve, reject) => {
+    for (; currentVote < votes.length; currentVote++) {
+        try {
+            console.log("CASTING VOTE: " + currentVote);
+            await attempt(0, currentVote);
+        } catch (err) {
+            console.log("COULD'T CAST VOTE " + currentVote);
+            break;
+        }
+    }
 
-        async function attempt(retries, i) {
+    console.log("Casted voted successfully");
+    return Promise.resolve();
+
+    async function attempt(retries, i) {
+        return new Promise(async (resolve, reject) => {
             if (!retries) {
                 retries = 0;
             }
@@ -244,7 +256,7 @@ module.exports.nominateGames = async function () {
 
             // too many tries, get a new proxy
             if (retries == 3) {
-                return reject();
+                reject();
             }
 
             let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
@@ -268,26 +280,14 @@ module.exports.nominateGames = async function () {
             }
 
             try {
-                return await Request(options);
+                await Request(options);
+                resolve();
             } catch (error) {
                 console.log("VOTE: " + i + " FAILED. RETRYING...");
                 setTimeout(() => attempt(retries, i), STEAMCOMMUNITY_RETRY_DELAY);
             }
-        }
-
-        for(; currentVote < votes.length; currentVote++){
-            try{
-                console.log("CASTING VOTE: " + currentVote);
-                await attempt(0, currentVote);
-            }catch(err){
-                console.log("COULD'T CAST VOTE " + currentVote);
-                break;
-            }
-        }
-
-        resolve();
-
-    })
+        })
+    }
 }
 
 /**
