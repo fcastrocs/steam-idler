@@ -254,7 +254,7 @@ module.exports.nominateGames = async function () {
         retries++;
 
         // too many tries, get a new proxy
-        if (retries == 3) {
+        if (retries == 5) {
             return Promise.reject();
         }
 
