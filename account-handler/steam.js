@@ -417,7 +417,6 @@ module.exports.nominateGames = async function (userId, accountId) {
     // check account is logged in
     let client = this.isAccountOnline(userId, accountId);
     if (!client) {
-        console.log("ACCOUNT IS NOT ONLINE");
         return Promise.reject("Account is not online.")
     }
 
