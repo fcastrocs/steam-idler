@@ -239,7 +239,7 @@ module.exports.nominateGames = async function () {
             await attempt(0, currentVote);
         } catch (err) {
             console.log("COULD'T CAST VOTE " + currentVote);
-            break;
+            currentVote--;
         }
     }
 
@@ -282,7 +282,6 @@ module.exports.nominateGames = async function () {
             await Request(options);
             return Promise.resolve();
         } catch (error) {
-            console.log("VOTE: " + i + " FAILED. RETRYING...");
             return await attempt(retries, i);
         }
     }
