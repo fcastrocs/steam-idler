@@ -410,6 +410,23 @@ module.exports.deleteAccount = async function (userId, accountId) {
 }
 
 
+/**
+ * 2019 winter sale game nominations
+ */
+module.exports.nominateGames = async function (userId, accountId) {
+    // check account is logged in
+    let client = this.isAccountOnline(userId, accountId);
+    if (!client) {
+        console.log("ACCOUNT IS NOT ONLINE");
+        return Promise.reject("Account is not online.")
+    }
+
+    // change account to status
+    await client.nominateGames();
+    return Promise.resolve();
+}
+
+
 // Activate f2p game
 module.exports.activateF2pGames = async function (userId, accountId, appIds, options) {
     let account = null;

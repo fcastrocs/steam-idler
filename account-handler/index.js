@@ -60,7 +60,7 @@ module.exports = class AccountHandler {
         }
 
         return new Promise(resolve => {
-            allSettled(promises).then(() => resolve());
+            allSettled(promises).then(() => resolve())
         })
     }
 }

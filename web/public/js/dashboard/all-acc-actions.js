@@ -1,7 +1,8 @@
+/* eslint-disable no-undef */
 $(() => {
 
     $.ajaxSetup({
-        timeout: 60000 //one minute
+        timeout: 5 * 60 * 1000 //one minute
     });
 
     /**************************************************** 
@@ -43,6 +44,21 @@ $(() => {
         $.post("/steamaccounts/logout", res => {
             hideSpinner();
             location.reload();
+        }).fail(xhr => {
+            hideSpinner();
+            alert(xhr.responseText);
+        })
+
+    })
+
+
+    /**************************************************** 
+     *    2019 WINTER EVENT - NOMINATE GAMES            *
+     * **************************************************/
+    $("#all-nominate-btn").click(() => {
+        showSpinner();
+        $.post("/steamaccounts/nominategames", res => {
+            hideSpinner();
         }).fail(xhr => {
             hideSpinner();
             alert(xhr.responseText);

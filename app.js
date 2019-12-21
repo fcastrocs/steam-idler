@@ -64,22 +64,13 @@ module.exports.accountHandler = accountHandler;
         process.exit();
     }
 
-    // Fetch proxies now, then every 40 minutes 
+    // Fetch proxies
     try {
         let count = await fetchProxies();
         console.log(` - ${count} proxies fetched`)
     } catch (error) {
         console.log(error);
     }
-
-    setInterval(async () => {
-        try {
-            let count = await fetchProxies();
-            console.log(` - ${count} proxies fetched`)
-        } catch (error) {
-            console.log(error);
-        }
-    }, 120 * 60 * 1000);
 
     // Initialize accounts in handlers
     try {

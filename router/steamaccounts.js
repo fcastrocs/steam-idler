@@ -20,6 +20,32 @@ Router.get('/steamaccounts', async (req, res) => {
 })
 
 /**
+ * 2019 winter event game nominations
+ */
+
+ Router.post("/steamaccounts/nominategames", async function(req, res){
+    try {
+        // get all user accounts
+        let accounts = await AccountHandler.getAllAccounts(req.session.userId, { dontFilter: true })
+        if (accounts.length == 0) {
+            return res.status(400).send("You don't have any accounts.")
+        }
+
+        let promises = []
+        for (let i in accounts) {
+            promises.push(AccountHandler.nominateGames(req.session.userId, accounts[i]._id))
+        }
+
+        allSettled(promises).then(() => {
+            return res.send("games nominated");
+        })
+
+    } catch (error) {
+        console.error(error)
+    }
+ })
+
+/**
  * Login all accounts
  */
 Router.post('/steamaccounts/login', async function (req, res) {

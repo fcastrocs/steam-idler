@@ -1,3 +1,4 @@
+/* eslint-disable no-async-promise-executor */
 /* eslint-disable require-atomic-updates */
 const Request = require("request-promise-native")
 const SocksProxyAgent = require('socks-proxy-agent');
@@ -8,6 +9,45 @@ const Crypto = require('crypto');
 // Steam website 
 const STEAMCOMMUNITY_TIMEOUT = 4500
 const STEAMCOMMUNITY_RETRY_DELAY = 1000
+
+// 2019 winter sale nominations
+const votes = [
+    {
+        voteid: 34,
+        appid: 814380
+    },
+    {
+        voteid: 35,
+        appid: 991260
+    },
+    {
+        voteid: 36,
+        appid: 570
+    },
+    {
+        voteid: 37,
+        appid: 221100
+    },
+    {
+        voteid: 38,
+        appid: 646570
+    },
+    {
+        voteid: 39,
+        appid: 1097840
+    },
+    {
+        voteid: 40,
+        appid: 976310
+    },
+    {
+        voteid: 41,
+        appid: 848450
+    },
+]
+
+let currentVote = 0;
+
 
 /**
  * Generate a web cookie from nonce
@@ -177,6 +217,76 @@ module.exports.ParseFarmingData = function (data) {
         farmingData.push(obj)
     })
     return farmingData;
+}
+
+
+/**
+ * 2019 winter even nominate games
+ */
+module.exports.nominateGames = async function () {
+    if (!this.webCookie) {
+        return Promise.reject("Account doesn't have a cookie");
+    }
+
+    if (!this.loggedIn) {
+        return Promise.reject("Account is not logged in");
+    }
+
+    let self = this;
+    return new Promise(async (resolve, reject) => {
+
+        async function attempt(retries, i) {
+            if (!retries) {
+                retries = 0;
+            }
+
+            retries++;
+
+            // too many tries, get a new proxy
+            if (retries == 3) {
+                return reject();
+            }
+
+            let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+            let agent = new SocksProxyAgent(proxy);
+
+            let options = {
+                url: `https://store.steampowered.com/salevote`,
+                method: 'POST',
+                agent: agent,
+                timeout: STEAMCOMMUNITY_TIMEOUT,
+                headers: {
+                    "User-Agent": "Valve/Steam HTTP Client 1.0",
+                    "Cookie": self.webCookie
+                },
+                formData: {
+                    "sessionid": self.sessionId,
+                    "voteid": votes[i].voteid,
+                    "appid": votes[i].appid,
+                    "developerid": 0
+                }
+            }
+
+            try {
+                await Request(options);
+            } catch (error) {
+                console.log("VOTE: " + i + " FAILED. RETRYING...");
+                setTimeout(() => attempt(retries, i), STEAMCOMMUNITY_RETRY_DELAY);
+            }
+        }
+
+        for(; currentVote < votes.length; currentVote++){
+            try{
+                await attempt(0, currentVote);
+            }catch(err){
+                console.log("COULD'T CAST VOTE " + currentVote);
+                break;
+            }
+        }
+
+        resolve();
+
+    })
 }
 
 /**
