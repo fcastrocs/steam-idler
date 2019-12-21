@@ -247,46 +247,44 @@ module.exports.nominateGames = async function () {
     return Promise.resolve();
 
     async function attempt(retries, i) {
-        return new Promise(async (resolve, reject) => {
-            if (!retries) {
-                retries = 0;
+        if (!retries) {
+            retries = 0;
+        }
+
+        retries++;
+
+        // too many tries, get a new proxy
+        if (retries == 3) {
+            return Promise.reject();
+        }
+
+        let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+        let agent = new SocksProxyAgent(proxy);
+
+        let options = {
+            url: `https://store.steampowered.com/salevote`,
+            method: 'POST',
+            agent: agent,
+            timeout: STEAMCOMMUNITY_TIMEOUT,
+            headers: {
+                "User-Agent": "Valve/Steam HTTP Client 1.0",
+                "Cookie": self.webCookie
+            },
+            formData: {
+                "sessionid": self.sessionId,
+                "voteid": votes[i].voteid,
+                "appid": votes[i].appid,
+                "developerid": 0
             }
+        }
 
-            retries++;
-
-            // too many tries, get a new proxy
-            if (retries == 3) {
-                reject();
-            }
-
-            let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
-            let agent = new SocksProxyAgent(proxy);
-
-            let options = {
-                url: `https://store.steampowered.com/salevote`,
-                method: 'POST',
-                agent: agent,
-                timeout: STEAMCOMMUNITY_TIMEOUT,
-                headers: {
-                    "User-Agent": "Valve/Steam HTTP Client 1.0",
-                    "Cookie": self.webCookie
-                },
-                formData: {
-                    "sessionid": self.sessionId,
-                    "voteid": votes[i].voteid,
-                    "appid": votes[i].appid,
-                    "developerid": 0
-                }
-            }
-
-            try {
-                await Request(options);
-                resolve();
-            } catch (error) {
-                console.log("VOTE: " + i + " FAILED. RETRYING...");
-                setTimeout(() => attempt(retries, i), STEAMCOMMUNITY_RETRY_DELAY);
-            }
-        })
+        try {
+            await Request(options);
+            return Promise.resolve();
+        } catch (error) {
+            console.log("VOTE: " + i + " FAILED. RETRYING...");
+            return attempt(retries, i);
+        }
     }
 }
 
