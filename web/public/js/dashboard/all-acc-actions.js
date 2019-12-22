@@ -2,7 +2,7 @@
 $(() => {
 
     $.ajaxSetup({
-        timeout: 5 * 60 * 1000 //one minute
+        timeout: 9 * 60 * 1000 //one minute
     });
 
     /**************************************************** 
@@ -46,7 +46,6 @@ $(() => {
             location.reload();
         }).fail(xhr => {
             hideSpinner();
-            alert(xhr.responseText);
         })
 
     })
@@ -56,16 +55,17 @@ $(() => {
      *    2019 WINTER EVENT - NOMINATE GAMES            *
      * **************************************************/
     $("#all-nominate-btn").click(() => {
+        alert("This will take a while, do not click the button again.")
         showSpinner();
         $.post("/steamaccounts/nominategames", res => {
             hideSpinner();
         }).fail(xhr => {
             hideSpinner();
-            alert(xhr.responseText);
         })
     })
 
     $("#all-discover-queues-btn").click(() => {
+        alert("This will take a while, do not click the button again.")
         showSpinner();
         $.post("/steamaccounts/view_discovery_queue", res => {
             hideSpinner();

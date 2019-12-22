@@ -69,6 +69,7 @@ module.exports.loginListener = function () {
             self.setPersona(self.account.forcedStatus)
 
             console.log(`Steam Login > user: ${self.account.user}`)
+            this.fullyLoggedIn = true;
 
             self.emit("login-res", {
                 steamid: self.account.steamid,

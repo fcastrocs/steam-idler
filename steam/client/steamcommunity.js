@@ -7,8 +7,8 @@ const cheerio = require('cheerio')
 const Crypto = require('crypto');
 
 // Steam website 
-const STEAMCOMMUNITY_TIMEOUT = 6500
-const STEAMCOMMUNITY_RETRY_DELAY = 1000
+const STEAMCOMMUNITY_TIMEOUT = 10000
+const STEAMCOMMUNITY_RETRY_DELAY = 3000
 
 // 2019 winter sale nominations
 const votes = [
@@ -99,7 +99,7 @@ module.exports.GenerateWebCookie = function (nonce) {
                     self.sessionId = sessionId;
                     let steamLogin = data.authenticateuser.token
                     let steamLoginSecure = data.authenticateuser.tokensecure
-                    let cookie = `sessionid=${sessionId}; steamLogin=${steamLogin}; steamLoginSecure=${steamLoginSecure};`
+                    let cookie = `sessionid=${sessionId}; steamLogin=${steamLogin}; steamLoginSecure=${steamLoginSecure}; birthtime=-2021828399; lastagecheckage=7-0-1906;`
                     return resolve(cookie);
                 }
             } catch (error) {
@@ -222,7 +222,7 @@ module.exports.waitUntilLoggedIn = function () {
     let self = this;
     return new Promise(resolve => {
         (function check() {
-            if (self.loggedIn && self.webCookie) {
+            if (self.fullyLoggedIn) {
                 return resolve();
             }
             setTimeout(() => check(), 5000);
@@ -240,11 +240,7 @@ module.exports.nominateGames = async function () {
     }
 
     let self = this;
-    if (!this.webCookie) {
-        return Promise.reject("Account doesn't have a cookie");
-    }
-
-    if (!this.loggedIn) {
+    if (!self.fullyLoggedIn) {
         return Promise.reject("Account is not logged in");
     }
 
@@ -264,10 +260,10 @@ module.exports.nominateGames = async function () {
                 // too many tries, renew the connection
                 if (retries >= 3) {
                     console.log("VOTE " + (i + 1) + " FAILED, RENEWING CONNECTION.");
-                    self.loggedIn = false;
+                    self.fullyLoggedIn = false;
                     setTimeout(() => {
                         self.RenewConnection("need new cookie");
-                    }, 40000);
+                    }, 30000);
                     await self.waitUntilLoggedIn();
                     retries = 0;
                 }
@@ -300,7 +296,7 @@ module.exports.nominateGames = async function () {
                     retries++;
                     setTimeout(() => {
                         tryVote();
-                    }, 10000);
+                    }, 6000);
                 }
             })();
         })
@@ -310,13 +306,18 @@ module.exports.nominateGames = async function () {
 
 module.exports.viewDiscoveryQueue = async function () {
     let self = this;
-    if (!this.webCookie) {
-        return Promise.reject("Account doesn't have a cookie");
-    }
-
-    if (!this.loggedIn) {
+    if (!self.fullyLoggedIn) {
         return Promise.reject("Account is not logged in");
     }
+
+    await setMaturity(5);
+    console.log("Maturity option 5 set");
+    await setMaturity(2);
+    console.log("Maturity option 2 set");
+    await setMaturity(1);
+    console.log("Maturity option 1 set");
+    await setMaturity(3);
+    console.log("Maturity option 3 set");
 
     // do three queue discoveries
     for (let i = 0; i < 3; i++) {
@@ -330,6 +331,55 @@ module.exports.viewDiscoveryQueue = async function () {
         console.log("Queue " + (i + 1) + " clearned.");
     }
 
+    function setMaturity(descid) {
+        let retries = 0;
+        return new Promise(async resolve => {
+            (async function trySetMaturity() {
+                // too many tries, renew the connection
+                if (retries >= 3) {
+                    console.log("COULD NOT SET MATURITY OPTION " + descid);
+                    self.fullyLoggedIn = false;
+                    setTimeout(() => {
+                        self.RenewConnection("need new cookie");
+                    }, 10000);
+                    await self.waitUntilLoggedIn();
+                    retries = 0;
+                }
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://store.steampowered.com/account/saveonecontentdescriptorpreference`,
+                    method: 'POST',
+                    agent: agent,
+                    timeout: STEAMCOMMUNITY_TIMEOUT,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    },
+                    formData: {
+                        "sessionid": self.sessionId,
+                        "descid": descid,
+                        "hide": 0
+                    }
+                }
+
+                try {
+                    await Request(options);
+                    return resolve();
+                } catch (error) {
+                    console.log("Could not set maturity option " + descid + ", retrying...");
+                    retries++;
+                    setTimeout(() => {
+                        trySetMaturity();
+                    }, STEAMCOMMUNITY_RETRY_DELAY);
+                }
+            })();
+        })
+
+    }
+
     function clearFromQueue(appid) {
         let retries = 0;
         return new Promise(async resolve => {
@@ -337,10 +387,10 @@ module.exports.viewDiscoveryQueue = async function () {
                 // too many tries, renew the connection
                 if (retries >= 3) {
                     console.log("CLEARING APPID " + appid + " FAILED, RENEWING CONNECTION.");
-                    self.loggedIn = false;
+                    self.fullyLoggedIn = false;
                     setTimeout(() => {
                         self.RenewConnection("need new cookie");
-                    }, 40000);
+                    }, 10000);
                     await self.waitUntilLoggedIn();
                     retries = 0;
                 }
@@ -372,7 +422,7 @@ module.exports.viewDiscoveryQueue = async function () {
                     retries++;
                     setTimeout(() => {
                         tryClear();
-                    }, 10000);
+                    }, STEAMCOMMUNITY_RETRY_DELAY);
                 }
             })();
         })
@@ -385,10 +435,10 @@ module.exports.viewDiscoveryQueue = async function () {
                 // too many tries, renew the connection
                 if (retries >= 3) {
                     console.log("GETTING QUEUE FAILED " + i + ", RENEWING CONNECTION.");
-                    self.loggedIn = false;
+                    self.fullyLoggedIn = false;
                     setTimeout(() => {
-                        self.RenewConnection("need new cookie"); 
-                    }, 40000);
+                        self.RenewConnection("need new cookie");
+                    }, 10000);
                     await self.waitUntilLoggedIn();
                     retries = 0;
                 }
@@ -420,7 +470,7 @@ module.exports.viewDiscoveryQueue = async function () {
                     retries++;
                     setTimeout(() => {
                         tryGetQueue();
-                    }, 10000);
+                    }, STEAMCOMMUNITY_RETRY_DELAY);
                 }
             })();
         })

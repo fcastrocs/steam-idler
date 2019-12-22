@@ -156,6 +156,7 @@ class Client extends EventEmitter {
      * @param {*} err error that triggered reconnection
      */
     RenewConnection(err) {
+        this.fullyLoggedIn = false;
         this.reconnecting = true;
         this.Disconnect();
         // Remove the proxy
