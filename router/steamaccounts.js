@@ -69,8 +69,9 @@ Router.get('/steamaccounts', async (req, res) => {
         for (let i in accounts) {
             promises.push(
                 new Promise(resolve=> setTimeout(() => {
-                    AccountHandler.viewDiscoveryQueue(req.session.userId, accounts[i]._id)
-                    resolve();
+                    AccountHandler.viewDiscoveryQueue(req.session.userId, accounts[i]._id).then(()=>{
+                        resolve();
+                    })
                 }, timeout))
             )
             timeout += 500;

@@ -257,7 +257,7 @@ module.exports.nominateGames = async function () {
         return new Promise(async resolve => {
             (async function tryVote() {
                 // too many tries, renew the connection
-                if (retries >= 3) {
+                if (retries >= 5) {
                     console.error("vote " + (i + 1) + " failed, renewing connection.");
                     self.RenewConnection("need new cookie");
                     await self.waitUntilLoggedIn();
@@ -331,7 +331,7 @@ module.exports.viewDiscoveryQueue = async function () {
         return new Promise(async resolve => {
             (async function trySetMaturity() {
                 // too many tries, renew the connection
-                if (retries >= 3) {
+                if (retries >= 5) {
                     console.error("Could not set maturity option " + descid);
                     self.fullyLoggedIn = false;
                     self.RenewConnection("need new cookie");
@@ -377,7 +377,7 @@ module.exports.viewDiscoveryQueue = async function () {
         return new Promise(async resolve => {
             (async function tryClear() {
                 // too many tries, renew the connection
-                if (retries >= 3) {
+                if (retries >= 5) {
                     console.error("Clearing appid " + appid + " failed, renewing connection.");
                     self.RenewConnection("need new cookie");
                     await self.waitUntilLoggedIn();
@@ -421,7 +421,7 @@ module.exports.viewDiscoveryQueue = async function () {
         return new Promise(async resolve => {
             (async function tryGetQueue() {
                 // too many tries, renew the connection
-                if (retries >= 3) {
+                if (retries >= 5) {
                     console.log("Getting queue " + i + " failed, renewing connection.");
                     self.RenewConnection("need new cookie");
                     await self.waitUntilLoggedIn();
