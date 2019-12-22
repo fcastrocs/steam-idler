@@ -229,7 +229,7 @@ Router.post("/steamaccount/clearaliases", async function (req, res) {
 
     try {
         await AccountHandler.clearAliases(req.session.userId, req.body.accountId);
-        return res.send()
+        return res.send("clear aliases")
     } catch (error) {
         console.error(error);
         return res.status(400).send(error);
@@ -247,7 +247,7 @@ Router.post("/steamaccount/changeprivacy", async function (req, res) {
 
     try {
         await AccountHandler.changePrivacy(req.session.userId, req.body.accountId, req.body.formData);
-        return res.send()
+        return res.send("changed privacy")
     } catch (error) {
         console.error(error);
         return res.status(400).send(error);
