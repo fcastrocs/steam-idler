@@ -7,7 +7,7 @@ const cheerio = require('cheerio')
 const Crypto = require('crypto');
 
 // Steam website 
-const STEAMCOMMUNITY_TIMEOUT = 10000
+const STEAMCOMMUNITY_TIMEOUT = 6500
 const STEAMCOMMUNITY_RETRY_DELAY = 1000
 
 // 2019 winter sale nominations
