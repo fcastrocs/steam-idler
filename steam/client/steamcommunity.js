@@ -262,9 +262,12 @@ module.exports.nominateGames = async function () {
         return new Promise(async resolve => {
             (async function tryVote() {
                 // too many tries, renew the connection
-                if (retries >= 4) {
+                if (retries >= 3) {
                     console.log("VOTE " + (i + 1) + " FAILED, RENEWING CONNECTION.");
-                    self.RenewConnection("need new cookie");
+                    self.loggedIn = false;
+                    setTimeout(() => {
+                        self.RenewConnection("need new cookie");
+                    }, 40000);
                     await self.waitUntilLoggedIn();
                     retries = 0;
                 }
@@ -296,8 +299,8 @@ module.exports.nominateGames = async function () {
                     console.log("Vote " + (i + 1) + " failed, retrying...");
                     retries++;
                     setTimeout(() => {
-                        tryVote(); 
-                    }, 5000);
+                        tryVote();
+                    }, 10000);
                 }
             })();
         })
@@ -317,8 +320,8 @@ module.exports.viewDiscoveryQueue = async function () {
 
     // do three queue discoveries
     for (let i = 0; i < 3; i++) {
-        let queue = await getQueue(i+1);
-        console.log("Got queue " + (i+1));
+        let queue = await getQueue(i + 1);
+        console.log("Got queue " + (i + 1));
 
         for (let j = 0; j < queue.length; j++) {
             await clearFromQueue(queue[j]);
@@ -332,9 +335,12 @@ module.exports.viewDiscoveryQueue = async function () {
         return new Promise(async resolve => {
             (async function tryClear() {
                 // too many tries, renew the connection
-                if (retries >= 4) {
+                if (retries >= 3) {
                     console.log("CLEARING APPID " + appid + " FAILED, RENEWING CONNECTION.");
-                    self.RenewConnection("need new cookie");
+                    self.loggedIn = false;
+                    setTimeout(() => {
+                        self.RenewConnection("need new cookie");
+                    }, 40000);
                     await self.waitUntilLoggedIn();
                     retries = 0;
                 }
@@ -365,8 +371,8 @@ module.exports.viewDiscoveryQueue = async function () {
                     console.log("Clearing appid " + appid + " failed, retrying...");
                     retries++;
                     setTimeout(() => {
-                        tryClear(); 
-                    }, 5000);
+                        tryClear();
+                    }, 10000);
                 }
             })();
         })
@@ -377,9 +383,12 @@ module.exports.viewDiscoveryQueue = async function () {
         return new Promise(async resolve => {
             (async function tryGetQueue() {
                 // too many tries, renew the connection
-                if (retries >= 4) {
+                if (retries >= 3) {
                     console.log("GETTING QUEUE FAILED " + i + ", RENEWING CONNECTION.");
-                    self.RenewConnection("need new cookie");
+                    self.loggedIn = false;
+                    setTimeout(() => {
+                        self.RenewConnection("need new cookie"); 
+                    }, 40000);
                     await self.waitUntilLoggedIn();
                     retries = 0;
                 }
@@ -410,8 +419,8 @@ module.exports.viewDiscoveryQueue = async function () {
                     console.log("Could not get queue " + i + ", retrying...");
                     retries++;
                     setTimeout(() => {
-                        tryGetQueue(); 
-                    }, 5000);
+                        tryGetQueue();
+                    }, 10000);
                 }
             })();
         })
