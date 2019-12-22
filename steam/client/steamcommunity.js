@@ -218,11 +218,26 @@ module.exports.ParseFarmingData = function (data) {
 }
 
 
+module.exports.waitUntilLoggedIn = function () {
+    let self = this;
+    return new Promise(resolve => {
+        (function check() {
+            if (self.loggedIn && self.webCookie) {
+                return resolve();
+            }
+            setTimeout(() => check(), 5000);
+        })();
+    });
+}
+
+
 /**
  * 2019 winter even nominate games
  */
 module.exports.nominateGames = async function () {
-    let currentVote = 0;
+    if (!this.currentVote) {
+        this.currentVote = 0;
+    }
 
     let self = this;
     if (!this.webCookie) {
@@ -233,57 +248,173 @@ module.exports.nominateGames = async function () {
         return Promise.reject("Account is not logged in");
     }
 
-    for (; currentVote < votes.length; currentVote++) {
-        try {
-            console.log("CASTING VOTE: " + currentVote);
-            await attempt(0, currentVote);
-        } catch (err) {
-            console.log("COULD'T CAST VOTE " + currentVote);
-            currentVote--;
-        }
+    for (; this.currentVote < votes.length; this.currentVote++) {
+        await castVote(this.currentVote);
+        console.log("Casted vote: " + (this.currentVote + 1));
     }
 
-    console.log("Casted voted successfully");
+    console.log("Casted all votes successfully");
     return Promise.resolve();
 
-    async function attempt(retries, i) {
-        if (!retries) {
-            retries = 0;
+
+    function castVote(i) {
+        let retries = 0;
+        return new Promise(async resolve => {
+            (async function tryVote() {
+                // too many tries, renew the connection
+                if (retries >= 4) {
+                    console.log("VOTE " + (i + 1) + " FAILED, RENEWING CONNECTION.");
+                    self.RenewConnection("need new cookie");
+                    await self.waitUntilLoggedIn();
+                    retries = 0;
+                }
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://store.steampowered.com/salevote`,
+                    method: 'POST',
+                    agent: agent,
+                    timeout: STEAMCOMMUNITY_TIMEOUT,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    },
+                    formData: {
+                        "sessionid": self.sessionId,
+                        "voteid": votes[i].voteid,
+                        "appid": votes[i].appid,
+                        "developerid": 0
+                    }
+                }
+
+                try {
+                    await Request(options);
+                    return resolve();
+                } catch (error) {
+                    console.log("Vote " + (i + 1) + " failed, retrying...");
+                    retries++;
+                    setTimeout(() => {
+                        tryVote(); 
+                    }, 5000);
+                }
+            })();
+        })
+    }
+}
+
+
+module.exports.viewDiscoveryQueue = async function () {
+    let self = this;
+    if (!this.webCookie) {
+        return Promise.reject("Account doesn't have a cookie");
+    }
+
+    if (!this.loggedIn) {
+        return Promise.reject("Account is not logged in");
+    }
+
+    // do three queue discoveries
+    for (let i = 0; i < 3; i++) {
+        let queue = await getQueue(i+1);
+        console.log("Got queue " + (i+1));
+
+        for (let j = 0; j < queue.length; j++) {
+            await clearFromQueue(queue[j]);
+            console.log("cleared appid " + queue[j])
         }
+        console.log("Queue " + (i + 1) + " clearned.");
+    }
 
-        retries++;
+    function clearFromQueue(appid) {
+        let retries = 0;
+        return new Promise(async resolve => {
+            (async function tryClear() {
+                // too many tries, renew the connection
+                if (retries >= 4) {
+                    console.log("CLEARING APPID " + appid + " FAILED, RENEWING CONNECTION.");
+                    self.RenewConnection("need new cookie");
+                    await self.waitUntilLoggedIn();
+                    retries = 0;
+                }
 
-        // too many tries, get a new proxy
-        if (retries == 5) {
-            return Promise.reject();
-        }
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
 
-        let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
-        let agent = new SocksProxyAgent(proxy);
+                let options = {
+                    url: `https://store.steampowered.com/app/${appid}`,
+                    method: 'POST',
+                    agent: agent,
+                    timeout: STEAMCOMMUNITY_TIMEOUT,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    },
+                    formData: {
+                        "sessionid": self.sessionId,
+                        "appid_to_clear_from_queue": appid,
+                        "snr": "1_5_9__1324"
+                    }
+                }
 
-        let options = {
-            url: `https://store.steampowered.com/salevote`,
-            method: 'POST',
-            agent: agent,
-            timeout: STEAMCOMMUNITY_TIMEOUT,
-            headers: {
-                "User-Agent": "Valve/Steam HTTP Client 1.0",
-                "Cookie": self.webCookie
-            },
-            formData: {
-                "sessionid": self.sessionId,
-                "voteid": votes[i].voteid,
-                "appid": votes[i].appid,
-                "developerid": 0
-            }
-        }
+                try {
+                    await Request(options);
+                    return resolve();
+                } catch (error) {
+                    console.log("Clearing appid " + appid + " failed, retrying...");
+                    retries++;
+                    setTimeout(() => {
+                        tryClear(); 
+                    }, 5000);
+                }
+            })();
+        })
+    }
 
-        try {
-            await Request(options);
-            return Promise.resolve();
-        } catch (error) {
-            return await attempt(retries, i);
-        }
+    function getQueue(i) {
+        let retries = 0;
+        return new Promise(async resolve => {
+            (async function tryGetQueue() {
+                // too many tries, renew the connection
+                if (retries >= 4) {
+                    console.log("GETTING QUEUE FAILED " + i + ", RENEWING CONNECTION.");
+                    self.RenewConnection("need new cookie");
+                    await self.waitUntilLoggedIn();
+                    retries = 0;
+                }
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let options = {
+                    url: `https://store.steampowered.com/explore/generatenewdiscoveryqueue`,
+                    method: 'POST',
+                    agent: agent,
+                    timeout: STEAMCOMMUNITY_TIMEOUT,
+                    headers: {
+                        "User-Agent": "Valve/Steam HTTP Client 1.0",
+                        "Cookie": self.webCookie
+                    },
+                    formData: {
+                        "sessionid": self.sessionId,
+                        "queuetype": 0
+                    }
+                }
+
+                try {
+                    let res = await Request(options);
+                    res = JSON.parse(res);
+                    return resolve(res.queue);
+                } catch (error) {
+                    console.log("Could not get queue " + i + ", retrying...");
+                    retries++;
+                    setTimeout(() => {
+                        tryGetQueue(); 
+                    }, 5000);
+                }
+            })();
+        })
     }
 }
 

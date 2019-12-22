@@ -142,7 +142,6 @@ Router.post('/steamaccount/redeemkey', async function (req, res) {
     }
 })
 
-
 // Redeem key
 Router.post('/steamaccount/setstatus', async function (req, res) {
     if (!req.body.accountId || !req.body.status) {

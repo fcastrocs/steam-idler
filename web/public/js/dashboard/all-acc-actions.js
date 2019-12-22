@@ -63,7 +63,16 @@ $(() => {
             hideSpinner();
             alert(xhr.responseText);
         })
+    })
 
+    $("#all-discover-queues-btn").click(() => {
+        showSpinner();
+        $.post("/steamaccounts/view_discovery_queue", res => {
+            hideSpinner();
+        }).fail(xhr => {
+            hideSpinner();
+            alert(xhr.responseText);
+        })
     })
 
     /**************************************************** 

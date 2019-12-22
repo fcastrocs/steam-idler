@@ -42,8 +42,36 @@ Router.get('/steamaccounts', async (req, res) => {
 
     } catch (error) {
         console.error(error)
+        return res.status(500).send("Could not nominate games.")
     }
  })
+
+ /**
+  * View discovery queues
+  */
+ Router.post("/steamaccounts/view_discovery_queue", async function(req, res){
+    try {
+        // get all user accounts
+        let accounts = await AccountHandler.getAllAccounts(req.session.userId, { dontFilter: true })
+        if (accounts.length == 0) {
+            return res.status(400).send("You don't have any accounts.")
+        }
+
+        let promises = []
+        for (let i in accounts) {
+            promises.push(AccountHandler.viewDiscoveryQueue(req.session.userId, accounts[i]._id))
+        }
+
+        allSettled(promises).then(() => {
+            return res.send("discovery queue viewed");
+        })
+
+    } catch (error) {
+        console.error(error)
+        return res.status(500).send("Could not view discovery queue.")
+    }
+ })
+
 
 /**
  * Login all accounts

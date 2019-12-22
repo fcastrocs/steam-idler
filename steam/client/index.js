@@ -6,7 +6,6 @@ const EventEmitter = require('events').EventEmitter;
 const GetProxy = require('../../util/proxy').GetProxy;
 const GetSteamCM = require('../../util/steamcm').GetSteamCM
 //const RemoveProxy = require("../../util/proxy").RemoveProxy
-const GetAndSaveProxies = require('../../util/proxy').GetAndSaveProxies;
 const SteamTotp = require('steam-totp');
 const io = require("../../app").io;
 
@@ -122,28 +121,6 @@ class Client extends EventEmitter {
         if (!options || !options.usePrevious) {
             this.steamcm = await GetSteamCM();
             this.proxy = await GetProxy();
-
-            // proxy list is empty, fetch more proxies.
-            if (!this.proxy) {
-                // havent started fetching a new list
-                if (process.env.fetchingProxies === "false") {
-                    console.error("Steam is down, getting a new proxy list in 14 mins");
-                    process.env.fetchingProxies = "true";
-                    setTimeout(async () => {
-                        await GetAndSaveProxies();
-                        process.env.fetchingProxies = "false";
-                        self.connect();
-                    }, 14 * 60 * 1000);
-                    return;
-                } else {
-                    // reconnect in between 15 to 20 mins
-                    let mins = (Math.random() * (20.0 - 15.0) + 15.0).toFixed(2);
-                    let timeout = Math.floor(mins * 60 * 1000);
-                    console.error(`Steam is down, waiting ${mins} mins until reconnect > ${this.account.user}`);
-                    setTimeout(() => self.connect(), timeout);
-                    return;
-                }
-            }
         }
 
         // connection options

@@ -425,6 +425,21 @@ module.exports.nominateGames = async function (userId, accountId) {
     return Promise.resolve();
 }
 
+/**
+ * 2019 winter sale game nominations
+ */
+module.exports.viewDiscoveryQueue = async function (userId, accountId) {
+    // check account is logged in
+    let client = this.isAccountOnline(userId, accountId);
+    if (!client) {
+        return Promise.reject("Account is not online.")
+    }
+
+    // change account to status
+    await client.viewDiscoveryQueue();
+    return Promise.resolve();
+}
+
 
 // Activate f2p game
 module.exports.activateF2pGames = async function (userId, accountId, appIds, options) {
