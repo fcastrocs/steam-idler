@@ -44,6 +44,7 @@ Router.get('/steamaccounts', async (req, res) => {
         }
 
         allSettled(promises).then(() => {
+            console.log("Finished nominating games");
             return res.send("games nominated");
         })
     } catch (error) {
@@ -76,11 +77,12 @@ Router.get('/steamaccounts', async (req, res) => {
         }
 
         allSettled(promises).then(() => {
-            return res.send("discovery queue viewed");
+            console.log("Finished viewing discovery queues.");
+            return res.send("discovery queues viewed");
         })
     } catch (error) {
         console.error(error)
-        return res.status(500).send("Could not view discovery queue.")
+        return res.status(500).send("Could not view discovery queues.")
     }
  })
 
