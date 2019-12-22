@@ -30,16 +30,22 @@ Router.get('/steamaccounts', async (req, res) => {
         if (accounts.length == 0) {
             return res.status(400).send("You don't have any accounts.")
         }
-
+        
+        let timeout = 0;
         let promises = []
         for (let i in accounts) {
-            promises.push(AccountHandler.nominateGames(req.session.userId, accounts[i]._id))
+            promises.push(
+                new Promise(resolve=> setTimeout(() => {
+                    AccountHandler.nominateGames(req.session.userId, accounts[i]._id)
+                    resolve();
+                }, timeout))
+            )
+            timeout += 500;
         }
 
         allSettled(promises).then(() => {
             return res.send("games nominated");
         })
-
     } catch (error) {
         console.error(error)
         return res.status(500).send("Could not nominate games.")
@@ -57,15 +63,21 @@ Router.get('/steamaccounts', async (req, res) => {
             return res.status(400).send("You don't have any accounts.")
         }
 
+        let timeout = 0;
         let promises = []
         for (let i in accounts) {
-            promises.push(AccountHandler.viewDiscoveryQueue(req.session.userId, accounts[i]._id))
+            promises.push(
+                new Promise(resolve=> setTimeout(() => {
+                    AccountHandler.viewDiscoveryQueue(req.session.userId, accounts[i]._id)
+                    resolve();
+                }, timeout))
+            )
+            timeout += 500;
         }
 
         allSettled(promises).then(() => {
             return res.send("discovery queue viewed");
         })
-
     } catch (error) {
         console.error(error)
         return res.status(500).send("Could not view discovery queue.")
