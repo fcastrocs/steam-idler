@@ -252,18 +252,14 @@ module.exports.nominateGames = async function () {
     console.log("Casted all votes successfully");
     return Promise.resolve();
 
-
     function castVote(i) {
         let retries = 0;
         return new Promise(async resolve => {
             (async function tryVote() {
                 // too many tries, renew the connection
                 if (retries >= 3) {
-                    console.log("VOTE " + (i + 1) + " FAILED, RENEWING CONNECTION.");
-                    self.fullyLoggedIn = false;
-                    setTimeout(() => {
-                        self.RenewConnection("need new cookie");
-                    }, 30000);
+                    console.error("vote " + (i + 1) + " failed, renewing connection.");
+                    self.RenewConnection("need new cookie");
                     await self.waitUntilLoggedIn();
                     retries = 0;
                 }
@@ -292,11 +288,10 @@ module.exports.nominateGames = async function () {
                     await Request(options);
                     return resolve();
                 } catch (error) {
-                    console.log("Vote " + (i + 1) + " failed, retrying...");
                     retries++;
                     setTimeout(() => {
                         tryVote();
-                    }, 6000);
+                    }, STEAMCOMMUNITY_RETRY_DELAY);
                 }
             })();
         })
@@ -337,11 +332,9 @@ module.exports.viewDiscoveryQueue = async function () {
             (async function trySetMaturity() {
                 // too many tries, renew the connection
                 if (retries >= 3) {
-                    console.log("COULD NOT SET MATURITY OPTION " + descid);
+                    console.error("Could not set maturity option " + descid);
                     self.fullyLoggedIn = false;
-                    setTimeout(() => {
-                        self.RenewConnection("need new cookie");
-                    }, 10000);
+                    self.RenewConnection("need new cookie");
                     await self.waitUntilLoggedIn();
                     retries = 0;
                 }
@@ -369,7 +362,6 @@ module.exports.viewDiscoveryQueue = async function () {
                     await Request(options);
                     return resolve();
                 } catch (error) {
-                    console.log("Could not set maturity option " + descid + ", retrying...");
                     retries++;
                     setTimeout(() => {
                         trySetMaturity();
@@ -386,11 +378,8 @@ module.exports.viewDiscoveryQueue = async function () {
             (async function tryClear() {
                 // too many tries, renew the connection
                 if (retries >= 3) {
-                    console.log("CLEARING APPID " + appid + " FAILED, RENEWING CONNECTION.");
-                    self.fullyLoggedIn = false;
-                    setTimeout(() => {
-                        self.RenewConnection("need new cookie");
-                    }, 10000);
+                    console.error("Clearing appid " + appid + " failed, renewing connection.");
+                    self.RenewConnection("need new cookie");
                     await self.waitUntilLoggedIn();
                     retries = 0;
                 }
@@ -418,7 +407,6 @@ module.exports.viewDiscoveryQueue = async function () {
                     await Request(options);
                     return resolve();
                 } catch (error) {
-                    console.log("Clearing appid " + appid + " failed, retrying...");
                     retries++;
                     setTimeout(() => {
                         tryClear();
@@ -434,11 +422,8 @@ module.exports.viewDiscoveryQueue = async function () {
             (async function tryGetQueue() {
                 // too many tries, renew the connection
                 if (retries >= 3) {
-                    console.log("GETTING QUEUE FAILED " + i + ", RENEWING CONNECTION.");
-                    self.fullyLoggedIn = false;
-                    setTimeout(() => {
-                        self.RenewConnection("need new cookie");
-                    }, 10000);
+                    console.log("Getting queue " + i + " failed, renewing connection.");
+                    self.RenewConnection("need new cookie");
                     await self.waitUntilLoggedIn();
                     retries = 0;
                 }
@@ -466,7 +451,6 @@ module.exports.viewDiscoveryQueue = async function () {
                     res = JSON.parse(res);
                     return resolve(res.queue);
                 } catch (error) {
-                    console.log("Could not get queue " + i + ", retrying...");
                     retries++;
                     setTimeout(() => {
                         tryGetQueue();
