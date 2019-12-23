@@ -5,10 +5,8 @@ $(() => {
     * **************************************************/
     $('#add-steamaccount-form').submit((e) => {
         e.preventDefault();
-
         //clear previous listeners
         socket.removeAllListeners();
-
         // Hide form
         $("#add-steamaccount-form").prop("hidden", true)
         // show warning
@@ -17,7 +15,6 @@ $(() => {
         $('#add-acc-console').prop("hidden", true).html("");
         $('#add-acc-error-msg').prop("hidden", true).text("")
         $('#add-acc-success-msg').prop("hidden", true);
-
         // get form data and transform it into an object
         let data = $('#add-steamaccount-form').serializeArray();
         let dataObj = new Object();
@@ -28,17 +25,13 @@ $(() => {
             dataObj[`${item.name}`] = item.value;
         })
 
-        /*********************************
-        *          LOG MESSAGES         *
-        ********************************/
+        // Display log messages
         socket.on("login-log-msg", msg => {
             let newMsg = `<p>• ${msg}</p>${$('#add-acc-console').html()}`
             $('#add-acc-console').html(newMsg).prop("hidden", false);
         })
 
-        /********************************
-        *          ERROR MESSAGE        *
-        ********************************/
+        // Login error messages
         socket.on("add-acc-error-msg", msg => {
             // hide warning message
             $("#add-acc-warning-msg").prop("hidden", true);
@@ -47,10 +40,7 @@ $(() => {
             // hide console
             $('#add-acc-console').prop("hidden", true).text("");
 
-
-            /********************************
-            *          EMAIL GUARD          *
-            ********************************/
+            // Email guard
             if (msg === "Invalid email guard code." || msg === "Email guard code needed.") {
                 // show email guard form
                 $("#email-guard-form").prop("hidden", false);
@@ -74,17 +64,14 @@ $(() => {
 
             }
 
-            /********************************
-            *         SHARED SECRET         *
-            ********************************/
+            // Shared secret
             else if (msg === "Invalid shared secret.") {
                 // show form
                 $("#add-steamaccount-form").prop("hidden", false);
                 $("input[name='sharedSecret").val("");
             }
-            /********************************
-            *         BAD PASSWORD          *
-            ********************************/
+
+            // Bad password
             else {
                 // show form
                 $("#add-steamaccount-form").prop("hidden", false);
@@ -92,6 +79,7 @@ $(() => {
             }
         })
 
+        // Logged in successfully
         socket.on("logged-in", doc => {
             $('#add-acc-success-msg').prop("hidden", false);
             // Show form
@@ -111,7 +99,7 @@ $(() => {
         // attach the socketId to data
         dataObj.socketId = socket.id
 
-        // send request
+        // Send request
         $.post('/steamaccount/add', dataObj);
     })
 
@@ -136,13 +124,6 @@ $(() => {
     *               STEAM - LOGIN                       *
     * **************************************************/
     $(document).on('click', ".acc-login-btn", function () {
-        if (apiLimit) {
-            alert("You have an ongoing request. Use the Actions button to login all accounts at once.")
-            return;
-        }
-
-        apiLimit = true;
-
         let self = $(this).closest("div.account")
         let accountId = self.attr("data-id");
         // hide buttons
@@ -153,14 +134,13 @@ $(() => {
 
         socket.removeAllListeners();
 
-        /*********************************
-        *          LOG MESSAGES         *
-        ********************************/
+        // Login messages
         socket.on("login-log-msg", msg => {
             let newMsg = `<p>• ${msg}</p>${consoleBox.html()}`
             consoleBox.html(newMsg);
         })
 
+        // Successfully logged in
         socket.on("logged-in", doc => {
             // update online and offline variables
             g_online++;
@@ -173,13 +153,11 @@ $(() => {
 
         // send request
         $.post('/steamaccount/login', { accountId: accountId, socketId: socket.id })
-            .fail((xhr, status, err) => {
-                apiLimit = false;
+            .fail((xhr) => {
                 socket.removeAllListeners();
                 alert(xhr.responseText)
             })
     })
-
 
     /**************************************************** 
     *               STEAM - LOGOUT                      *
@@ -200,11 +178,10 @@ $(() => {
             clearInterval(farmingTaskIds[accountId])
             clearInterval(lastReconnectTaskIds[accountId])
             updateAccountStatus(doc);
-        }).fail((xhr, status, err) => {
+        }).fail((xhr) => {
             alert(xhr.responseText)
         })
     })
-
 
     /*************************************************** 
     *               STEAM - DELETE ACC                 *
@@ -225,16 +202,18 @@ $(() => {
                 accountId: accountId
             },
             success: () => self.fadeOut(800),
-            error: (xhr, status, error) => alert(xhr.responseText)
+            error: xhr => alert(xhr.responseText)
         });
     })
 
-
-    $(document).on("click", ".get-intentory-btn", function(e){
+    /*************************************************** 
+    *             STEAM - REFRESH INVENTORY            *
+    ***************************************************/
+    $(document).on("click", ".get-intentory-btn", function (e) {
         e.preventDefault();
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id");
-        $.post("/steamaccount/refreshinventory", {accountId: accountId}, function(inventory){
+        $.post("/steamaccount/refreshinventory", { accountId: accountId }, function (inventory) {
             console.log(inventory);
         })
     })
@@ -259,7 +238,7 @@ $(() => {
         $.post('/steamaccount/changenick', { nickname: nickname, accountId: accountId }, function (nick) {
             $("#change-nick-modal").modal("toggle")
             $(`div.account[data-id=${accountId}]`).find(".persona-name").text(nick)
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             alert(xhr.responseText)
         })
     })
@@ -292,7 +271,7 @@ $(() => {
         $.post('/steamaccount/setstatus', { status: status, accountId: accountId }, function (doc) {
             $("#set-status-modal").modal("toggle")
             setTimeout(() => updateAccountStatus(doc), 300);
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             alert(xhr.responseText)
         })
     })
@@ -315,6 +294,7 @@ $(() => {
 
     // stop farming
     $(document).on('click', ".stop-farming-btn", function (e) {
+        e.preventDefault();
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id");
         $.post('/steamaccount/stopfarming', { accountId: accountId }, doc => {
@@ -322,7 +302,7 @@ $(() => {
             // clear the interval
             clearInterval(farmingTaskIds[accountId])
             setTimeout(() => updateAccountStatus(doc), 300);
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             alert(xhr.responseText)
         })
     })
@@ -336,11 +316,10 @@ $(() => {
         $.post('/steamaccount/startfarming', { accountId: accountId }, doc => {
             self.find(".farming-modal").modal("toggle");
             setTimeout(() => updateAccountStatus(doc), 300);
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             alert(xhr.responseText)
         })
     })
-
 
     /**************************************************** 
     *               STEAM - PLAY GAME                   *
@@ -371,7 +350,7 @@ $(() => {
             //close the modal
             self.find(".idle-modal").modal('toggle');
             setTimeout(() => updateAccountStatus(doc), 300);
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             alert(xhr.responseText)
         })
     })
@@ -398,7 +377,7 @@ $(() => {
             // clear selected games
             accounts_cache[accountId].selectedGames = [];
             setTimeout(() => updateAccountStatus(doc), 300);
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             alert(xhr.responseText)
         })
     })
@@ -431,7 +410,6 @@ $(() => {
             cache.selectedGames.splice(index, 1)
         }
     })
-
 
     /**************************************************** 
     *           STEAM - ACTIVATE F2P GAME              *
@@ -471,13 +449,12 @@ $(() => {
             $("#activate-f2p-game-msg").prop("hidden", false).text("Game(s) activated." + " Reloading in 3 secs.")
             $("#spinner-activate-f2p-game").hide();
             setTimeout(() => location.reload(), 3000);
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             $("#activate-f2p-game-form").prop("hidden", false)
             $("#spinner-activate-f2p-game").prop("hidden", true)
             $("#activate-f2p-game-errMsg").prop("hidden", false).text(`${xhr.responseText}`)
         })
     })
-
 
     /**************************************************** 
    *           STEAM - ACTIVATE FREE GAME              *
@@ -517,13 +494,12 @@ $(() => {
             $("#activate-free-game-msg").prop("hidden", false).text("Game(s) activated." + " Reloading in 3 secs.")
             $("#spinner-activate-free-game").hide();
             setTimeout(() => location.reload(), 3000);
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             $("#activate-free-game-form").prop("hidden", false)
             $("#spinner-activate-free-game").prop("hidden", true)
             $("#activate-free-game-errMsg").prop("hidden", false).text(`${xhr.responseText}`)
         })
     })
-
 
     /**************************************************** 
     *           STEAM - REDEEM KEY                      *
@@ -535,7 +511,6 @@ $(() => {
         $("#redeem-key").attr("data-id", accountId)
         $("#redeem-key-modal").modal("toggle")
     })
-
 
     // close redeem key modal
     $('#redeem-key-modal').on('hidden.bs.modal', function () {
@@ -565,13 +540,12 @@ $(() => {
             $("#redeem-key-msg").prop("hidden", false).text("Successfully added games")
             processGames(accountId, games)
             $("#spinner-redeem-key").prop("hidden", true)
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             $("#redeem-key-errMsg").prop("hidden", false).text(xhr.responseText)
             $("#redeem-key-form").prop("hidden", false)
             $("#spinner-redeem-key").prop("hidden", true)
         })
     })
-
 
     /**************************************************** 
     *                  STEAM - IVENTORY                 *
@@ -585,7 +559,6 @@ $(() => {
     /**************************************************** 
     *              STEAM - AVATAR CHANGE                *
      **************************************************/
-
     // open avatar modal
     $(document).on("click", ".change-avatar-btn", function (e) {
         e.preventDefault(); // This will prevent page scroll
@@ -645,7 +618,7 @@ $(() => {
             $.post('/steamaccount/changeavatar', data, avatar => {
                 $(`div.account[data-id=${accountId}]`).find(".avatar").attr("src", avatar)
                 $('#change-avatar-modal').modal("toggle")
-            }).fail((xhr, status, err) => {
+            }).fail(xhr => {
                 $('#change-avatar-modal').modal("toggle")
                 alert(xhr.responseText)
             })
@@ -661,7 +634,6 @@ $(() => {
         $("#change-avatar-form")[0].reset();
         $("#avatar-preview").attr("src", "http://placehold.it/150x150")
     })
-
 
     /**************************************************
     *              STEAM - CLEAR ALIASES             *
@@ -686,7 +658,7 @@ $(() => {
             $(this).show();
             $("#clear-aliases-spinner").prop("hidden", true);
             $('#clear-aliases-modal').modal("toggle")
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             $("#clear-aliases-spinner").prop("hidden", true);
             $(this).show();
             alert(xhr.responseText)
@@ -705,7 +677,7 @@ $(() => {
     })
 
     // set account settings
-    $("#change-privacy-modal").on('shown.bs.modal', function (e) {
+    $("#change-privacy-modal").on('shown.bs.modal', function () {
         let accountId = $("#change-privacy-btn").attr("data-id")
         if (!accounts_cache[accountId].privacySettings) {
             return;
@@ -734,7 +706,6 @@ $(() => {
         $(`[name="eCommentPermission"]`).val(data.eCommentPermission)
 
     })
-
 
     // form submit
     $("#change-privacy-form").submit(function (e) {
@@ -775,7 +746,7 @@ $(() => {
             $("#change-privacy-spinner").prop("hidden", true);
             accounts_cache[accountId].privacySettings = dataObj;
             $(this).show();
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             $("#change-privacy-spinner").prop("hidden", true);
             $(this).show();
             alert(xhr.responseText)
@@ -800,7 +771,6 @@ $(() => {
             $("#inventory-gifts-privacy").prop('disabled', false)
         }
     })
-
 
     // modify form based on selected settings
     $("#profile-privacy").change(function () {
@@ -881,6 +851,4 @@ $(() => {
             })
         }
     })
-
-
 })

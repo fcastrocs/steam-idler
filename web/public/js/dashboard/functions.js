@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-undef */
 
 // builds account div
 function buildAccount(account) {
@@ -264,7 +266,6 @@ function time(time, mode, isSeconds) {
 }
 
 // Replaces status of existing account in dashboard
-// if force == true, then force update
 function updateAccountStatus(account) {
     let accountId = account._id;
     let checkTimeChanged = false;
@@ -333,17 +334,17 @@ function unselectGames(obj) {
     })
 }
 
-function getAllAccountIds() {
-    let accountIds = []
-    $(".account").each(function () {
-        accountIds.push($(this).attr("data-id"))
-    })
-    return accountIds;
-}
+// function getAllAccountIds() {
+//     let accountIds = []
+//     $(".account").each(function () {
+//         accountIds.push($(this).attr("data-id"))
+//     })
+//     return accountIds;
+// }
 
 // Fetch all user's steam accounts from db
 function FetchAllAccounts() {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
         $.ajax({
             url: "/steamaccounts",
             type: "GET",

@@ -217,24 +217,29 @@ module.exports.logoutAccount = async function (userId, accountId) {
     return Promise.resolve(doc);
 }
 
-
 /**
  * Get account inventory
  */
-module.exports.getInventory = async function (userId, accountId){
-     // check account is logged in
-     let client = this.isAccountOnline(userId, accountId);
-     if (!client) {
-         return Promise.reject("Account is not online.")
-     }
- 
-     // change account to status
-     let inventory = await client.getInventory("don't fail");
-     // save new inventory to account
-     
-     return inventory;
-}
+module.exports.getInventory = async function (userId, accountId) {
+    // check account is logged in
+    let client = this.isAccountOnline(userId, accountId);
+    if (!client) {
+        return Promise.reject("Account is not online.")
+    }
 
+    let account = await this.getAccount({ userId: userId, accountId: accountId })
+    if (!account) {
+        return Promise.reject("Account not found.")
+    }
+
+    // change account to status
+    let inventory = await client.getInventory("don't fail");
+
+    // save new inventory to account
+    account.inventory = inventory;
+    account = this.filterSensitiveAcc(account);
+    return account;
+}
 
 /**
  * Change accounts persona name / nick
@@ -416,7 +421,6 @@ module.exports.steamConnect = async function (loginOptions, socketId) {
     })
 }
 
-
 /**
  * Deletes an account
  * Returns a promise
@@ -426,7 +430,6 @@ module.exports.deleteAccount = async function (userId, accountId) {
     await Accounts.deleteOne({ _id: accountId, userId: userId }).exec();
     return Promise.resolve();
 }
-
 
 /**
  * 2019 winter sale game nominations
@@ -457,7 +460,6 @@ module.exports.viewDiscoveryQueue = async function (userId, accountId) {
     await client.viewDiscoveryQueue();
     return Promise.resolve();
 }
-
 
 // Activate f2p game
 module.exports.activateF2pGames = async function (userId, accountId, appIds, options) {
@@ -516,7 +518,6 @@ module.exports.activateFreePromoGame = async function (userId, accountId, packag
         return Promise.reject(error)
     }
 }
-
 
 /**
  * Redeems a key to account
@@ -578,7 +579,6 @@ module.exports.setStatus = async function (userId, accountId, status, options) {
     this.filterSensitiveAcc(doc)
     return Promise.resolve(doc)
 }
-
 
 module.exports.changeAvatar = async function (userId, accountId, binaryImg, filename) {
     // check account is logged in
