@@ -15,51 +15,38 @@ module.exports.loginListener = function () {
             self.reconnecting = false;
             self.account.steamid = res.client_supplied_steamid;
 
-            // generate web cookie
+            // Generate web cookie
             try {
                 self.webCookie = await self.GenerateWebCookie(res.webapi_authenticate_user_nonce);
                 if (this.socketId) {
                     io.to(`${this.socketId}`).emit("login-log-msg", "Received web cookie.");
                 }
             } catch (error) {
-                if (this.socketId) {
-                    io.to(`${this.socketId}`).emit("login-log-msg", "Could not get web cookie, retrying with new proxy.");
-                }
-
-                // could not generate web cookie, account will relogin.
                 self.RenewConnection("cookie")
                 return;
             }
 
+            // Get farming data
             try {
                 var farmingData = await self.GetFarmingData();
                 if (this.socketId) {
                     io.to(`${this.socketId}`).emit("login-log-msg", "Received Steam cards data.");
                 }
             } catch (error) {
-                if (this.socketId) {
-                    io.to(`${this.socketId}`).emit("login-log-msg", "Could not get Steam cards data, retrying with new proxy.");
-                }
-
-                // could not get farming data, account will relogin.
                 self.RenewConnection("farming data")
                 return;
             }
 
-            // Get inventory 
-            try {
-                var inventory = await self.GetIventory();
 
+            // Get inventory
+            try {
+                var inventory = await self.getInventory("let fail");
                 if (this.socketId) {
                     io.to(`${this.socketId}`).emit("login-log-msg", "Received inventory data.");
                 }
             } catch (error) {
-                if (this.socketId) {
-                    io.to(`${this.socketId}`).emit("login-log-msg", "Could not get inventory data, retrying with new proxy.");
-                }
-
-                self.RenewConnection("inventory")
-                return
+                self.RenewConnection("intentory")
+                return;
             }
 
             // Set persona
@@ -73,8 +60,8 @@ module.exports.loginListener = function () {
 
             self.emit("login-res", {
                 steamid: self.account.steamid,
-                farmingData: farmingData || [],
-                inventory: inventory || null
+                farmingData: farmingData,
+                inventory: inventory
             })
 
             if (this.socketId) {
@@ -84,7 +71,7 @@ module.exports.loginListener = function () {
             // After login, don't send more messages
             this.socketId = null;
 
-            if(!self.account.newAccount && self.wasLoggedIn){
+            if (!self.account.newAccount && self.wasLoggedIn) {
                 self.emit("connection-gained");
             }
 
@@ -96,7 +83,7 @@ module.exports.loginListener = function () {
         else if (code == 5) {
             errMsg = "Bad User/Pass."
         }
-        else if(code ==56){ //"PasswordUnset"
+        else if (code == 56) { //"PasswordUnset"
             errMsg = "Check your login details."
         }
         // EMAIL GUARD 
@@ -244,7 +231,7 @@ module.exports.connectionListeners = function () {
             // this flag is only used to know when to send "connection-ganed"
             self.wasLoggedIn = true;
             self.loggedIn = false;
-            if(!self.account.newAccount){
+            if (!self.account.newAccount) {
                 self.emit("connection-lost");
             }
         }

@@ -96,6 +96,17 @@ Router.post('/steamaccount/playgames', async function (req, res) {
     }
 })
 
+/**
+ * Get inventory
+ */
+Router.post("/steamaccount/refreshinventory", async function (req, res){
+    if (!req.body.accountId) {
+        return res.status(400).send("accountId parameter needed.")
+    }
+
+    await AccountHandler.getInventory(req.session.userId, req.body.accountId);
+    return res.send("inventory refreshed");
+})
 
 // Stop playing games
 Router.post('/steamaccount/stopgames', async function (req, res) {

@@ -67,6 +67,7 @@
     padding-top: 10px;
     margin-top: 85px;
     width: 940px;
+    min-height: 235px;
     position: fixed;
     max-height: calc(100% - 190px);
     font-size: 14px;

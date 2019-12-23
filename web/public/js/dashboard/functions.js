@@ -24,6 +24,7 @@ function buildAccount(account) {
                         <a href="#" class="change-avatar-btn">Change avatar</a>
                         <a href="#" class="change-nick">Change nick</a>
                         <a href="#" class="change-privacy-btn">Change privacy</a>
+                        <a href="#" class="get-intentory-btn">Refresh inventory</a>
                         <a href="#" class="clear-aliases-btn">Clear previous aliases</a>
                         <a href="#" class="activate-free-game">Activate free promo game</a>
                         <a href="#" class="activate-f2p-game">Activate F2P game</a>
@@ -104,17 +105,14 @@ function buildAccount(account) {
         }
 
         // build inventory modal
-        if (!account.inventory) {
+        if (account.inventory.length == 0) {
             inventoryModal = "Inventory is empty"
         }
         else {
-            for (let i in account.inventory) {
-                if (!account.inventory.hasOwnProperty(i)) {
-                    continue;
-                }
-                let url = `https://steamcommunity-a.akamaihd.net/economy/image/${account.inventory[i].icon_url}/96fx96f`
-                inventoryModal += `<img src="${url}" data-toggle="tooltip" data-placement="top" title="${account.inventory[i].market_name}">`
-            }
+            account.inventory.forEach(item => {
+                let url = `https://steamcommunity-a.akamaihd.net/economy/image/${item.icon}/96fx96f`
+                inventoryModal += `<img src="${url}" data-toggle="tooltip" data-placement="top" title="${item.name}">`
+            });
         }
 
         //${account.lastHourReconnects}

@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 $(() => {
     /***************************************************
     *               ADD STEAM ACCOUNT                  *
@@ -226,6 +227,16 @@ $(() => {
             success: () => self.fadeOut(800),
             error: (xhr, status, error) => alert(xhr.responseText)
         });
+    })
+
+
+    $(document).on("click", ".get-intentory-btn", function(e){
+        e.preventDefault();
+        let self = $(this).closest("div.account");
+        let accountId = self.attr("data-id");
+        $.post("/steamaccount/refreshinventory", {accountId: accountId}, function(inventory){
+            console.log(inventory);
+        })
     })
 
     /**************************************************** 

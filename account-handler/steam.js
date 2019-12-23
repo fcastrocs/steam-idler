@@ -219,6 +219,24 @@ module.exports.logoutAccount = async function (userId, accountId) {
 
 
 /**
+ * Get account inventory
+ */
+module.exports.getInventory = async function (userId, accountId){
+     // check account is logged in
+     let client = this.isAccountOnline(userId, accountId);
+     if (!client) {
+         return Promise.reject("Account is not online.")
+     }
+ 
+     // change account to status
+     let inventory = await client.getInventory("don't fail");
+     // save new inventory to account
+     
+     return inventory;
+}
+
+
+/**
  * Change accounts persona name / nick
  * Saves account changes to database
  * Returns a promise with account

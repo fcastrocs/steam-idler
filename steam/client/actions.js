@@ -1,4 +1,9 @@
 /**
+ * These are actions unique to the steam client
+ */
+
+
+/**
  * Sets account to play games or to stop playing games if empty array
  * @param {*} games games array to play
  * @returns account status: "In-game" or "Online"

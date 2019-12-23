@@ -46,26 +46,22 @@ const votes = [
     },
 ]
 
-
 /**
- * Generate a web cookie from nonce
+ * Generate a web cookie from nonce.
  * @param {*} nonce given by steam after authentication
  * @returns web cookie
  */
 module.exports.GenerateWebCookie = function (nonce) {
-    if (!this.loggedIn) {
-        return Promise.reject()
+    let self = this;
+    if (!self.loggedIn) {
+        return Promise.reject("Account is not logged in.")
     }
 
-    let self = this;
-    return new Promise((resolve, reject) => {
-        (async function attempt(retries) {
-            if (!retries) {
-                retries = 0;
-            }
-            retries++;
-            // too many tries, get a new proxy
-            if (retries == 3) {
+    let retries = 0;
+    return new Promise(async (resolve, reject) => {
+        (async function tryAuthenticate() {
+            // too many tries, renew the connection
+            if (retries >= 5) {
                 return reject();
             }
 
@@ -93,7 +89,7 @@ module.exports.GenerateWebCookie = function (nonce) {
             try {
                 let data = await Request(options);
                 if (!data.authenticateuser) {
-                    setTimeout(() => attempt(retries), STEAMCOMMUNITY_RETRY_DELAY);
+                    setTimeout(() => tryAuthenticate(), STEAMCOMMUNITY_RETRY_DELAY);
                 } else {
                     let sessionId = Crypto.randomBytes(12).toString('hex')
                     self.sessionId = sessionId;
@@ -103,9 +99,9 @@ module.exports.GenerateWebCookie = function (nonce) {
                     return resolve(cookie);
                 }
             } catch (error) {
-                setTimeout(() => attempt(retries), STEAMCOMMUNITY_RETRY_DELAY);
+                retries++;
+                setTimeout(() => tryAuthenticate(), STEAMCOMMUNITY_RETRY_DELAY);
             }
-
         })();
     })
 }
@@ -115,25 +111,20 @@ module.exports.GenerateWebCookie = function (nonce) {
  * @returns Promise with array containing items { title, appId, playTime, cardsRemaining }
  */
 module.exports.GetFarmingData = function () {
-    if (!this.webCookie) {
-        return Promise.reject()
-    }
-
-    if (!this.loggedIn) {
-        return Promise.reject()
-    }
-
     let self = this;
-    return new Promise((resolve, reject) => {
-        (async function attempt(retries) {
-            if (!retries) {
-                retries = 0;
-            }
+    if (!self.loggedIn) {
+        return Promise.reject("Account is not logged in.")
+    }
 
-            retries++;
+    if (!self.webCookie) {
+        return Promise.reject("Account doesn't have a web cookie.")
+    }
 
-            // too many tries, get a new proxy
-            if (retries == 3) {
+    let retries = 0;
+    return new Promise(async (resolve, reject) => {
+        (async function tryGetFarmingData() {
+            // too many tries, renew the connection
+            if (retries >= 5) {
                 return reject();
             }
 
@@ -153,71 +144,74 @@ module.exports.GetFarmingData = function () {
 
             try {
                 let data = await Request(options)
-                return resolve(self.ParseFarmingData(data));
+                return resolve(parseFarmingData(data));
             } catch (error) {
-                setTimeout(() => attempt(retries), STEAMCOMMUNITY_RETRY_DELAY);
+                retries++;
+                setTimeout(() => tryGetFarmingData(), STEAMCOMMUNITY_RETRY_DELAY);
             }
         })();
     })
+
+    /**
+     * Helper function for GetFarmingData()
+     * @param {*} data raw html card farming data
+     * @returns array containing items { title, appId, playTime, cardsRemaining }
+     */
+    function parseFarmingData(data) {
+        const $ = cheerio.load(data, { decodeEntities: false });
+
+        let farmingData = [];
+
+        $(".badge_row").each(function () {
+            // check for remaining cards
+            let progress = $(this).find(".progress_info_bold").text();
+            if (!progress) {
+                return;
+            }
+
+            progress = Number(progress.replace(/[^0-9.]+/g, ""));
+            if (progress === 0) {
+                return;
+            }
+
+            // Get play time
+            let playTime = $(this).find(".badge_title_stats_playtime").text();
+            if (!playTime) {
+                return;
+            }
+            playTime = Number(playTime.replace(/[^0-9.]+/g, ""));
+
+
+            // Get game title
+            $(this).find(".badge_view_details").remove();
+            let gameTitle = $(this).find(".badge_title").text();
+            if (!gameTitle) {
+                return;
+            }
+            gameTitle = gameTitle.replace(/&nbsp;/g, '')
+            gameTitle = gameTitle.trim();
+
+            // Get appID
+            let link = $(this).find(".badge_row_overlay").attr("href")
+            link = link.substring(link.indexOf("gamecards"), link.length);
+            let appId = Number(link.replace(/[^0-9.]+/g, ""));
+
+            let obj = {
+                title: gameTitle,
+                appId: appId.toString(),
+                playTime: playTime,
+                cardsRemaining: progress
+            }
+
+            farmingData.push(obj)
+        })
+        return farmingData;
+    }
 }
 
 /**
- * Helper function for GetFarmingData()
- * @param {*} data raw html card farming data
- * @returns array containing items { title, appId, playTime, cardsRemaining }
+ * Resolves until account is fully logged in.
  */
-module.exports.ParseFarmingData = function (data) {
-    const $ = cheerio.load(data, { decodeEntities: false });
-
-    let farmingData = [];
-
-    $(".badge_row").each(function () {
-        // check for remaining cards
-        let progress = $(this).find(".progress_info_bold").text();
-        if (!progress) {
-            return;
-        }
-
-        progress = Number(progress.replace(/[^0-9.]+/g, ""));
-        if (progress === 0) {
-            return;
-        }
-
-        // Get play time
-        let playTime = $(this).find(".badge_title_stats_playtime").text();
-        if (!playTime) {
-            return;
-        }
-        playTime = Number(playTime.replace(/[^0-9.]+/g, ""));
-
-
-        // Get game title
-        $(this).find(".badge_view_details").remove();
-        let gameTitle = $(this).find(".badge_title").text();
-        if (!gameTitle) {
-            return;
-        }
-        gameTitle = gameTitle.replace(/&nbsp;/g, '')
-        gameTitle = gameTitle.trim();
-
-        // Get appID
-        let link = $(this).find(".badge_row_overlay").attr("href")
-        link = link.substring(link.indexOf("gamecards"), link.length);
-        let appId = Number(link.replace(/[^0-9.]+/g, ""));
-
-        let obj = {
-            title: gameTitle,
-            appId: appId.toString(),
-            playTime: playTime,
-            cardsRemaining: progress
-        }
-
-        farmingData.push(obj)
-    })
-    return farmingData;
-}
-
-
 module.exports.waitUntilLoggedIn = function () {
     let self = this;
     return new Promise(resolve => {
@@ -230,9 +224,8 @@ module.exports.waitUntilLoggedIn = function () {
     });
 }
 
-
 /**
- * 2019 winter even nominate games
+ * 2019 winter event nominate games
  */
 module.exports.nominateGames = async function () {
     if (!this.currentVote) {
@@ -298,7 +291,9 @@ module.exports.nominateGames = async function () {
     }
 }
 
-
+/**
+ * 2019 winter event view 3 discovery queues
+ */
 module.exports.viewDiscoveryQueue = async function () {
     let self = this;
     if (!self.fullyLoggedIn) {
@@ -463,29 +458,31 @@ module.exports.viewDiscoveryQueue = async function () {
 
 /**
  * Get Inventory data
- * @returns Promise with array inventory data
+ * @returns ---
  */
-module.exports.GetIventory = function () {
-    if (!this.webCookie) {
-        return Promise.reject()
-    }
-
-    if (!this.loggedIn) {
-        return Promise.reject()
-    }
-
+module.exports.getInventory = async function (mode) {
     let self = this;
-    return new Promise((resolve, reject) => {
-        (async function attempt(retries) {
-            if (!retries) {
-                retries = 0;
-            }
+    if (!self.webCookie) {
+        return Promise.reject("Account does not have a cookie.")
+    }
 
-            retries++;
+    if (!self.loggedIn) {
+        return Promise.reject("Account is not logged in.")
+    }
 
-            // too many tries, get a new proxy
-            if (retries == 3) {
-                return reject();
+    let retries = 0;
+    return new Promise(async (resolve, reject) => {
+        (async function tryGetInventory() {
+            // too many tries, renew the connection
+            if (retries >= 5) {
+                if(mode === "let fail"){
+                    return reject();
+                }
+
+                self.RenewConnection("inventory");
+                await self.waitUntilLoggedIn();
+                // at this point inventory was refreshed in logOnResponse
+                return resolve(null);
             }
 
             let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
@@ -503,22 +500,44 @@ module.exports.GetIventory = function () {
             }
 
             try {
-                let inventory = await Request(options)
-                inventory = JSON.parse(inventory);
-                if (!inventory.success) {
-                    setTimeout(() => attempt(retries), STEAMCOMMUNITY_RETRY_DELAY);
+                let data = await Request(options)
+                data = JSON.parse(data);
+                // Check for empty inventory
+                if (Array.isArray(data.rgInventory) && data.rgInventory.length == 0) {
+                    return resolve([]);
                 }
 
-                if (inventory.rgDescriptions.length == 0) {
-                    return resolve(null);
-                }
-
-                return resolve(inventory.rgDescriptions);
+                var inventory = parseInventory(data)
+                return resolve(inventory);
             } catch (error) {
-                setTimeout(() => attempt(retries), STEAMCOMMUNITY_RETRY_DELAY);
+                retries++;
+                setTimeout(() => {
+                    tryGetInventory();
+                }, STEAMCOMMUNITY_RETRY_DELAY);
             }
         })();
     })
+
+    function parseInventory(data){
+        let items = [];
+
+        let inventory = data.rgInventory;
+        let description = data.rgDescriptions;
+
+        for(const key in inventory){
+            let item = {}
+            let c_i = inventory[key].classid + "_" + inventory[key].instanceid;
+
+            item.assetid = inventory[key].id;
+            item.amount = inventory[key].amount;
+            item.icon = description[c_i].icon_url;
+            item.name = description[c_i].name;
+            item.type = description[c_i].type;
+            item.tradable = description[c_i].tradable;
+            items.push(item);
+        }
+        return items;
+    }
 }
 
 /**
