@@ -229,23 +229,6 @@ function buildAccount(account) {
     return acc;
 }
 
-// Returns format 00:00:00
-/*function time(time) {
-    // convert to seconds
-    let delta = Math.abs((Date.now() - time) / 1000)
-    let days = Math.floor(delta / 86400)
-    delta -= days * 86400
-    let hours = Math.floor(delta / 3600)
-    delta -= hours * 3600
-    let minutes = Math.floor(delta / 60)
-    delta -= minutes * 60;
-    let seconds = Math.floor(delta);
-    hours = "0" + hours
-    minutes = "0" + minutes
-    seconds = "0" + seconds
-    return hours.substr(-2) + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
-}*/
-
 
 function time(time, mode, isSeconds) {
     let delta = time;
@@ -332,14 +315,6 @@ function unselectGames(obj) {
         }
     })
 }
-
-// function getAllAccountIds() {
-//     let accountIds = []
-//     $(".account").each(function () {
-//         accountIds.push($(this).attr("data-id"))
-//     })
-//     return accountIds;
-// }
 
 // Fetch all user's steam accounts from db
 function FetchAllAccounts() {
