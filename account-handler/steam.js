@@ -220,7 +220,7 @@ module.exports.logoutAccount = async function (userId, accountId) {
 /**
  * Get account inventory
  */
-module.exports.getInventory = async function (userId, accountId) {
+module.exports.getInventory = async function (userId, accountId, socketId) {
     // check account is logged in
     let client = this.isAccountOnline(userId, accountId);
     if (!client) {
@@ -238,7 +238,12 @@ module.exports.getInventory = async function (userId, accountId) {
     // save new inventory to account
     account.inventory = inventory;
     account = this.filterSensitiveAcc(account);
-    return account;
+
+    if(socketId){
+        io.to(`${socketId}`).emit("inventory", inventory);
+    }
+
+    return inventory;
 }
 
 /**

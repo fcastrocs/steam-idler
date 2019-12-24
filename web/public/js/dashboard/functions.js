@@ -138,7 +138,6 @@ function buildAccount(account) {
     }
 
     let acc = `<div class="account account-${account.forcedStatus}" data-id="${account._id}">
-
                     <span class="avatar-item">
                         <a href="https://steamcommunity.com/profiles/${account.steamid}" target="_blank">
                             <img class="avatar avatar-${account.status}" src="${account.avatar}">

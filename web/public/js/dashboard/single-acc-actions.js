@@ -213,9 +213,17 @@ $(() => {
         e.preventDefault();
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id");
-        $.post("/steamaccount/refreshinventory", { accountId: accountId }, function (inventory) {
-            console.log(inventory);
+
+        $.post("/steamaccount/refreshinventory", {
+            accountId: accountId,
+            socketId: socket.id
         })
+
+        socket.on("inventory", inventory => {
+            console.log(inventory);
+            socket.removeAllListeners();
+        })
+
     })
 
     /**************************************************** 

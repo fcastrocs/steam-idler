@@ -16,7 +16,7 @@ Router.post("/steamaccount/add", async (req, res) => {
     if (!req.body.socketId) {
         return res.status(400).send("socket ID needed.")
     }
-    
+
     // setup login options
     let options = {
         user: req.body.user.toLowerCase().trim(),
@@ -99,13 +99,17 @@ Router.post('/steamaccount/playgames', async function (req, res) {
 /**
  * Get inventory
  */
-Router.post("/steamaccount/refreshinventory", async function (req, res){
+Router.post("/steamaccount/refreshinventory", async function (req, res) {
     if (!req.body.accountId) {
         return res.status(400).send("accountId parameter needed.")
     }
 
-    await AccountHandler.getInventory(req.session.userId, req.body.accountId);
-    return res.send("inventory refreshed");
+    if (!req.body.socketId) {
+        return res.status(400).send("socket ID needed.")
+    }
+
+    AccountHandler.getInventory(req.session.userId, req.body.accountId, req.body.socketId);
+    res.send("okay");
 })
 
 // Stop playing games

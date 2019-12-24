@@ -56,7 +56,6 @@ class Client extends EventEmitter {
             io.to(`${this.socketId}`).emit("login-log-msg", "Connecting to Steam.");
         }
 
-
         let timeout = 0;
         if(loginOptions.initializing){
             timeout = Math.floor(Math.random() * 60) * 1000;
