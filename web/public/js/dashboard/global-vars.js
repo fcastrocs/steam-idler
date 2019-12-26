@@ -1,6 +1,6 @@
 var apiLimit = false;
 var farmingTaskIds = []
-var lastReconnectTaskIds = []
+var upTimeTaskIds = []
 var accounts_cache = [];
 // Create a socket
 var socket = io();

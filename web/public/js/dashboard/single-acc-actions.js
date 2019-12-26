@@ -176,7 +176,7 @@ $(() => {
             g_online--;
             //clear intervals
             clearInterval(farmingTaskIds[accountId])
-            clearInterval(lastReconnectTaskIds[accountId])
+            clearInterval(upTimeTaskIds[accountId])
             updateAccountStatus(doc);
         }).fail((xhr) => {
             alert(xhr.responseText)
