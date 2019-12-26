@@ -161,12 +161,22 @@ hr{
 }
 
 .modal-buttons{
-    float: right;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -10px;
+    margin-bottom: 10px;
+    margin-right: 15px;
+}
+
+.modal-btn{
+    margin: 5px;
 }
 
 .modal-submit{
     width: 130px;
 }
+
+/* END MODALS */
 
 .dropdown-menu{
     background-color: rgb(54, 60, 71);

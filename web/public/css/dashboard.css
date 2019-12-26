@@ -268,7 +268,7 @@ input[name="emailGuard"] {
 }
 
 
-.games-dialog{
+.games-dialog, .inventory-dialog{
     max-width: 100% !important;
     width: 900px !important;
 }
@@ -321,6 +321,17 @@ input[name="emailGuard"] {
     background-color: rgb(54, 60, 71);
     border: solid 1px rgb(88, 98, 114);
     color: rgb(219, 219, 219);
+}
+
+.iventory-info{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+}
+
+.inventory-item{
+    margin-bottom: 10px;
 }
 
 @media only screen and (max-width: 800px) {

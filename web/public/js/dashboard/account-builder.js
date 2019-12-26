@@ -125,15 +125,22 @@ function buildAccount(account) {
                             <div class="modal-content iventory-content">
                                 <div class="modal-header">
                                     <h5 class="modal-title">Inventory</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
                                 </div>
                                 <div class="modal-body inventory-body">
                                     <div class="d-flex justify-content-center">
-                                        <div class="spinner-border text-info inventory-modal-spinner" role="status" hidden></div>
+                                        <div class="spinner-border text-info inventory-spinner" hidden></div>
                                     </div>
-                                    <div class="alert alert-danger iventory-errMsg" role="alert" hidden></div>
-                                    <div class="iventory-info">
+                                    <div class="inventory-info">
                                         ${inventoryHtml}
                                     </div>
+                                </div>
+                                <div class="modal-buttons">
+                                    <button class="btn btn-primary modal-btn refresh-intentory-btn">Reload Inventory</button>
+                                    <button class="btn btn-primary modal-btn">Send offer</button>
+                                    <button class="btn btn-secondary modal-btn" data-dismiss="modal">Close</button>
                                 </div>
                             </div>
                         </div>
@@ -190,7 +197,7 @@ function buildSettingsMenu(status) {
 /**
  * Starts the uptime timer
  */
-function startUptimeTimer(account){
+function startUptimeTimer(account) {
     upTimeTaskIds[account._id] = setInterval(() => {
         $(`div[data-id="${account._id}"]`).find(".uptimehrs-item").text(time(account.lastConnect, "hrs"))
     }, 3000)
@@ -260,7 +267,7 @@ function buildInventory(inventory) {
     else {
         inventory.forEach(item => {
             let url = `https://steamcommunity-a.akamaihd.net/economy/image/${item.icon}/96fx96f`
-            inventoryHtml += `<img src="${url}" data-toggle="tooltip" data-placement="top" title="${item.name}">`
+            inventoryHtml += `<img class="inventory-item" src="${url}" data-toggle="tooltip" data-placement="top" title="${item.name}">`
         });
     }
     return inventoryHtml;

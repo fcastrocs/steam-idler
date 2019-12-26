@@ -209,24 +209,38 @@ $(() => {
     /*************************************************** 
     *             STEAM - REFRESH INVENTORY            *
     ***************************************************/
-    $(document).on("click", ".get-intentory-btn", function (e) {
+    $(document).on("click", ".refresh-intentory-btn", function (e) {
         e.preventDefault();
         let self = $(this).closest("div.account");
         let accountId = self.attr("data-id");
+
+        inventoryShowSpinner(self)
 
         $.post("/steamaccount/refreshinventory", {
             accountId: accountId,
             socketId: socket.id
         }).fail((xhr) => {
             alert(xhr.responseText)
+            inventoryHideSpinner(self)
         })
 
         socket.on("inventory", inventory => {
-            console.log(inventory);
+            self.find(".inventory-info").html(buildInventory(inventory));
+            inventoryHideSpinner(self)
             socket.removeAllListeners();
         })
 
     })
+
+    function inventoryShowSpinner(self){
+        self.find(".inventory-info").hide();
+        self.find(".inventory-spinner").prop("hidden", false);
+    }
+
+    function inventoryHideSpinner(self){
+        self.find(".inventory-info").show();
+        self.find(".inventory-spinner").prop("hidden", true);
+    }
 
     /**************************************************** 
     *               STEAM - CHANGE NICK                 *
