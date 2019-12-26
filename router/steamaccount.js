@@ -108,7 +108,7 @@ Router.post("/steamaccount/refreshinventory", async function (req, res) {
         return res.status(400).send("socket ID needed.")
     }
 
-    AccountHandler.getInventory(req.session.userId, req.body.accountId, req.body.socketId);
+    await AccountHandler.getInventory(req.session.userId, req.body.accountId, req.body.socketId);
     res.send("okay");
 })
 

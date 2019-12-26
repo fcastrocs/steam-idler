@@ -217,6 +217,8 @@ $(() => {
         $.post("/steamaccount/refreshinventory", {
             accountId: accountId,
             socketId: socket.id
+        }).fail((xhr) => {
+            alert(xhr.responseText)
         })
 
         socket.on("inventory", inventory => {
