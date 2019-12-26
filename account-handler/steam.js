@@ -237,7 +237,7 @@ module.exports.getInventory = async function (userId, accountId, socketId) {
 
     // save new inventory to account
     account.inventory = inventory;
-    account = this.filterSensitiveAcc(account);
+    await this.saveAccount(account);
 
     if(socketId){
         io.to(`${socketId}`).emit("inventory", inventory);
