@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 let steamAcc = new Schema({
     userId: {type: Schema.Types.ObjectId, ref: 'User' , required: true, index: true},
-    user: {type: String, required: true, unique: true},
+    user: {type: String, required: true, unique: true, index: true},
     pass: {type: Object, required: true},
     shared_secret: {type: Object, default: null},
     sentry: {type: Object, default: null},

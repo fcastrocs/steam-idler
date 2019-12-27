@@ -4,9 +4,6 @@
 const SteamAccount = require('../models/steam-accounts')
 const Security = require("../util/security");
 const SteamAccHandler = require('../models/steam-account-handler')
-const {
-  performance
-} = require('perf_hooks');
 
 /**
  * Returns all accounts
@@ -21,16 +18,13 @@ module.exports.getAllAccounts = async function (userId, options) {
         if (options && options.dontFilter) {
             query = SteamAccount.find({ userId: userId })
         } else { // filter accounts
-            query = SteamAccount.find({ userId: userId }).select(["-pass", "-shared_secret", "-sentry", "-inventory"])
+            query = SteamAccount.find({ userId: userId }).select(["-pass", "-shared_secret", "-sentry"])
         }
     } else {
         query = SteamAccount.find({})
     }
 
-    var t0 = performance.now();
     let accounts = await query.exec();
-    var t1 = performance.now();
-    console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
 
     return accounts;
 }
