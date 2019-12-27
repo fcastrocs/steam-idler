@@ -1,10 +1,5 @@
 /* eslint-disable no-undef */
 $(() => {
-
-    $.ajaxSetup({
-        timeout: 9 * 60 * 1000 //one minute
-    });
-
     /**************************************************** 
      *               LOGIN ALL ACCS                     *
      * **************************************************/
@@ -25,7 +20,7 @@ $(() => {
             apiLimit = false;
             hideSpinner();
             alert(res);
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             socket.removeAllListeners();
             apiLimit = false;
             hideSpinner();
@@ -41,10 +36,10 @@ $(() => {
             return;
         }
         showSpinner();
-        $.post("/steamaccounts/logout", res => {
+        $.post("/steamaccounts/logout", () => {
             hideSpinner();
             location.reload();
-        }).fail(xhr => {
+        }).fail(() => {
             hideSpinner();
         })
 
@@ -57,9 +52,9 @@ $(() => {
     $("#all-nominate-btn").click(() => {
         alert("This will take a while, do not click the button again.")
         showSpinner();
-        $.post("/steamaccounts/nominategames", res => {
+        $.post("/steamaccounts/nominategames", () => {
             hideSpinner();
-        }).fail(xhr => {
+        }).fail(() => {
             hideSpinner();
         })
     })
@@ -115,7 +110,7 @@ $(() => {
 
         $.post('/steamaccounts/stopidling', () => {
             location.reload();
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             alert(xhr.responseText);
         })
 
@@ -155,7 +150,7 @@ $(() => {
             $("#spinner-activate-f2p-game").prop("hidden", true)
             displayGames(res.games);
             setTimeout(() => location.reload(), 3000);
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             $("#activate-f2p-game-errMsg").prop("hidden", false).text(xhr.responseText)
             $("#spinner-activate-f2p-game").prop("hidden", true)
             // show forma again
@@ -201,7 +196,7 @@ $(() => {
             $("#spinner-activate-free-game").prop("hidden", true)
             displayGames(res.games);
             setTimeout(() => location.reload(), 3000);
-        }).fail((xhr, status, err) => {
+        }).fail(xhr => {
             $("#activate-free-game-errMsg").prop("hidden", false).text(xhr.responseText)
             $("#spinner-activate-free-game").prop("hidden", true)
             // show forma again

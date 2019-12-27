@@ -172,7 +172,6 @@ function buildSettingsMenu(status) {
                             <a href="#" class="change-avatar-btn">Change avatar</a>
                             <a href="#" class="change-nick">Change nick</a>
                             <a href="#" class="change-privacy-btn">Change privacy</a>
-                            <a href="#" class="get-intentory-btn">Refresh inventory</a>
                             <a href="#" class="clear-aliases-btn">Clear previous aliases</a>
                             <a href="#" class="activate-free-game">Activate free promo game</a>
                             <a href="#" class="activate-f2p-game">Activate F2P game</a>

@@ -8,6 +8,7 @@
 <script src="../static/js/dashboard/single-acc-actions.js?v=2"></script>
 <script src="../static/js/dashboard/all-acc-actions.js?v=2"></script>
 <script src="../static/js/dashboard/filters.js?v=2"></script>
+<script src="../static/js/dashboard/user-settings.js?v=2"></script>
 
 <!-- container -->
 <div id="body">
@@ -530,6 +531,35 @@
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                             <button type="submit" class="btn btn-primary modal-submit" id="change-privacy-btn"
                                 data-id="">Set</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGE TRADE URL -->
+    <div class="modal fade" id="tradeurl-modal" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Set Trade URL</h5>
+                </div>
+                <div class="modal-body">
+                    <div>Inventory Privacy must be set to Public to receive Trade Offers from a Trade URL. </div>
+                    <br>
+                    <form id="change-tradeurl-form">
+                        <div class="form-group" id="tradeurl">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Trade URL</span>
+                                </div>
+                                <input type="text" name="tradeurl" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="modal-buttons">
+                            <button type="submit" class="btn btn-primary modal-btn" id="save-tradeurl">Save</button>
+                            <button class="btn btn-secondary modal-btn" data-dismiss="modal">Close</button>
                         </div>
                     </form>
                 </div>

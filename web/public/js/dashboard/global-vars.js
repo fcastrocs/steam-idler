@@ -1,4 +1,3 @@
-var apiLimit = false;
 var farmingTaskIds = []
 var upTimeTaskIds = []
 var accounts_cache = [];
