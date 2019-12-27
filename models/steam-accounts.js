@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema;
 
 let steamAcc = new Schema({
-    userId: {type: Schema.Types.ObjectId, ref: 'User' , required: true},
+    userId: {type: Schema.Types.ObjectId, ref: 'User' , required: true, index: true},
     user: {type: String, required: true, unique: true},
     pass: {type: Object, required: true},
     shared_secret: {type: Object, default: null},
