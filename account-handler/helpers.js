@@ -4,7 +4,9 @@
 const SteamAccount = require('../models/steam-accounts')
 const Security = require("../util/security");
 const SteamAccHandler = require('../models/steam-account-handler')
-
+const {
+    performance
+  } = require('perf_hooks');
 
 /**
  * Returns all accounts
