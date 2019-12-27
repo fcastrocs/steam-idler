@@ -4,25 +4,18 @@ $(() => {
      *               LOGIN ALL ACCS                     *
      * **************************************************/
     $("#all-login-btn").click(() => {
-        if (apiLimit) {
-            alert("You have an ongoing request, please wait until it finished.")
-            return;
-        }
         alert("This may take a while, depending on how many accounts you have.");
         showSpinner();
-        apiLimit = true
         socket.on("logged-in", doc => {
             updateAccountStatus(doc);
         })
 
         $.post("/steamaccounts/login", { socketId: socket.id }, res => {
             socket.removeAllListeners();
-            apiLimit = false;
             hideSpinner();
             alert(res);
         }).fail(xhr => {
             socket.removeAllListeners();
-            apiLimit = false;
             hideSpinner();
             alert(xhr.responseText);
         })
@@ -62,7 +55,7 @@ $(() => {
     $("#all-discover-queues-btn").click(() => {
         alert("This will take a while, do not click the button again.")
         showSpinner();
-        $.post("/steamaccounts/view_discovery_queue", res => {
+        $.post("/steamaccounts/view_discovery_queue", () => {
             hideSpinner();
         }).fail(xhr => {
             hideSpinner();
