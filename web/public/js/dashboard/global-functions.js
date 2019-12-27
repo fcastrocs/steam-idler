@@ -89,13 +89,8 @@ function unselectGames(obj) {
 // Fetch all user's steam accounts from db
 function FetchAllAccounts() {
     return new Promise(resolve => {
-        $.ajax({
-            url: "/steamaccounts",
-            type: "GET",
-            headers: { "cache-control": "no-cache" },
-            cache: false,
-            success: accounts => resolve(accounts),
-
+        $.get("/steamaccounts", accounts => {
+            resolve(accounts);
         })
     })
 }
