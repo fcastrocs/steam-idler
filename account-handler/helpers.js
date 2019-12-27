@@ -21,7 +21,7 @@ module.exports.getAllAccounts = async function (userId, options) {
         if (options && options.dontFilter) {
             query = SteamAccount.find({ userId: userId })
         } else { // filter accounts
-            query = SteamAccount.find({ userId: userId }).select(["-pass", "-shared_secret", "-sentry"])
+            query = SteamAccount.find({ userId: userId })
         }
     } else {
         query = SteamAccount.find({})
