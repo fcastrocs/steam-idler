@@ -24,7 +24,13 @@ module.exports.getAllAccounts = async function (userId, options) {
     } else {
         query = SteamAccount.find({})
     }
-    return await query.exec();
+
+    var t0 = performance.now();
+    let accounts = await query.exec();
+    var t1 = performance.now();
+    console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
+
+    return accounts;
 }
 
 
