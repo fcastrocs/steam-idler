@@ -1,6 +1,7 @@
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
+const compression = require('compression');
 const express = require('express');
 const app = express();
 const exphbs = require('express-handlebars');
@@ -131,6 +132,8 @@ async function fetchProxies() {
 function initExpress() {
     // set HTTP headers appropriately to counter web vulnerabilities
     app.use(helmet())
+    
+    app.use(compression());
 
     // public folder
     app.use('/static', express.static(`${__dirname}/web/public`))
