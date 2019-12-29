@@ -297,8 +297,6 @@ module.exports.viewDiscoveryQueue = async function () {
         return Promise.reject("Account is not logged in");
     }
 
-    let newCookie = self.webCookie + " birthtime=-2021828399; lastagecheckage=7-0-1906;"
-
     await setMaturity(5);
     console.log("Maturity option 5 set");
     await setMaturity(2);
@@ -341,7 +339,7 @@ module.exports.viewDiscoveryQueue = async function () {
                     agent: agent,
                     timeout: STEAMCOMMUNITY_TIMEOUT,
                     headers: {
-                        "Cookie": newCookie
+                        "Cookie": self.webCookie + " birthtime=-2021828399; lastagecheckage=7-0-1906;"
                     },
                     formData: {
                         "sessionid": self.sessionId,
@@ -385,7 +383,7 @@ module.exports.viewDiscoveryQueue = async function () {
                     agent: agent,
                     timeout: STEAMCOMMUNITY_TIMEOUT,
                     headers: {
-                        "Cookie": newCookie
+                        "Cookie": self.webCookie + " birthtime=-2021828399; lastagecheckage=7-0-1906;"
                     },
                     formData: {
                         "sessionid": self.sessionId,
@@ -428,7 +426,7 @@ module.exports.viewDiscoveryQueue = async function () {
                     agent: agent,
                     timeout: STEAMCOMMUNITY_TIMEOUT,
                     headers: {
-                        "Cookie": newCookie
+                        "Cookie": self.webCookie + " birthtime=-2021828399; lastagecheckage=7-0-1906;"
                     },
                     formData: {
                         "sessionid": self.sessionId,
