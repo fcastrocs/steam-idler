@@ -7,7 +7,7 @@ let user = new Schema({
     email: {type: String, unique: true, required: true},
     isVerified: {type: Boolean, default: false},
     admin: {type: Boolean, default: false},
-    tradeUrl: {type: String, unique: true, default: ""}
+    tradeUrl: {type: String, default: ""}
 });
 
 module.exports = mongoose.model('User', user);

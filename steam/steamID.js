@@ -1,31 +1,20 @@
 const Long = require("bytebuffer").Long;
 
-class SteamID {
-  constructor(object) {
-    this.accountID = object.accountID || 0;
-    this.accountInstance = object.accountInstance || 0;
-    this.accountType = object.accountType || 0;
-    this.accountUniverse = object.accountUniverse || 0;
+/**
+ * Returns a 64-bit SteamID
+ */
+module.exports = function (accountId) {
+  if (!accountId) {
+    accountId = 0;
   }
 
-  encode() {
-    return new Long(this.accountID, this.accountInstance | this.accountType << 20 | this.accountUniverse << 24);
-  }
+  let parsedId = parseInt(accountId, 10);
 
-  toString() {
-    return this.encode().toString();
-  }
+  // use default values
+  let instance = 1;
+  let type = 1;
+  let universe = 1;
 
-  static decode(steamID) {
-    steamID = Long.fromValue(steamID);
-    return new SteamID({
-      accountID: steamID.low,
-      accountInstance: steamID.high & 0xFFFFF,
-      accountType: steamID.high >> 20 & 0xF,
-      accountUniverse: steamID.high >> 24 & 0xFF
-    });
-  }
-  
+  let long = new Long(parsedId, instance | type << 20 | universe << 24);
+  return long.toString();
 }
-
-module.exports = SteamID;

@@ -12,7 +12,6 @@ module.exports.loginListener = function () {
         // SUCCESSFUL LOGIN
         if (code == 1) {
             self.loggedIn = true;
-            self.reconnecting = false;
             self.account.steamid = res.client_supplied_steamid;
 
             // Generate web cookie
@@ -26,27 +25,30 @@ module.exports.loginListener = function () {
                 return;
             }
 
-            // Get farming data
-            try {
-                var farmingData = await self.GetFarmingData();
-                if (this.socketId) {
-                    io.to(`${this.socketId}`).emit("login-log-msg", "Received Steam cards data.");
+            // To speed connection process, don't fetch farmingData and inventory again after reconnecting
+            if (!this.loggedInOnce) {
+                // Get farming data
+                try {
+                    var farmingData = await self.GetFarmingData();
+                    if (this.socketId) {
+                        io.to(`${this.socketId}`).emit("login-log-msg", "Received Steam cards data.");
+                    }
+                } catch (error) {
+                    self.RenewConnection("farming data")
+                    return;
                 }
-            } catch (error) {
-                self.RenewConnection("farming data")
-                return;
-            }
 
 
-            // Get inventory
-            try {
-                var inventory = await self.getInventory("let fail");
-                if (this.socketId) {
-                    io.to(`${this.socketId}`).emit("login-log-msg", "Received inventory data.");
+                // Get inventory
+                try {
+                    var inventory = await self.getInventory("let fail");
+                    if (this.socketId) {
+                        io.to(`${this.socketId}`).emit("login-log-msg", "Received inventory data.");
+                    }
+                } catch (error) {
+                    self.RenewConnection("intentory")
+                    return;
                 }
-            } catch (error) {
-                self.RenewConnection("intentory")
-                return;
             }
 
             // Set persona
@@ -55,8 +57,11 @@ module.exports.loginListener = function () {
             }
             self.setPersona(self.account.forcedStatus)
 
-            console.log(`Steam Login > user: ${self.account.user}`)
+            console.log(`${this.account.user} > logged in | proxy IP: ${this.proxy.ip}`);
+
+            // Reset flags
             this.fullyLoggedIn = true;
+            this.loggedInOnce = true;
 
             self.emit("login-res", {
                 steamid: self.account.steamid,
@@ -77,9 +82,8 @@ module.exports.loginListener = function () {
 
             // not a new account anymore, this will cause for code 88 retries
             self.account.newAccount = false;
-            return;
+            return
         }
-
         else if (code == 5) {
             errMsg = "Bad User/Pass."
         }
@@ -88,7 +92,7 @@ module.exports.loginListener = function () {
         }
         // EMAIL GUARD 
         else if (code == 63 || code == 65) {
-            this.dontReconnect = true;
+            this.waitEmailGuard = true;
 
             if (this.socketId) {
                 if (code == 63) {
@@ -100,13 +104,14 @@ module.exports.loginListener = function () {
 
                 io.sockets.sockets[this.socketId].once("email-guard", code => {
                     io.to(`${this.socketId}`).emit("login-log-msg", "Email guard code received, retrying.");
-                    this.dontReconnect = false;
+                    this.waitEmailGuard = false;
                     this.account.emailGuard = code;
                     self.connect({ usePrevious: true });
                 })
             }
             return;
         }
+
         // RATE LIMIT
         else if (code == 84) {
             if (this.socketId && !this.badProxyMsgSent) {
@@ -127,6 +132,7 @@ module.exports.loginListener = function () {
             errMsg = "Invalid shared secret."
 
             // only keep retrying if request did not come from addAccount
+            // this is necessary because sometimes the shared secret fails
             if (!self.account.newAccount) {
                 self.RenewConnection(errMsg)
                 return;
@@ -138,7 +144,7 @@ module.exports.loginListener = function () {
                 io.to(`${this.socketId}`).emit("login-log-msg", "Bad Steam CM, trying another one.");
             }
 
-            console.log(`Login failed code: ${code} > user: ${self.account.user}`)
+            console.error(`Login failed code: ${code} > user: ${self.account.user}`)
             self.RenewConnection(`code ${code}`)
             return;
         }
@@ -151,6 +157,7 @@ module.exports.loginListener = function () {
         self.emit("loginError", errMsg);
         self.Disconnect();
     });
+
 
 }
 
@@ -237,7 +244,7 @@ module.exports.connectionListeners = function () {
         }
 
         // wait for email guard, don't reconnect;
-        if (this.dontReconnect) {
+        if (this.waitEmailGuard) {
             return;
         }
 

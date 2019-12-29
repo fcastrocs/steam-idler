@@ -40,8 +40,8 @@ class SteamClient extends EventEmitter {
 			self.NetMsgReceived(packet);
 		});
 	}
-	
-	Connect(){
+
+	Connect() {
 		return this._connection.Connect();
 	}
 
@@ -220,7 +220,7 @@ class SteamClient extends EventEmitter {
 		this.Send({
 			msg: this.EMsg.ClientGamesPlayed,
 			proto: {}
-		}, new this.Schema.CMsgClientGamesPlayed({games_played: games}).toBuffer());
+		}, new this.Schema.CMsgClientGamesPlayed({ games_played: games }).toBuffer());
 	}
 
 
@@ -239,12 +239,8 @@ class SteamClient extends EventEmitter {
 	}
 
 	LogOn(logOnDetails) {
-		// construct temporary SteamID
-		this.steamID = new SteamID({
-			accountInstance: 1,
-			accountUniverse: Steam.EUniverse.Public,
-			accountType: Steam.EAccountType.Individual
-		}).toString();
+		// Get temporary SteamID
+		this.steamID = SteamID();
 
 		logOnDetails.protocol_version = this.PROTOCOL_VERSION;
 		this.Send({

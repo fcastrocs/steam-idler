@@ -47,6 +47,21 @@ const votes = [
 ]
 
 /**
+ * Resolves until account is fully logged in.
+ */
+module.exports.waitUntilFullyLoggedIn = function () {
+    let self = this;
+    return new Promise(resolve => {
+        (function check() {
+            if (self.fullyLoggedIn) {
+                return resolve();
+            }
+            setTimeout(() => check(), 5000);
+        })();
+    });
+}
+
+/**
  * Generate a web cookie from nonce.
  * @param {*} nonce given by steam after authentication
  * @returns web cookie
@@ -62,7 +77,7 @@ module.exports.GenerateWebCookie = function (nonce) {
         (async function tryAuthenticate() {
             // too many tries, renew the connection
             if (retries >= 5) {
-                return reject();
+                return reject("Could not get cookie");
             }
 
             let sessionKey = SteamCrypto.generateSessionKey();
@@ -93,9 +108,8 @@ module.exports.GenerateWebCookie = function (nonce) {
                 } else {
                     let sessionId = Crypto.randomBytes(12).toString('hex')
                     self.sessionId = sessionId;
-                    let steamLogin = data.authenticateuser.token
                     let steamLoginSecure = data.authenticateuser.tokensecure
-                    let cookie = `sessionid=${sessionId}; steamLogin=${steamLogin}; steamLoginSecure=${steamLoginSecure}; birthtime=-2021828399; lastagecheckage=7-0-1906;`
+                    let cookie = `sessionid=${sessionId}; steamLoginSecure=${steamLoginSecure};`
                     return resolve(cookie);
                 }
             } catch (error) {
@@ -137,7 +151,6 @@ module.exports.GetFarmingData = function () {
                 agent: agent,
                 timeout: STEAMCOMMUNITY_TIMEOUT,
                 headers: {
-                    "User-Agent": "Valve/Steam HTTP Client 1.0",
                     "Cookie": self.webCookie
                 }
             }
@@ -210,21 +223,6 @@ module.exports.GetFarmingData = function () {
 }
 
 /**
- * Resolves until account is fully logged in.
- */
-module.exports.waitUntilLoggedIn = function () {
-    let self = this;
-    return new Promise(resolve => {
-        (function check() {
-            if (self.fullyLoggedIn) {
-                return resolve();
-            }
-            setTimeout(() => check(), 5000);
-        })();
-    });
-}
-
-/**
  * 2019 winter event nominate games
  */
 module.exports.nominateGames = async function () {
@@ -253,7 +251,7 @@ module.exports.nominateGames = async function () {
                 if (retries >= 5) {
                     console.error("vote " + (i + 1) + " failed, renewing connection.");
                     self.RenewConnection("need new cookie");
-                    await self.waitUntilLoggedIn();
+                    await self.waitUntilFullyLoggedIn();
                     retries = 0;
                 }
 
@@ -266,7 +264,6 @@ module.exports.nominateGames = async function () {
                     agent: agent,
                     timeout: STEAMCOMMUNITY_TIMEOUT,
                     headers: {
-                        "User-Agent": "Valve/Steam HTTP Client 1.0",
                         "Cookie": self.webCookie
                     },
                     formData: {
@@ -300,6 +297,9 @@ module.exports.viewDiscoveryQueue = async function () {
         return Promise.reject("Account is not logged in");
     }
 
+    let newCookie = "";
+    newCookie += self.webCookie + " birthtime=-2021828399; lastagecheckage=7-0-1906;"
+
     await setMaturity(5);
     console.log("Maturity option 5 set");
     await setMaturity(2);
@@ -330,7 +330,7 @@ module.exports.viewDiscoveryQueue = async function () {
                     console.error("Could not set maturity option " + descid);
                     self.fullyLoggedIn = false;
                     self.RenewConnection("need new cookie");
-                    await self.waitUntilLoggedIn();
+                    await self.waitUntilFullyLoggedIn();
                     retries = 0;
                 }
 
@@ -343,8 +343,7 @@ module.exports.viewDiscoveryQueue = async function () {
                     agent: agent,
                     timeout: STEAMCOMMUNITY_TIMEOUT,
                     headers: {
-                        "User-Agent": "Valve/Steam HTTP Client 1.0",
-                        "Cookie": self.webCookie
+                        "Cookie": newCookie
                     },
                     formData: {
                         "sessionid": self.sessionId,
@@ -375,7 +374,7 @@ module.exports.viewDiscoveryQueue = async function () {
                 if (retries >= 5) {
                     console.error("Clearing appid " + appid + " failed, renewing connection.");
                     self.RenewConnection("need new cookie");
-                    await self.waitUntilLoggedIn();
+                    await self.waitUntilFullyLoggedIn();
                     retries = 0;
                 }
 
@@ -388,7 +387,6 @@ module.exports.viewDiscoveryQueue = async function () {
                     agent: agent,
                     timeout: STEAMCOMMUNITY_TIMEOUT,
                     headers: {
-                        "User-Agent": "Valve/Steam HTTP Client 1.0",
                         "Cookie": self.webCookie
                     },
                     formData: {
@@ -419,7 +417,7 @@ module.exports.viewDiscoveryQueue = async function () {
                 if (retries >= 5) {
                     console.log("Getting queue " + i + " failed, renewing connection.");
                     self.RenewConnection("need new cookie");
-                    await self.waitUntilLoggedIn();
+                    await self.waitUntilFullyLoggedIn();
                     retries = 0;
                 }
 
@@ -432,7 +430,6 @@ module.exports.viewDiscoveryQueue = async function () {
                     agent: agent,
                     timeout: STEAMCOMMUNITY_TIMEOUT,
                     headers: {
-                        "User-Agent": "Valve/Steam HTTP Client 1.0",
                         "Cookie": self.webCookie
                     },
                     formData: {
@@ -458,7 +455,6 @@ module.exports.viewDiscoveryQueue = async function () {
 
 /**
  * Get Inventory data
- * @returns ---
  */
 module.exports.getInventory = async function (mode) {
     let self = this;
@@ -475,14 +471,13 @@ module.exports.getInventory = async function (mode) {
         (async function tryGetInventory() {
             // too many tries, renew the connection
             if (retries >= 5) {
-                if(mode === "let fail"){
+                if (mode === "let fail") {
                     return reject();
                 }
 
                 self.RenewConnection("inventory");
-                await self.waitUntilLoggedIn();
-                // at this point inventory was refreshed in logOnResponse
-                return resolve(null);
+                await self.waitUntilFullyLoggedIn();
+                retries = 0;
             }
 
             let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
@@ -494,7 +489,6 @@ module.exports.getInventory = async function (mode) {
                 agent: agent,
                 timeout: STEAMCOMMUNITY_TIMEOUT,
                 headers: {
-                    "User-Agent": "Valve/Steam HTTP Client 1.0",
                     "Cookie": self.webCookie
                 }
             }
@@ -518,13 +512,13 @@ module.exports.getInventory = async function (mode) {
         })();
     })
 
-    function parseInventory(data){
+    function parseInventory(data) {
         let items = [];
 
         let inventory = data.rgInventory;
         let description = data.rgDescriptions;
 
-        for(const key in inventory){
+        for (const key in inventory) {
             let item = {}
             let c_i = inventory[key].classid + "_" + inventory[key].instanceid;
 
@@ -539,6 +533,88 @@ module.exports.getInventory = async function (mode) {
         return items;
     }
 }
+
+/**
+ * Send trade offer
+ */
+module.exports.sendOffer = async function (steamId, token, offer, tradeUrl) {
+    let self = this;
+    if (!self.fullyLoggedIn) {
+        return Promise.reject("Account is not logged in");
+    }
+
+    let res = await trysendOffer();
+    return Promise.resolve(res);
+
+    function trysendOffer() {
+        let retries = 0;
+        return new Promise((resolve, reject) => {
+            (async function attempt() {
+                // too many tries, renew the connection
+                if (retries >= 5) {
+                    console.error("Sending trade offer failed, renewing connection.");
+                    self.RenewConnection("trade offer");
+                    await self.waitUntilFullyLoggedIn();
+                    retries = 0;
+                }
+
+                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let agent = new SocksProxyAgent(proxy);
+
+                let params = {
+                    "trade_offer_access_token": token
+                }
+
+                let data = {
+                    "sessionid": self.sessionId,
+                    "serverid": 1,
+                    "partner": steamId,
+                    "tradeoffermessage": "",
+                    "json_tradeoffer": JSON.stringify(offer),
+                    "captcha": "",
+                    "trade_offer_create_params": JSON.stringify(params),
+                }
+
+                let options = {
+                    url: "https://steamcommunity.com/tradeoffer/new/send",
+                    method: 'POST',
+                    agent: agent,
+                    timeout: STEAMCOMMUNITY_TIMEOUT,
+                    headers: {
+                        "Referer": tradeUrl,
+                        "Cookie": self.webCookie,
+                    },
+                    json: true,
+                    formData: data
+                }
+
+                try {
+                    let res = await Request(options);
+                    console.log(`${self.account.user} > Trade offer sent`)
+                    if (res.needs_mobile_confirmation) {
+                        return resolve("Offer sent, needs mobile confirmation.");
+                    }
+                    return resolve(`Offer sent, needs email confirmation @${res.email_domain}.`);
+                } catch (error) {
+                    if (error.statusCode) {
+                        if (error.statusCode == 500) {
+                            console.error(`${self.account.user} > Trade offer status code: ${error.statusCode}`)
+                            return reject("Trade restrictions on either party, or the other party has a private inventory.")
+                        }
+                        console.error(`${self.account.user} > Trade offer status code: ${error.statusCode}`)
+                        return reject("errorcode: " + error.statusCode)
+                    }
+
+                    retries++;
+                    setTimeout(() => {
+                        attempt();
+                    }, STEAMCOMMUNITY_RETRY_DELAY);
+                }
+            })();
+        })
+    }
+}
+
 
 /**
 * Change avatar
@@ -583,11 +659,10 @@ module.exports.changeAvatar = function (binaryImg, filename) {
                 method: 'POST',
                 agent: agent,
                 timeout: STEAMCOMMUNITY_TIMEOUT,
-                json: true,
                 headers: {
-                    "User-Agent": "Valve/Steam HTTP Client 1.0",
                     "Cookie": self.webCookie
                 },
+                json: true,
                 formData: {
                     "MAX_FILE_SIZE": buffer.length,
                     "type": "player_avatar_image",
@@ -654,11 +729,10 @@ module.exports.clearAliases = function () {
                 method: 'POST',
                 agent: agent,
                 timeout: STEAMCOMMUNITY_TIMEOUT,
-                json: true,
                 headers: {
-                    "User-Agent": "Valve/Steam HTTP Client 1.0",
                     "Cookie": self.webCookie
                 },
+                json: true,
                 formData: { "sessionid": self.sessionId }
             }
 
@@ -716,11 +790,10 @@ module.exports.changePrivacy = function (formData) {
                 method: 'POST',
                 agent: agent,
                 timeout: STEAMCOMMUNITY_TIMEOUT,
-                json: true,
                 headers: {
-                    "User-Agent": "Valve/Steam HTTP Client 1.0",
                     "Cookie": self.webCookie
                 },
+                json: true,
                 formData: {
                     "sessionid": self.sessionId,
                     'Privacy': JSON.stringify(formData.Privacy),
@@ -783,11 +856,10 @@ module.exports.activateFreeGame = function (packageId) {
                 method: 'POST',
                 agent: agent,
                 timeout: STEAMCOMMUNITY_TIMEOUT,
-                json: true,
                 headers: {
-                    "User-Agent": "Valve/Steam HTTP Client 1.0",
                     "Cookie": self.webCookie
                 },
+                json: true,
                 formData: {
                     "snr": "1_5_9__403",
                     "action": "add_to_cart",

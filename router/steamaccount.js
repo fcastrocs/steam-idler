@@ -1,6 +1,7 @@
 const Router = require('express').Router();
 const apiLimiter = require('./util/api-limiter');
 const AccountHandler = require("../app").accountHandler
+const io = require("../app").io;
 
 /**
  * Middleware to remove API limit before sending response
@@ -111,6 +112,29 @@ Router.post("/steamaccount/refreshinventory", async function (req, res) {
     await AccountHandler.getInventory(req.session.userId, req.body.accountId, req.body.socketId);
     res.send("okay");
 })
+
+/**
+ * Send trade offer
+ */
+Router.post("/steamaccount/sendoffer", async function (req, res) {
+    if (!req.body.accountId) {
+        return res.status(400).send("accountId parameter needed.")
+    }
+
+    if (!req.body.socketId) {
+        return res.status(400).send("socket ID needed.")
+    }
+
+    let result = "";
+    try{
+        result = await AccountHandler.sendOffer(req.session.userId, req.body.accountId);
+    }catch(err){
+        result = err;
+    }
+
+    io.to(`${req.body.socketId}`).emit("send-offer-result", result);
+    res.send("okay");
+});
 
 // Stop playing games
 Router.post('/steamaccount/stopgames', async function (req, res) {

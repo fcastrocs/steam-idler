@@ -139,7 +139,7 @@ function buildAccount(account) {
                                 </div>
                                 <div class="modal-buttons">
                                     <button class="btn btn-primary modal-btn refresh-intentory-btn">Reload Inventory</button>
-                                    <button class="btn btn-primary modal-btn">Send offer</button>
+                                    <button class="btn btn-primary modal-btn send-offer-btn">Send offer</button>
                                     <button class="btn btn-secondary modal-btn" data-dismiss="modal">Close</button>
                                 </div>
                             </div>

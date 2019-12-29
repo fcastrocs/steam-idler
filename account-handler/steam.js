@@ -8,6 +8,8 @@ const SteamAccount = require('../models/steam-accounts')
 const mongoose = require('mongoose');
 const io = require("../app").io;
 const Accounts = require("../models/steam-accounts");
+const User = require("../models/user");
+const getSteamId = require("../steam/steamID");
 
 /**
  * Login to steam
@@ -239,12 +241,105 @@ module.exports.getInventory = async function (userId, accountId, socketId) {
     account.inventory = inventory;
     await this.saveAccount(account);
 
-    if(socketId){
+    if (socketId) {
         io.to(`${socketId}`).emit("inventory", inventory);
     }
 
     return inventory;
 }
+
+
+/**
+ * Send Trade Offer
+ */
+module.exports.sendOffer = async function (userId, accountId) {
+    //check if user has a tradeurl
+    let user = await User.findById(userId).exec();
+    if (!user.tradeUrl || user.tradeUrl === "") {
+        return Promise.reject("Set your trade URL in settings first.")
+    }
+
+    // check account is logged in
+    let client = this.isAccountOnline(userId, accountId);
+    if (!client) {
+        return Promise.reject("Account is not online.")
+    }
+
+    let account = await this.getAccount({ userId: userId, accountId: accountId })
+    if (!account) {
+        return Promise.reject("Account not found.")
+    }
+
+    //Now build de trade offer
+    let offer = this.buildTradeOffer(account.inventory);
+
+    if(!offer){
+        return Promise.reject("No tradable items.")
+    }
+
+    //Parse partnerId
+    let start = user.tradeUrl.indexOf("=");
+    let end = user.tradeUrl.indexOf("&");
+    //convert to steamid
+    let partnerId = user.tradeUrl.slice(start + 1, end);
+    let steamId = getSteamId(partnerId);
+    //Parse Token
+    start = user.tradeUrl.lastIndexOf("=");
+    let token = user.tradeUrl.slice(start + 1)
+
+    try {
+        let res = await client.sendOffer(steamId, token, offer, user.tradeUrl);
+        return Promise.resolve(res);
+    } catch (err) {
+        return Promise.reject(err);
+    }
+}
+
+/**
+ * Helper Function for sendOffer()
+ * Builds the trade offer
+ */
+module.exports.buildTradeOffer = function (inventory) {
+
+    let assets = [];
+
+    for (const item of inventory) {
+        if (item.tradable == 0) {
+            continue;
+        }
+
+        let asset = {
+            appid: "753",
+            contextid: "6",
+            amount: item.amount,
+            assetid: item.assetid
+        }
+        assets.push(asset);
+    }
+
+    // no tradable items
+    if(assets.length == 0){
+        return null;
+    }
+
+    let offer = {
+        newversion: true,
+        version: assets.length + 1,
+        me: {
+            assets: assets,
+            currency: [],
+            ready: false
+        },
+        them: {
+            assets: [],
+            currency: [],
+            ready: false
+        }
+    }
+
+    return offer;
+}
+
 
 /**
  * Change accounts persona name / nick

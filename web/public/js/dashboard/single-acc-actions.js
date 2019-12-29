@@ -232,15 +232,39 @@ $(() => {
 
     })
 
-    function inventoryShowSpinner(self){
+    function inventoryShowSpinner(self) {
         self.find(".inventory-info").hide();
         self.find(".inventory-spinner").prop("hidden", false);
     }
 
-    function inventoryHideSpinner(self){
+    function inventoryHideSpinner(self) {
         self.find(".inventory-info").show();
         self.find(".inventory-spinner").prop("hidden", true);
     }
+
+    /*************************************************** 
+    *             STEAM - SEND OFFER         *
+    ***************************************************/
+    $(document).on("click", ".send-offer-btn", function (e) {
+        e.preventDefault();
+        let self = $(this).closest("div.account");
+        let accountId = self.attr("data-id");
+
+        alert("This might take some time, you will be notified of the result.");
+        inventoryShowSpinner(self)
+
+        $.post("/steamaccount/sendoffer", {
+            accountId: accountId,
+            socketId: socket.id
+        })
+
+        socket.on("send-offer-result", res =>{
+            inventoryHideSpinner(self);
+            socket.removeAllListeners();
+            alert(res);
+        });
+
+    })
 
     /**************************************************** 
     *               STEAM - CHANGE NICK                 *
