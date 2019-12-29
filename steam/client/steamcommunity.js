@@ -297,8 +297,7 @@ module.exports.viewDiscoveryQueue = async function () {
         return Promise.reject("Account is not logged in");
     }
 
-    let newCookie = "";
-    newCookie += self.webCookie + " birthtime=-2021828399; lastagecheckage=7-0-1906;"
+    let newCookie = self.webCookie + " birthtime=-2021828399; lastagecheckage=7-0-1906;"
 
     await setMaturity(5);
     console.log("Maturity option 5 set");
@@ -328,7 +327,6 @@ module.exports.viewDiscoveryQueue = async function () {
                 // too many tries, renew the connection
                 if (retries >= 5) {
                     console.error("Could not set maturity option " + descid);
-                    self.fullyLoggedIn = false;
                     self.RenewConnection("need new cookie");
                     await self.waitUntilFullyLoggedIn();
                     retries = 0;
@@ -387,7 +385,7 @@ module.exports.viewDiscoveryQueue = async function () {
                     agent: agent,
                     timeout: STEAMCOMMUNITY_TIMEOUT,
                     headers: {
-                        "Cookie": self.webCookie
+                        "Cookie": newCookie
                     },
                     formData: {
                         "sessionid": self.sessionId,
@@ -430,7 +428,7 @@ module.exports.viewDiscoveryQueue = async function () {
                     agent: agent,
                     timeout: STEAMCOMMUNITY_TIMEOUT,
                     headers: {
-                        "Cookie": self.webCookie
+                        "Cookie": newCookie
                     },
                     formData: {
                         "sessionid": self.sessionId,
