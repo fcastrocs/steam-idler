@@ -38,6 +38,26 @@ $(() => {
 
     })
 
+    /**************************************************
+   *             STEAM - SEND OFFER                   *
+   ***************************************************/
+    $(document).on("click", "#all-send-offers-btn", function (e) {
+        e.preventDefault();
+
+        alert("This might take some time, you will be notified of the result.");
+        showSpinner();
+
+        $.post("/steamaccounts/sendoffer", {
+            socketId: socket.id
+        })
+
+        socket.on("send-offer-result", res => {
+            hideSpinner();
+            socket.removeAllListeners();
+            alert(res);
+        });
+
+    })
 
     /**************************************************** 
      *    2019 WINTER EVENT - NOMINATE GAMES            *

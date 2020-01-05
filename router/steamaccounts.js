@@ -2,6 +2,8 @@ const Router = require('express').Router();
 const apiLimiter = require('./util/api-limiter');
 const AccountHandler = require("../app").accountHandler
 const allSettled = require('promise.allsettled');
+const io = require("../app").io;
+const User = require("../models/user");
 
 /**
  * Middleware to remove API limit before sending response
@@ -23,19 +25,19 @@ Router.get('/steamaccounts', async (req, res) => {
  * 2019 winter event game nominations
  */
 
- Router.post("/steamaccounts/nominategames", async function(req, res){
+Router.post("/steamaccounts/nominategames", async function (req, res) {
     try {
         // get all user accounts
         let accounts = await AccountHandler.getAllAccounts(req.session.userId, { dontFilter: true })
         if (accounts.length == 0) {
             return res.status(400).send("You don't have any accounts.")
         }
-        
+
         let timeout = 0;
         let promises = []
         for (let i in accounts) {
             promises.push(
-                new Promise(resolve=> setTimeout(() => {
+                new Promise(resolve => setTimeout(() => {
                     AccountHandler.nominateGames(req.session.userId, accounts[i]._id)
                     resolve();
                 }, timeout))
@@ -51,12 +53,12 @@ Router.get('/steamaccounts', async (req, res) => {
         console.error(error)
         return res.status(500).send("Could not nominate games.")
     }
- })
+})
 
- /**
-  * View discovery queues
-  */
- Router.post("/steamaccounts/view_discovery_queue", async function(req, res){
+/**
+ * View discovery queues
+ */
+Router.post("/steamaccounts/view_discovery_queue", async function (req, res) {
     try {
         // get all user accounts
         let accounts = await AccountHandler.getAllAccounts(req.session.userId, { dontFilter: true })
@@ -68,8 +70,8 @@ Router.get('/steamaccounts', async (req, res) => {
         let promises = []
         for (let i in accounts) {
             promises.push(
-                new Promise(resolve=> setTimeout(() => {
-                    AccountHandler.viewDiscoveryQueue(req.session.userId, accounts[i]._id).then(()=>{
+                new Promise(resolve => setTimeout(() => {
+                    AccountHandler.viewDiscoveryQueue(req.session.userId, accounts[i]._id).then(() => {
                         resolve();
                     })
                 }, timeout))
@@ -85,7 +87,67 @@ Router.get('/steamaccounts', async (req, res) => {
         console.error(error)
         return res.status(500).send("Could not view discovery queues.")
     }
- })
+})
+
+
+/**
+* Send offers
+*/
+Router.post("/steamaccounts/sendoffer", async function (req, res) {
+    // need socketId
+    if (!req.body.socketId) {
+        return res.status(400).send("socket ID needed.")
+    }
+
+    //check if user has a tradeurl
+    let user = await User.findById(req.session.userId).exec();
+    if (!user.tradeUrl || user.tradeUrl === "") {
+        io.to(`${req.body.socketId}`).emit("send-offer-result", "Set your trade url in settings first.");
+        return res.status(400).send("Set your trade url in settings first.")
+    }
+
+    // get all user accounts
+    let accounts = await AccountHandler.getAllAccounts(req.session.userId, { dontFilter: true })
+    if (accounts.length == 0) {
+        return res.status(400).send("You don't have any accounts.")
+    }
+
+    let timeout = 0;
+    let promises = []
+
+    for (let i in accounts) {
+        promises.push(
+            new Promise((resolve, reject) => setTimeout(() => {
+                AccountHandler.sendOffer(req.session.userId, accounts[i]._id).then((res) => {
+                    resolve(res);
+                }).catch(err => {
+                    reject(err);
+                })
+            }, timeout))
+        )
+        timeout += 2000;
+    }
+
+
+    allSettled(promises).then(results => {
+        console.log("Finished sending offers.");
+
+        let fulfilled = 0;
+        let rejected = 0;
+
+        // Count how many fulfilled and how many rejected
+        results.forEach(element => {
+            if (element.status === "fulfilled") {
+                fulfilled++;
+                return;
+            }
+            rejected++;
+        });
+
+        io.to(`${req.body.socketId}`).emit("send-offer-result", `Offers sent: ${fulfilled}, failed: ${rejected}`)
+        return res.send("okay");
+    })
+})
 
 /**
  * Login all accounts
