@@ -86,7 +86,7 @@ module.exports.accountHandler = accountHandler;
 
 async function DBconnect() {
     try {
-        mongoose.set('useCreateIndex', true);
+        //mongoose.set('useCreateIndex', true); //This might give the at Pool.destroy  error
         await mongoose.connect(process.env.MOGODB_URI, {
             useNewUrlParser: true,
             dbName: process.env.DATABASE,
