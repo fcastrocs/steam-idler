@@ -464,6 +464,9 @@ module.exports.getInventory = async function (mode) {
 
     let retries = 0;
     return new Promise(async (resolve, reject) => {
+        let gotSteamCards = false
+        let items = [];
+
         (async function tryGetInventory() {
             // too many tries, renew the connection
             if (retries >= 5) {
@@ -490,15 +493,30 @@ module.exports.getInventory = async function (mode) {
             }
 
             try {
-                let data = await Request(options)
+                let data = null;
+
+                if(gotSteamCards){
+                     // get inventory/json/753/6  <-- steam cards
+                    data = await Request(options)
+                    data = JSON.parse(data);
+                    // Check for empty inventory
+                    if (!Array.isArray(data.rgInventory)) {
+                        parseInventory(items, data, "6");
+                    }
+                    gotSteamCards = true;
+                }
+                
+
+                // get inventory/json/753/1  <-- gifts
+                options.url = `https://steamcommunity.com/profiles/${self.account.steamid}/inventory/json/753/1`,
+                data = await Request(options)
                 data = JSON.parse(data);
                 // Check for empty inventory
-                if (Array.isArray(data.rgInventory) && data.rgInventory.length == 0) {
-                    return resolve([]);
+                if (!Array.isArray(data.rgInventory)) {
+                    parseInventory(items, data, "6");
                 }
 
-                var inventory = parseInventory(data)
-                return resolve(inventory);
+                return resolve(items);
             } catch (error) {
                 retries++;
                 setTimeout(() => {
@@ -508,9 +526,7 @@ module.exports.getInventory = async function (mode) {
         })();
     })
 
-    function parseInventory(data) {
-        let items = [];
-
+    function parseInventory(items, data, contextid) {
         let inventory = data.rgInventory;
         let description = data.rgDescriptions;
 
@@ -524,9 +540,9 @@ module.exports.getInventory = async function (mode) {
             item.name = description[c_i].name;
             item.type = description[c_i].type;
             item.tradable = description[c_i].tradable;
+            item.contextid = contextid;
             items.push(item);
         }
-        return items;
     }
 }
 
