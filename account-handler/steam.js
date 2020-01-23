@@ -303,7 +303,15 @@ module.exports.buildTradeOffer = function (inventory) {
 
     let assets = [];
 
+    let count = 0;
+
     for (const item of inventory) {
+        count++
+
+        if(count == 9){
+            break;
+        }
+
         if (item.tradable == 0) {
             continue;
         }
