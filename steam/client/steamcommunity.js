@@ -581,7 +581,8 @@ module.exports.sendOffer = async function (steamId, token, offer, tradeUrl) {
                         "Cookie": self.webCookie,
                     },
                     json: true,
-                    formData: data
+                    formData: data,
+                    encoding: null
                 }
 
                 try {
