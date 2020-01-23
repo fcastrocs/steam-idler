@@ -311,11 +311,10 @@ module.exports.buildTradeOffer = function (inventory) {
         let asset = {
             appid: "753",
             contextid: "6",
-            amount: 1,
-            assetid: "11876269561"
+            amount: item.amount,
+            assetid: item.assetid
         }
         assets.push(asset);
-        break;
     }
 
     // no tradable items
