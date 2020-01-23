@@ -300,19 +300,14 @@ module.exports.sendOffer = async function (userId, accountId) {
  * Builds the trade offer
  */
 module.exports.buildTradeOffer = function (inventory) {
-
     let assets = [];
 
-    let count = 0;
-
     for (const item of inventory) {
-        count++
-
-        if(count == 10){
-            break;
+        if (item.tradable == 0) {
+            continue;
         }
 
-        if (item.tradable == 0) {
+        if(item.type === "The Steam Awards - 2019 Trading Card"){
             continue;
         }
 

@@ -495,7 +495,7 @@ module.exports.getInventory = async function (mode) {
             try {
                 let data = null;
 
-                if(gotSteamCards){
+                if(!gotSteamCards){
                      // get inventory/json/753/6  <-- steam cards
                     data = await Request(options)
                     data = JSON.parse(data);
