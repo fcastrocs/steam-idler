@@ -513,7 +513,7 @@ module.exports.getInventory = async function (mode) {
                 data = JSON.parse(data);
                 // Check for empty inventory
                 if (!Array.isArray(data.rgInventory)) {
-                    parseInventory(items, data, "6");
+                    parseInventory(items, data, "1");
                 }
 
                 return resolve(items);
