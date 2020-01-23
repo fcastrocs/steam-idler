@@ -308,7 +308,7 @@ module.exports.buildTradeOffer = function (inventory) {
     for (const item of inventory) {
         count++
 
-        if(count == 40){
+        if(count == 20){
             break;
         }
 
