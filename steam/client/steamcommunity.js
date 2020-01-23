@@ -593,6 +593,10 @@ module.exports.sendOffer = async function (steamId, token, offer, tradeUrl) {
                     }
                     return resolve(`Offer sent, needs email confirmation @${res.email_domain}.`);
                 } catch (error) {
+                    console.log(error)
+                    console.log("\n\n")
+                    console.log(error.error)
+
                     console.log(error.error.toString())
                     if (error.statusCode) {
                         if (error.statusCode == 500) {
