@@ -22,8 +22,6 @@ Router.post("/dashboard/changetradeurl", isLoggedIn, async (req, res) => {
     if (!req.body.tradeUrl) {
         return res.status(400).send("tradeurl parameter needed.")
     }
-
-    //validate tradeurl
     let regex = /^https:\/\/steamcommunity\.com\/tradeoffer\/new\/\?partner=[0-9]+&token=.{8}$/;
     if(!regex.test(req.body.tradeUrl)){
         return res.status(400).send("Invalid trade url.")

@@ -315,6 +315,7 @@ module.exports.buildTradeOffer = function (inventory) {
             assetid: "11876269561"
         }
         assets.push(asset);
+        break;
     }
 
     // no tradable items
