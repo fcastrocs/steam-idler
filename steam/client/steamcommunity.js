@@ -519,7 +519,7 @@ module.exports.getInventory = async function (mode) {
             let c_i = inventory[key].classid + "_" + inventory[key].instanceid;
 
             item.assetid = inventory[key].id;
-            item.amount = parseInt(inventory[key].amount);
+            item.amount = inventory[key].amount;
             item.icon = description[c_i].icon_url;
             item.name = description[c_i].name;
             item.type = description[c_i].type;

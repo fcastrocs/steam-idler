@@ -311,7 +311,7 @@ module.exports.buildTradeOffer = function (inventory) {
         let asset = {
             appid: "753",
             contextid: "6",
-            amount: item.amount,
+            amount: 1,
             assetid: item.assetid
         }
         assets.push(asset);
