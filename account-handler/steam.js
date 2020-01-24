@@ -273,7 +273,7 @@ module.exports.sendOffer = async function (userId, accountId) {
     //Now build de trade offer
     let offer = this.buildTradeOffer(account.inventory);
 
-    if(!offer){
+    if (!offer) {
         return Promise.reject("No tradable items.")
     }
 
@@ -307,7 +307,8 @@ module.exports.buildTradeOffer = function (inventory) {
             continue;
         }
 
-        if(item.type === "The Steam Awards - 2019 Trading Card"){
+        if (item.type === "The Steam Awards - 2019 Trading Card" ||
+            item.type === "The Steam Awards - 2019 Foil Trading Card") {
             continue;
         }
 
@@ -321,7 +322,7 @@ module.exports.buildTradeOffer = function (inventory) {
     }
 
     // no tradable items
-    if(assets.length == 0){
+    if (assets.length == 0) {
         return null;
     }
 
