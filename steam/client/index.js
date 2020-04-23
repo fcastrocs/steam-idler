@@ -83,7 +83,7 @@ class Client extends EventEmitter {
             proxy: {
                 ipaddress: this.proxy.ip,
                 port: this.proxy.port,
-                type: 5
+                type: 4
             },
             destination: {
                 host: this.steamcm.ip,
