@@ -3,7 +3,7 @@ const Proxy = require('../models/proxy');
 
 // Returns proxy list from proxyscrape.com
 async function GetProxies() {
-    let url = "https://api.proxyscrape.com/?request=displayproxies&protocol=socks5&serialkey=JWXG8-CAGC0-CC8YC-ZB974&country=US&timeout=5000"
+    let url = "https://api.proxyscrape.com/?request=displayproxies&protocol=socks5&serialkey=JWXG8-CAGC0-CC8YC-ZB974&country=RU&timeout=5000"
     let proxyList = null;
     try {
         let res = await request.get(url);

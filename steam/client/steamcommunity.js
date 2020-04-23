@@ -89,7 +89,7 @@ module.exports.GenerateWebCookie = function (nonce) {
                 encrypted_loginkey: encryptedNonce
             };
 
-            let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+            let proxy = `socks5://${self.proxy.ip}:${self.proxy.port}`
             let agent = new SocksProxyAgent(proxy);
 
             let options = {
@@ -142,7 +142,7 @@ module.exports.GetFarmingData = function () {
                 return reject();
             }
 
-            let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+            let proxy = `socks5://${self.proxy.ip}:${self.proxy.port}`
             let agent = new SocksProxyAgent(proxy);
 
             let options = {
@@ -255,7 +255,7 @@ module.exports.nominateGames = async function () {
                     retries = 0;
                 }
 
-                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let proxy = `socks5://${self.proxy.ip}:${self.proxy.port}`
                 let agent = new SocksProxyAgent(proxy);
 
                 let options = {
@@ -330,7 +330,7 @@ module.exports.viewDiscoveryQueue = async function () {
                     retries = 0;
                 }
 
-                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let proxy = `socks5://${self.proxy.ip}:${self.proxy.port}`
                 let agent = new SocksProxyAgent(proxy);
 
                 let options = {
@@ -374,7 +374,7 @@ module.exports.viewDiscoveryQueue = async function () {
                     retries = 0;
                 }
 
-                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let proxy = `socks5://${self.proxy.ip}:${self.proxy.port}`
                 let agent = new SocksProxyAgent(proxy);
 
                 let options = {
@@ -417,7 +417,7 @@ module.exports.viewDiscoveryQueue = async function () {
                     retries = 0;
                 }
 
-                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let proxy = `socks5://${self.proxy.ip}:${self.proxy.port}`
                 let agent = new SocksProxyAgent(proxy);
 
                 let options = {
@@ -479,7 +479,7 @@ module.exports.getInventory = async function (mode) {
                 retries = 0;
             }
 
-            let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+            let proxy = `socks5://${self.proxy.ip}:${self.proxy.port}`
             let agent = new SocksProxyAgent(proxy);
 
             let options = {
@@ -570,7 +570,7 @@ module.exports.sendOffer = async function (steamId, token, offer, tradeUrl) {
                     retries = 0;
                 }
 
-                let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+                let proxy = `socks5://${self.proxy.ip}:${self.proxy.port}`
                 let agent = new SocksProxyAgent(proxy);
 
                 let params = {
@@ -665,7 +665,7 @@ module.exports.changeAvatar = function (binaryImg, filename) {
 
             retries++;
 
-            let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+            let proxy = `socks5://${self.proxy.ip}:${self.proxy.port}`
             let agent = new SocksProxyAgent(proxy);
 
             let options = {
@@ -735,7 +735,7 @@ module.exports.clearAliases = function () {
 
             retries++;
 
-            let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+            let proxy = `socks5://${self.proxy.ip}:${self.proxy.port}`
             let agent = new SocksProxyAgent(proxy);
 
             let options = {
@@ -796,7 +796,7 @@ module.exports.changePrivacy = function (formData) {
 
             retries++;
 
-            let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+            let proxy = `socks5://${self.proxy.ip}:${self.proxy.port}`
             let agent = new SocksProxyAgent(proxy);
 
             let options = {
@@ -862,7 +862,7 @@ module.exports.activateFreeGame = function (packageId) {
 
             retries++;
 
-            let proxy = `socks4://${self.proxy.ip}:${self.proxy.port}`
+            let proxy = `socks5://${self.proxy.ip}:${self.proxy.port}`
             let agent = new SocksProxyAgent(proxy);
 
             let options = {
