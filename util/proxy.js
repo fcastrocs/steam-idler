@@ -3,13 +3,14 @@ const Proxy = require('../models/proxy');
 
 // Returns proxy list from proxyscrape.com
 async function GetProxies() {
-    let url = "https://api.proxyscrape.com/?request=displayproxies&proxytype=socks4&timeout=5000&country=BR&uptime=0&status=alive&averagetimeout=10000&age=unlimited&score=0&port=all&organization=all&serialkey=JWXG8-CAGC0-CC8YC-ZB974"
+    let url = "https://api.proxyscrape.com/?request=displayproxies&proxytype=socks4&country=BR"
+
     let proxyList = null;
     try {
         let res = await request.get(url);
         // validate the proxies
         proxyList = res.split("\r\n").filter(proxy => {
-            // do not allow emtpy values
+            // do not allow emtpy values`
             if (proxy === "") {
                 return false;
             }
