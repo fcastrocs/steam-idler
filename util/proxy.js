@@ -3,7 +3,7 @@ const Proxy = require('../models/proxy');
 
 // Returns proxy list from proxyscrape.com
 async function GetProxies() {
-    let url = "https://api.proxyscrape.com/?request=displayproxies&proxytype=socks4&timeout=10000&country=ID"
+    let url = "http://account.fineproxy.org/api/getproxy/?format=txt&type=socksip&login=US342134&password=lVcjTDtpLJ"
 
     let proxyList = null;
     try {
