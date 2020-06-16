@@ -544,6 +544,9 @@ class SteamClient extends EventEmitter {
 			});
 
 			(body.packages || []).forEach(function (pkg) {
+				if(pkg == null){
+					continue;
+				}
 				var data = {
 					"changenumber": pkg.change_number,
 					"missingToken": !!pkg.missing_token,
