@@ -545,7 +545,7 @@ class SteamClient extends EventEmitter {
 
 			(body.packages || []).forEach(function (pkg) {
 				if(pkg == null){
-					continue;
+					return;
 				}
 				var data = {
 					"changenumber": pkg.change_number,
