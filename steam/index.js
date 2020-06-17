@@ -95,7 +95,6 @@ class SteamClient extends EventEmitter {
 			});
 			packageids.sort(self.SortNumeric);
 
-
 			self.GetPkgInfo(packageids, appIds => {
 				self.GetAppInfo(appIds, games => {
 					self.emit("games", games);
@@ -270,10 +269,14 @@ class SteamClient extends EventEmitter {
 			return;
 		}
 
-		this.GetProductInfo([], pkgIds, function (apps, packages) {
-			// Request info for all the apps in these packages
+		// Request info for all the apps in these packages
+		this.GetProductInfo([], pkgIds, (apps, packages) => {
 			let appids = [];
 			for (let pkgid in packages) {
+				if(!packages[pkgid].packageinfo){
+					continue;
+				}
+
 				// This package has expired. Free weekend, usually
 				var extended = packages[pkgid].packageinfo.extended;
 				if (extended && extended.expirytime && extended.expirytime <= Math.floor(Date.now() / 1000)) {
@@ -500,7 +503,6 @@ class SteamClient extends EventEmitter {
 	}
 
 	GetProductInfo(apps, packages, callback) {
-		// Steam can send us the full response in multiple responses, so we need to buffer them into one callback
 		var appids = [];
 		var packageids = [];
 		var response = {
@@ -510,73 +512,36 @@ class SteamClient extends EventEmitter {
 			"unknownPackages": []
 		};
 
+		// transform apps from [1,2] to [{appid: 1}, {appid: 2}] format
 		apps = apps.map(function (app) {
-			if (typeof app === 'object') {
-				appids.push(app.appid);
-				return app;
-			} else {
-				appids.push(app);
-				return { "appid": app };
-			}
+			appids.push(app);
+			return { "appid": app };
 		});
 
+
+		// transform packages from [1,2] to [{packageid: 1}, {packageid: 2}] format
 		packages = packages.map(function (pkg) {
-			if (typeof pkg === 'object') {
-				packageids.push(pkg.packageid);
-				return pkg;
-			} else {
-				packageids.push(pkg);
-				return { "packageid": pkg };
-			}
+			packageids.push(pkg);
+			return { "packageid": pkg };
 		});
 
-		this.__Send(this.EMsg.ClientPICSProductInfoRequest, {
-			"apps": apps,
-			"packages": packages
-		}, function (body) {
-			(body.apps || []).forEach(function (app) {
-				var data = {
-					"changenumber": app.change_number,
-					"missingToken": !!app.missing_token,
-					"appinfo": VDF.parse(app.buffer.toString('utf8')).appinfo
-				};
-				app._parsedData = data;
-			});
-
+		// Steam can send us the full response in multiple responses, so we need to buffer them into one callback
+		this.__Send(this.EMsg.ClientPICSProductInfoRequest, { "apps": apps, "packages": packages }, body => {
 			(body.packages || []).forEach(function (pkg) {
-				if(pkg.buffer == null){
-					return;
-				}
-				var data = {
+				response.packages[pkg.packageid] = {
 					"changenumber": pkg.change_number,
 					"missingToken": !!pkg.missing_token,
-					"packageinfo": BinaryKVParser.parse(pkg.buffer)[pkg.packageid]
+					"packageinfo": pkg.buffer ? BinaryKVParser.parse(pkg.buffer)[pkg.packageid] : null
 				};
-				pkg._parsedData = data;
-			});
 
-			if (!callback) {
-				return;
-			}
-
-			(body.unknown_appids || []).forEach(function (appid) {
-				response.unknownApps.push(appid);
-				var index = appids.indexOf(appid);
-				if (index != -1) {
-					appids.splice(index, 1);
-				}
-			});
-
-			(body.unknown_packageids || []).forEach(function (packageid) {
-				response.unknownPackages.push(packageid);
-				var index = packageids.indexOf(packageid);
+				var index = packageids.indexOf(pkg.packageid);
 				if (index != -1) {
 					packageids.splice(index, 1);
 				}
 			});
 
 			(body.apps || []).forEach(function (app) {
-				response.apps[app.appid] = app._parsedData || {
+				response.apps[app.appid] = {
 					"changenumber": app.change_number,
 					"missingToken": !!app.missing_token,
 					"appinfo": VDF.parse(app.buffer.toString('utf8')).appinfo
@@ -588,24 +553,8 @@ class SteamClient extends EventEmitter {
 				}
 			});
 
-			(body.packages || []).forEach(function (pkg) {
-				if(pkg.buffer == null){
-					return;
-				}
-				response.packages[pkg.packageid] = pkg._parsedData || {
-					"changenumber": pkg.change_number,
-					"missingToken": !!pkg.missing_token,
-					"packageinfo": BinaryKVParser.parse(pkg.buffer)[pkg.packageid]
-				};
-
-				var index = packageids.indexOf(pkg.packageid);
-				if (index != -1) {
-					packageids.splice(index, 1);
-				}
-			});
-
 			if (appids.length === 0 && packageids.length === 0) {
-				callback(response.apps, response.packages, response.unknownApps, response.unknownPackages);
+				callback(response.apps, response.packages);
 			}
 		});
 	}
