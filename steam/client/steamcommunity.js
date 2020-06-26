@@ -10,6 +10,8 @@ const Crypto = require('crypto');
 const STEAMCOMMUNITY_TIMEOUT = 10000
 const STEAMCOMMUNITY_RETRY_DELAY = 3000
 
+const DISCOVERY_QUEUES_TODO = 1
+
 // 2019 winter sale nominations
 const votes = [
     {
@@ -307,7 +309,7 @@ module.exports.viewDiscoveryQueue = async function () {
     console.log("Maturity option 3 set");
 
     // do three queue discoveries
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < DISCOVERY_QUEUES_TODO; i++) {
         let queue = await getQueue(i + 1);
         console.log("Got queue " + (i + 1));
 

@@ -532,7 +532,7 @@ module.exports.steamConnect = async function (loginOptions, socketId) {
 module.exports.deleteAccount = async function (userId, accountId) {
     await this.logoutAccount(userId, accountId);
     await Accounts.deleteOne({ _id: accountId, userId: userId }).exec();
-    return Promise.resolve();
+    return Promise.resolve("okay");
 }
 
 /**

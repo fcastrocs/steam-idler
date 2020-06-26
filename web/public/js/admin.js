@@ -1,6 +1,6 @@
 $(() => {
 
-    $('#renew-proxies').click(function(){
+    $('#renew-proxies').click(function () {
         $(this).prop("disabled", true);
         $.post('/admin/renewproxies').done(count => {
             $(this).prop("disabled", false);
@@ -11,7 +11,7 @@ $(() => {
         })
     });
 
-    $('#renew-steamcms').click(function(){
+    $('#renew-steamcms').click(function () {
         $(this).prop("disabled", true);
         $.post('/admin/renewsteamcms').done(count => {
             $(this).prop("disabled", false);
@@ -49,11 +49,30 @@ $(() => {
             <span class="user-item-accounts">${user.accountsCount}</span>
             <span class="user-item-loggedAccounts">${user.loggedAccountsCount}</span>
             <button type="button" class="btn btn-primary">Ban</button>
-            <button type="button" class="btn btn-primary">Delete</button>
+            <button type="button" class="btn btn-primary user-delete">Delete</button>
             </div>`
         });
 
         $("#user-list").append(usersHtml);
+    })
+
+    // delete user
+    $(document).on('click', '.user-delete', function (e) {
+        e.preventDefault();
+        let self = $(this).closest(".user-item");
+        let userId = self.attr("data-id");
+
+        $.ajax({
+            url: '/admin/deleteuser',
+            method: 'DELETE',
+            data: { userId: userId },
+            success: function (result) {
+                alert(result);
+            },
+            error: function (request) {
+                alert(request.responseText);
+            }
+        });
     })
 
 })
