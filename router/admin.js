@@ -147,14 +147,11 @@ router.delete("/admin/deleteuser", [isLoggedIn, isAdmin], async (req, res) => {
     }
 
     // delete user session
-    let schema = Mongoose.Schema({}, { string: false });
-    let Sessions = Mongoose.model("sessions", schema);
-    try {
-        await Sessions.deleteMany({session: {'$regex': '.*"userId":"'+req.body.userId+'".*'}}).exec();
-    } catch (e) {
-        console.error(e);
-        return res.status(400).send("Something went wrong while deleting user session")
-    }
+    await Mongoose.connection.db.collection("sessions").deleteMany({
+        session: {
+            '$regex': '.*"userId":"' + req.body.userId + '".*'
+        }
+    })
 
     // finally delete the user
     try {
