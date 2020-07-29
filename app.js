@@ -65,13 +65,13 @@ module.exports.accountHandler = accountHandler;
         process.exit();
     }
 
-    // Fetch proxies
+    /*// Fetch proxies
     try {
         let count = await fetchProxies();
         console.log(` - ${count} proxies fetched`)
     } catch (error) {
         console.log(error);
-    }
+    }*/
 
     // Initialize accounts in handlers
     try {
