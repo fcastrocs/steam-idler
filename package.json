@@ -12,6 +12,7 @@
     "@doctormckay/steam-crypto": "^1.2.0",
     "@hapi/joi": "^15.1.1",
     "adm-zip": "^0.4.13",
+    "argon2": "^0.27.0",
     "binarykvparser": "^2.2.0",
     "body-parser": "^1.19.0",
     "buffer-crc32": "^0.2.13",

@@ -2,12 +2,17 @@
 const router = require('express').Router();
 const User = require('../models/user');
 const Mailer = require("../mailer");
-const Security = require("../util/security")
+const argon2 = require('argon2');
+const crypto = require('crypto');
 const Token = require("../models/token")
 const signup = require("./util/signup-schema")
 const Invite = require("../models/invite")
 const mongoose = require('mongoose');
 
+
+/***************************************************
+ *                LOGIN REQUEST                    *
+ **************************************************/
 router.post('/login', async function (req, res) {
     if (req.session.loggedIn) {
         return res.status(400).send("You are already logged in.")
@@ -17,7 +22,6 @@ router.post('/login', async function (req, res) {
         return res.status(400).send("username/password needed")
     }
 
-    //usernames should be lowercase
     let username = req.body.username.trim().toLowerCase();
 
     // find user
@@ -28,9 +32,12 @@ router.post('/login', async function (req, res) {
     }
 
     //compare passwords
-    let dbpassword = Security.decrypt(doc.password)
-    if (dbpassword !== req.body.password) {
-        return res.status(400).send("Bad username/password.")
+    try {
+        if (!await argon2.verify(doc.password, req.body.password)) {
+            return res.status(400).send("Bad username/password.")
+        }
+    } catch (err) {
+        // internal failure
     }
 
     // make sure user is verified.
@@ -51,14 +58,15 @@ router.post('/login', async function (req, res) {
     return res.send("Logged in")
 })
 
-
-// Register request
+/***************************************************
+ *               REGISTER REQUEST                  *
+ **************************************************/
 router.post('/register', async function (req, res) {
     if (req.session.loggedIn) {
         return res.status(400).send("You are already logged in.")
     }
 
-    if (!req.body.username || !req.body.password || !req.body.email || 
+    if (!req.body.username || !req.body.password || !req.body.email ||
         !req.body.invitecode || !req.body.tradeurl) {
         return res.status(400).send("Bad register request.")
     }
@@ -70,9 +78,7 @@ router.post('/register', async function (req, res) {
         return res.status(400).send("Invalid invite code.")
     }
 
-    // trim spaces and make it lower case.
     req.body.username = req.body.username.trim().toLowerCase();
-    // trim spaces and make it lower case.
     req.body.email = req.body.email.trim().toLowerCase();
 
     // validate form data
@@ -101,11 +107,18 @@ router.post('/register', async function (req, res) {
         return res.status(400).send("This username already exists.")
     }
 
+    // hash the password
+    try {
+        var hash = await argon2.hash(req.body.password);
+    } catch (err) {
+        // internal error
+    }
+
     // create the user
     user = new User({
         _id: mongoose.Types.ObjectId(),
         username: req.body.username,
-        password: Security.encrypt(req.body.password),
+        password: hash,
         email: req.body.email
     })
 
@@ -122,6 +135,9 @@ router.post('/register', async function (req, res) {
     }
 })
 
+/***************************************************
+ *              CONFIRMATION REQUEST               *
+ **************************************************/
 router.get('/register/confirm/:token', async function (req, res) {
     if (req.session.loggedIn) {
         return res.redirect("/");
@@ -159,7 +175,9 @@ router.get('/register/confirm/:token', async function (req, res) {
     }
 })
 
-
+/***************************************************
+ *                  LOGOUT REQUEST                 *
+ **************************************************/
 router.get("/logout", async function (req, res) {
     if (!req.session.loggedIn) {
         return res.redirect("/")
@@ -173,10 +191,8 @@ router.get("/logout", async function (req, res) {
 })
 
 /***************************************************
- *              ACCOUNT RECOVERY                   *
+ *                RECOVERY REQUEST                 *
  **************************************************/
-
-// Generate a recovery link
 router.post("/recovery", async function (req, res) {
     if (req.session.loggedIn) {
         return res.status(400).send("You are already logged in.")
@@ -199,7 +215,7 @@ router.post("/recovery", async function (req, res) {
     let token = await query.exec();
 
     // create a new token.
-    token = new Token({ userId: user._id, token: Security.createToken() });
+    token = new Token({ userId: user._id, token: crypto.randomBytes(16).toString('hex') });
 
     try {
         await token.save();
@@ -268,8 +284,12 @@ router.post("/recovery/changepass", async function (req, res) {
         return res.status(400).send("Invalid/Expired token.")
     }
 
-    //change password
-    user.password = Security.encrypt(req.body.recoverPassword)
+    // hash the new password
+    try {
+        user.password = await argon2.hash(req.body.recoverPassword);
+    } catch (err) {
+        // internal error
+    }
 
     try {
         await token.remove();
@@ -298,7 +318,7 @@ async function createToken_sendConfirmation(doc, host) {
     let token = await query.exec();
 
     // create new token
-    token = new Token({ userId: doc._id, token: Security.createToken() });
+    token = new Token({ userId: doc._id, token: crypto.randomBytes(16).toString('hex') });
 
     try {
         await token.save();
