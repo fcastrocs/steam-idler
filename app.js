@@ -186,9 +186,8 @@ function initExpress() {
         res.redirect("/");
     });
 
-
-    let server = app.listen(process.env.HTTP_PORT, () => {
-        console.log(' - HTTP Server running on port 8080');
+    let server = app.listen(process.env.PORT || 8080, () => {
+        console.log(` - HTTP Server running on port: ${process.env.PORT || 8080}`);
         // Start socket.io
         let io = require('socket.io')(server)
         module.exports.io = io;
