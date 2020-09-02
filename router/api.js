@@ -10,7 +10,11 @@ Router.get("/api/idledhours", async (req, res) => {
     if (!doc) {
         res.send("0");
     } else {
-        res.send(`${Math.round(doc[0].amount / 3600)}`);
+        if (!doc[0].amount) {
+            res.send("0");
+        } else {
+            res.send(`${Math.round(doc[0].amount / 3600)}`);
+        }
     }
 })
 
