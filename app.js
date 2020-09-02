@@ -210,11 +210,11 @@ function initExpress() {
     });
 
 
-    httpServer.listen(process.env.HTTP_PORT, () => {
+    httpServer.listen(process.env.PORT || 8080, () => {
         console.log(' - HTTP Server running on port 8080');
     });
 
-    httpsServer.listen(process.env.HTTPS_PORT, () => {
+    httpsServer.listen(process.env.PORT || 8080, () => {
         console.log(' - HTTPS Server running on port 8443');
     });
 }
