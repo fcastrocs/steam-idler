@@ -1,6 +1,3 @@
-const fs = require('fs');
-const http = require('http');
-const https = require('https');
 const compression = require('compression');
 const express = require('express');
 const app = express();
@@ -18,26 +15,6 @@ const ApiLimiter = require('./models/api-limiter')
 // Declare process variables
 // used when steam goes down.
 process.env.fetchingProxies = "false";
-
-// SSL Certificate
-const privateKey = fs.readFileSync(`${__dirname}/ssl/private.key`, 'utf8');
-const certificate = fs.readFileSync(`${__dirname}/ssl/certificate.crt`, 'utf8');
-const ca = fs.readFileSync(`${__dirname}/ssl/ca_bundle.crt`, 'utf8');
-const credentials = {
-    key: privateKey,
-    cert: certificate,
-    ca: ca
-};
-
-// Starting both http & https servers
-const httpServer = http.createServer(app);
-const httpsServer = https.createServer(credentials, app);
-
-// Start socket.io
-const io = require('socket.io')(httpServer)
-io.attach(httpServer);
-io.attach(httpsServer)
-module.exports.io = io;
 
 // Handler must be kept in RAM at all times
 let accountHandler = new AccountHandler();
@@ -132,7 +109,7 @@ async function fetchProxies() {
 function initExpress() {
     // set HTTP headers appropriately to counter web vulnerabilities
     app.use(helmet())
-    
+
     app.use(compression());
 
     // public folder
@@ -210,11 +187,10 @@ function initExpress() {
     });
 
 
-    httpServer.listen(process.env.PORT || 8080, () => {
+    let server = app.listen(process.env.HTTP_PORT, () => {
         console.log(' - HTTP Server running on port 8080');
-    });
-
-    httpsServer.listen(process.env.PORT || 8080, () => {
-        console.log(' - HTTPS Server running on port 8443');
+        // Start socket.io
+        let io = require('socket.io')(server)
+        module.exports.io = io;
     });
 }
