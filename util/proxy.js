@@ -1,4 +1,4 @@
-const request = require("request-promise-native");
+const axios = require("axios").default;
 const Proxy = require("../models/proxy");
 
 // Returns proxy list from proxyscrape.com
@@ -6,17 +6,15 @@ async function GetProxies() {
   let url =
     "https://proxy.webshare.io/proxy/list/download/mmfodgnjlbzmrysmezlyenixvifrjskanzxbqwpu/-/socks/username/direct/";
 
-  let proxyList = null;
   try {
-    let res = await request.get(url);
+    let res = await axios.get(url);
     // validate the proxies
-    proxyList = res.split("\r\n").map((proxy) => {
+    return res.split("\r\n").map((proxy) => {
       return proxy.replace(":ccqdjjhc-dest:yt4v7cxsvnv6", "");
     });
-    return Promise.resolve(proxyList);
   } catch (error) {
-    console.error(error);
-    return Promise.reject("Could not fetch proxy list.");
+    console.log(error);
+    throw "Could not fetch proxy list.";
   }
 }
 
