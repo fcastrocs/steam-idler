@@ -13,7 +13,7 @@ async function GetProxies() {
       return proxy.replace(":ccqdjjhc-dest:yt4v7cxsvnv6", "");
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     throw "Could not fetch proxy list.";
   }
 }
@@ -40,13 +40,14 @@ async function GetAndSaveProxies() {
     return new Promise((resolve, reject) => {
       Proxy.insertMany(proxies, (err, docs) => {
         if (err) {
+          console.error(err);
           return reject(" - could not store proxies to db");
         }
         return resolve(docs.length);
       });
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return Promise.reject(error);
   }
 }
@@ -82,4 +83,4 @@ let RemoveProxy = async (proxy) => {
   });
 };
 
-module.exports = {GetAndSaveProxies, GetProxy, RemoveProxy}
+module.exports = { GetAndSaveProxies, GetProxy, RemoveProxy };
