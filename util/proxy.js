@@ -9,7 +9,7 @@ async function GetProxies() {
   try {
     let res = await axios.get(url);
     // validate the proxies
-    return res.split("\r\n").map((proxy) => {
+    return res.data.split("\r\n").map((proxy) => {
       return proxy.replace(":ccqdjjhc-dest:yt4v7cxsvnv6", "");
     });
   } catch (error) {
