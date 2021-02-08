@@ -13,11 +13,9 @@ async function GetProxies() {
     proxyList = res.split("\r\n").map((proxy) => {
       return proxy.replace(":ccqdjjhc-dest:yt4v7cxsvnv6", "");
     });
-
-    console.log(proxyList);
-
     return Promise.resolve(proxyList);
   } catch (error) {
+    console.error(error);
     return Promise.reject("Could not fetch proxy list.");
   }
 }
