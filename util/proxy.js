@@ -81,6 +81,4 @@ let RemoveProxy = async (proxy) => {
   });
 };
 
-module.exports.GetAndSaveProxies = GetAndSaveProxies;
-module.exports.GetProxy = GetProxy;
-module.exports.RemoveProxy = RemoveProxy;
+module.exports = {GetAndSaveProxies, GetProxy, RemoveProxy}
