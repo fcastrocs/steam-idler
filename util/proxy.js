@@ -9,9 +9,15 @@ async function GetProxies() {
   try {
     let res = await axios.get(url);
     // validate the proxies
-    return res.data.split("\r\n").map((proxy) => {
-      return proxy.replace(":ccqdjjhc-dest:yt4v7cxsvnv6", "");
-    });
+    return res.data
+      .split("\r\n")
+      .filter((proxy) => {
+        if (!proxy) return false;
+        return true;
+      })
+      .map((proxy) => {
+        return proxy.replace(":ccqdjjhc-dest:yt4v7cxsvnv6", "");
+      });
   } catch (error) {
     console.error(error);
     throw "Could not fetch proxy list.";
