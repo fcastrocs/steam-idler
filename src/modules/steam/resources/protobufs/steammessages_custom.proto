@@ -1,0 +1,6 @@
+option optimize_for = SPEED;
+option cc_generic_services = false;
+
+message CMsgClientVACBanStatus {
+	optional uint32 num_bans = 1;
+}
